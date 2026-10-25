@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Output level vs amp</title>
+<style>
+  :root {
+    color-scheme: light;
+    --surface-1: #fcfcfb; --text-primary: #0b0b0b; --text-secondary: #52514e; --grid: #e4e3df; --axis: #9a9892;
+    --series-1: #2a78d6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --surface-1: #1a1a19; --text-primary: #f0efec; --text-secondary: #c3c2b7; --grid: #2f2f2d; --axis: #6f6e69;
+      --series-1: #3987e5;
+    }
+  }
+  body { margin: 0; background: var(--surface-1); color: var(--text-primary); font: 15px/1.45 system-ui, sans-serif; }
+  main { max-width: 860px; margin: 0 auto; padding: 24px 16px 40px; }
+  h1 { font-size: 1.25rem; margin: 0 0 4px; }
+  p.sub { margin: 0 0 16px; color: var(--text-secondary); font-size: .9rem; }
+  .legend { display: flex; gap: 18px; flex-wrap: wrap; color: var(--text-secondary); font-size: .85rem; margin-bottom: 6px; }
+  .legend i { display: inline-block; width: 22px; height: 0; border-top: 2px solid var(--series-1); vertical-align: middle; margin-right: 6px; }
+  .legend i.ref { border-top: 2px dashed var(--axis); }
+  #wrap { position: relative; }
+  svg { width: 100%; height: auto; display: block; }
+  svg text { fill: var(--text-secondary); font: 12px system-ui, sans-serif; }
+  .grid { stroke: var(--grid); stroke-width: 1; }
+  .axis { stroke: var(--axis); stroke-width: 1; }
+  .line { fill: none; stroke: var(--series-1); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+  .ref { fill: none; stroke: var(--axis); stroke-width: 1.5; stroke-dasharray: 5 4; }
+  .dot { fill: var(--series-1); stroke: var(--surface-1); stroke-width: 2; }
+  .hit { fill: transparent; cursor: crosshair; }
+  #tip { position: absolute; pointer-events: none; background: var(--surface-1); color: var(--text-primary); border: 1px solid var(--axis);
+         border-radius: 6px; padding: 6px 9px; font-size: .8rem; box-shadow: 0 2px 8px rgba(0,0,0,.2); display: none; white-space: nowrap; }
+  #tip small { color: var(--text-secondary); }
+  details { margin-top: 18px; }
+  summary { cursor: pointer; color: var(--text-secondary); }
+  table { border-collapse: collapse; margin-top: 8px; width: 100%; }
+  th, td { text-align: right; padding: 4px 10px; border-bottom: 1px solid var(--grid); font-variant-numeric: tabular-nums; }
+  th:first-child, td:first-child { text-align: left; }
+  th { color: var(--text-secondary); font-weight: 600; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Output level vs amp setting</h1>
+  <p class="sub">ESP32-C3 DATV on XIAO ESP32-C3, measured by HB9IIU (two sets merged, 21 points). Instrument, frequency and symbol rate not recorded.</p>
+  <div class="legend">
+    <span><i></i>Measured</span>
+    <span><i class="ref"></i>Ideal linear amplitude (20 log<sub>10</sub>, anchored at amp 23 = -10 dBm)</span>
+  </div>
+  <div id="wrap"><svg id="chart" viewBox="0 0 800 460" role="img" aria-label="Output power in dBm against amp setting from 1 to 480. It follows linear amplitude between about 15 and 100, falls below it above about 250, reaching 14 dBm at 480, and has a floor of about -24 dBm at amp 1."></svg><div id="tip"></div></div>
+  <details>
+    <summary>Table view</summary>
+    <table id="tbl"><thead><tr><th>amp</th><th>measured dBm</th><th>ideal dBm</th><th>difference dB</th></tr></thead><tbody></tbody></table>
+  </details>
+</main>
+<script>
+const data = [[1,-24],[15,-13.8],[20,-11.4],[23,-10],[30,-7.5],[38,-5.8],[40,-5.6],[50,-3.5],[57,-2.38],[90,1.17],[98,2.3],
+              [140,5.15],[183,7.52],[222,8.8],[249,9.74],[275,10.8],[300,11.5],[307,11.3],[381,13.35],[444,13.9],[480,14]];
+const ideal = a => -10 + 20 * Math.log10(a / 23);
+const W = 800, H = 460, m = {l: 56, r: 24, t: 14, b: 50}, YMIN = -26, YMAX = 16, XMAX = 500;
+const x = a => m.l + a / XMAX * (W - m.l - m.r);
+const y = d => m.t + (YMAX - d) / (YMAX - YMIN) * (H - m.t - m.b);
+const NS = 'http://www.w3.org/2000/svg';
+const svg = document.getElementById('chart'), tip = document.getElementById('tip');
+const el = (n, attrs, text) => { const e = document.createElementNS(NS, n); for (const k in attrs) e.setAttribute(k, attrs[k]); if (text !== undefined) e.textContent = text; svg.appendChild(e); return e; };
+
+for (let d = -24; d <= 12; d += 6) {
+  el('line', {x1: m.l, x2: W - m.r, y1: y(d), y2: y(d), class: 'grid'});
+  el('text', {x: m.l - 8, y: y(d) + 4, 'text-anchor': 'end'}, d);
+}
+el('line', {x1: m.l, x2: W - m.r, y1: y(YMIN), y2: y(YMIN), class: 'axis'});
+for (let a = 0; a <= 500; a += 100) el('text', {x: x(a), y: H - m.b + 18, 'text-anchor': 'middle'}, a);
+el('text', {x: (m.l + W - m.r) / 2, y: H - 8, 'text-anchor': 'middle'}, 'amp setting (slider / --amp)');
+el('text', {transform: `translate(14 ${(m.t + H - m.b) / 2}) rotate(-90)`, 'text-anchor': 'middle'}, 'output power (dBm)');
+
+const refPts = []; for (let a = 12; a <= 480; a += 6) refPts.push(`${x(a)},${y(ideal(a))}`);
+el('polyline', {class: 'ref', points: refPts.join(' ')});
+el('polyline', {class: 'line', points: data.map(([a, d]) => `${x(a)},${y(d)}`).join(' ')});
+data.forEach(([a, d]) => el('circle', {class: 'dot', cx: x(a), cy: y(d), r: 4}));
+el('text', {x: x(1) + 12, y: y(-24) + 4}, '-24 dBm at amp 1 (floor)');
+el('text', {x: x(480) - 4, y: y(14) + 30, 'text-anchor': 'end'}, '+14 dBm at 480 (2.4 dB below ideal)');
+
+data.forEach(([a, d]) => {
+  const h = el('circle', {class: 'hit', cx: x(a), cy: y(d), r: 14});
+  const show = () => {
+    const r = svg.getBoundingClientRect(), s = r.width / W, df = d - ideal(a);
+    tip.innerHTML = `amp <b>${a}</b><br>${d} dBm<br><small>ideal ${ideal(a).toFixed(1)} dBm (${df >= 0 ? '+' : ''}${df.toFixed(1)} dB)</small>`;
+    tip.style.display = 'block';
+    tip.style.left = Math.min(x(a) * s + 12, r.width - tip.offsetWidth - 4) + 'px';
+    tip.style.top = Math.max(y(d) * s - tip.offsetHeight - 10, 0) + 'px';
+  };
+  h.addEventListener('mouseenter', show); h.addEventListener('mousemove', show);
+  h.addEventListener('mouseleave', () => tip.style.display = 'none');
+});
+
+document.querySelector('#tbl tbody').innerHTML = data.map(([a, d]) =>
+  `<tr><td>${a}</td><td>${d}</td><td>${ideal(a).toFixed(1)}</td><td>${(d - ideal(a)).toFixed(1)}</td></tr>`).join('');
+</script>
+</body>
+</html>

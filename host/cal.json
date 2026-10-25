@@ -1,0 +1,9 @@
+{
+  "note": "Neutral calibration. Set measured corrections for your own board.",
+  "dc": [
+    0.0,
+    0.0
+  ],
+  "iq_gain": 1.0,
+  "iq_phase_deg": 0.0
+}

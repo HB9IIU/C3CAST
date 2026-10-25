@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ app_name }}</title>
+  <link rel="stylesheet" href="/static/c3cast.css?v={{ app_version }}">
+</head>
+<body>
+{% include "_icons.html" %}
+<div id="toast" class="toast d-none" role="status"></div>
+<div class="wrap">
+
+  <header class="bar">
+    <svg class="i logo"><use href="#i-logo"/></svg>
+    <h1 class="brand">{{ app_name }}<small>v{{ app_version }} · by HB9IIU</small></h1>
+    <span class="grow"></span>
+    <span class="utc" id="utc"><b>--:--:--</b> UTC</span>
+    <span id="state" class="chip"><i class="led"></i><span id="stateText">idle</span></span>
+    <a href="/setup" class="btn" title="Setup"><svg class="i"><use href="#i-sliders"/></svg>Setup</a>
+  </header>
+
+  <div class="dev">
+    <span id="conn" class="chip"><i class="led"></i><span id="connText">checking</span></span>
+    <span id="connInfo" class="info"></span>
+    <span class="grow"></span>
+    <button id="flashBtn" class="btn" title="Flash the firmware to a board"><svg class="i"><use href="#i-chip"/></svg>Flash</button>
+    <button id="recheck" class="btn" title="Check the board again"><svg class="i"><use href="#i-refresh"/></svg>Check</button>
+  </div>
+
+  <section id="flashPanel" class="panel d-none" style="margin-bottom:.6rem">
+    <div class="ph"><svg class="i"><use href="#i-chip"/></svg>Flash firmware<span class="grow"></span><span id="flashFw" style="letter-spacing:.04em;text-transform:none;font-weight:400"></span></div>
+    <div class="pb">
+      <div class="row">
+        <select id="flashPort" style="flex:1;min-width:14rem;width:auto"></select>
+        <button id="flashGo" class="btn danger" type="button"><svg class="i"><use href="#i-chip"/></svg><span id="flashGoText">Flash</span></button>
+        <button id="flashClose" class="btn" type="button">Close</button>
+      </div>
+      <div id="flashNote" class="hint"><svg class="i"><use href="#i-info"/></svg>erases the whole board, then writes the firmware (also works on a blank board)</div>
+      <div class="progress"><i id="flashBar"></i></div>
+      <pre id="flashLog" class="logbox d-none"></pre>
+    </div>
+  </section>
+
+  <div class="grid">
+
+    <section class="panel">
+      <div class="ph"><svg class="i"><use href="#i-image"/></svg>Source</div>
+      <div class="pb">
+        <div class="field">
+          <div class="seg">
+            <input type="radio" name="source" id="srcPicture" value="picture" checked>
+            <label for="srcPicture"><svg class="i"><use href="#i-image"/></svg>Picture</label>
+            <input type="radio" name="source" id="srcClock" value="clock">
+            <label for="srcClock"><svg class="i"><use href="#i-clock"/></svg>SBB clock</label>
+            <input type="radio" name="source" id="srcCamera" value="camera">
+            <label for="srcCamera"><svg class="i"><use href="#i-camera"/></svg>USB camera</label>
+          </div>
+        </div>
+        <div class="field" id="pictureBox"><select id="picture"></select></div>
+        <div class="field d-none" id="cameraBox">
+          <select id="camera"></select>
+          <div id="cameraInfo" class="hint"></div>
+        </div>
+        <div class="screen">
+          <img id="preview" alt="">
+          <span class="tag" id="screenTag">PREVIEW</span>
+          <div id="onair" class="onair d-none"><i class="led"></i>ON AIR</div>
+        </div>
+        <div id="previewMsg" class="msg"></div>
+        <div class="row" style="margin-top:.6rem">
+          <span id="pictureHelp" class="hint" style="margin:0"><svg class="i"><use href="#i-info"/></svg>PNG / JPG, 16:9 &rarr; webapp/pictures</span>
+          <span id="clockHelp" class="hint d-none" style="margin:0"><svg class="i"><use href="#i-info"/></svg>callsign, locator, lead time: <a href="/setup">setup</a></span>
+          <span class="grow"></span>
+          <button id="reload" class="btn"><svg class="i"><use href="#i-refresh"/></svg>Reload</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="ph"><svg class="i"><use href="#i-wave"/></svg>Link<span class="grow"></span>
+        <span style="letter-spacing:.06em;text-transform:none;font-weight:400">{{ freq }} MHz &middot; DVB-S2 QPSK</span></div>
+      <div class="pb">
+        <div class="field">
+          <div class="lab">Symbol rate<span>kS/s</span></div>
+          <div class="seg">
+            {% for r in rates %}
+            <input type="radio" name="sr" id="sr{{ r }}" value="{{ r }}" {{ 'checked' if r == 500000 }}>
+            <label for="sr{{ r }}">{{ r // 1000 }}</label>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="field">
+          <div class="lab">FEC</div>
+          <div class="seg fit">
+            {% for f in fecs %}
+            <input type="radio" name="fec" id="fec{{ loop.index }}" value="{{ f }}" {{ 'checked' if loop.first }}>
+            <label for="fec{{ loop.index }}">{{ f }}</label>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="field">
+          <div class="lab">Level<b id="levelVal"></b></div>
+          <input type="range" id="level" min="{{ lmin }}" max="{{ lmax }}" value="{{ ldef }}">
+        </div>
+        <dl class="kv field">
+          <div><dt>Channel</dt><dd id="pCap">-</dd></div>
+          <div><dt>Stream</dt><dd id="pMux">-</dd></div>
+          <div><dt>Codec</dt><dd id="pCodec">-</dd></div>
+          <div><dt>Picture</dt><dd id="pSize">-</dd></div>
+          <div><dt>Video</dt><dd id="pVideo">-</dd></div>
+          <div><dt>Audio</dt><dd id="pAudio">-</dd></div>
+        </dl>
+        <button id="toggle" class="go" type="button"><svg class="i"><use id="toggleUse" href="#i-play"/></svg><span id="toggleText">Start</span></button>
+      </div>
+    </section>
+
+  </div>
+
+  <section class="panel" style="margin-top:.6rem">
+    <div class="ph"><svg class="i"><use href="#i-term"/></svg>Telemetry</div>
+    <dl class="tele">
+      <div><dt>Elapsed</dt><dd id="elapsed">00:00:00</dd></div>
+      <div><dt>ESP buffer</dt><dd id="buffer">-</dd></div>
+      <div><dt>TS packets</dt><dd id="packets">-</dd></div>
+    </dl>
+    <div id="error" class="err d-none"></div>
+    <pre id="log"></pre>
+  </section>
+
+  <footer><span>{{ app_name }} v{{ app_version }} &middot; by HB9IIU</span><span>firmware: SP8ESA ESP32-DATV &middot; PTT on D10</span></footer>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const val = name => document.querySelector(`input[name=${name}]:checked`).value;
+const CHIP = {idle: ['', 'idle'], starting: ['warn', 'starting'], transmitting: ['air', 'on air'], stopping: ['warn', 'stopping'], error: ['bad', 'error']};
+let busy = false, board = false, flashing = false;
+
+const chip = (id, cls, text) => { $(id).className = 'chip ' + cls; $(id + 'Text').textContent = text; };
+const hms = s => [Math.floor(s / 3600), Math.floor(s / 60) % 60, s % 60].map(n => String(n).padStart(2, '0')).join(':');
+const tick = () => { $('utc').innerHTML = '<b>' + new Date().toISOString().slice(11, 19) + '</b> UTC'; };
+
+async function post(url, body) {
+  const r = await fetch(url, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body || {})});
+  return {ok: r.ok, data: await r.json().catch(() => ({}))};
+}
+
+async function checkBoard() {
+  chip('conn', '', 'checking'); $('connInfo').textContent = '';
+  const c = await (await fetch('/api/connection')).json();
+  board = c.connected;
+  const many = !c.connected && c.candidates.length > 1;
+  chip('conn', c.connected ? 'ok' : many ? 'warn' : 'bad', c.connected ? 'board connected' : many ? 'choose a board' : 'board not found');
+  $('connInfo').textContent = c.connected ? `${c.port} · ${c.how}`
+    : many ? 'several boards answer:'
+    : c.saved_missing ? `Saved board ${c.saved.port} (${c.saved.serial}) is not connected. Plug it in, then Check.` +
+        (c.tried.length ? ` Other Espressif port(s) ${c.tried.join(', ')} did not answer as ESP32DATV.` : '')
+    : c.tried.length ? `Found ${c.tried.join(', ')} but no ESP32DATV answer. Close the serial monitor, or use Flash to install the firmware.`
+    : 'No Espressif USB device found. Is the board plugged in?';
+  if (many) c.candidates.forEach(a => {
+    const b = document.createElement('button');
+    b.className = 'btn';
+    b.style.marginLeft = '.6rem';
+    b.textContent = `${a.port} (${a.serial})`;
+    b.onclick = async () => { await post('/api/connection/choose', {port: a.port}); checkBoard(); };
+    $('connInfo').appendChild(b);
+  });
+  updateButtons();
+}
+
+async function loadPictures() {
+  const names = await (await fetch('/api/pictures')).json();
+  const keep = $('picture').value;
+  $('picture').innerHTML = names.map(n => `<option>${n}</option>`).join('');
+  if (names.includes(keep)) $('picture').value = keep;
+  showPreview();
+  updateButtons();
+}
+
+const isClock = () => val('source') === 'clock';
+const isCamera = () => val('source') === 'camera';
+let clockTimer = null, cameras = [], previewKey = '';
+
+function setPreview(url) {                  // '' stops the camera stream (the server then frees the camera)
+  if (url === previewKey) return;
+  previewKey = url;
+  if (url) $('preview').src = url; else $('preview').removeAttribute('src');
+}
+
+function syncCameraPreview() {
+  if (!isCamera()) return;
+  $('onair').classList.toggle('d-none', !busy);
+  $('screenTag').classList.toggle('d-none', busy);
+  $('preview').classList.toggle('d-none', busy);
+  if (busy) $('previewMsg').textContent = '';
+  setPreview(!busy && $('camera').value ? '/api/camera-preview?camera=' + encodeURIComponent($('camera').value) : '');
+}
+$('preview').onerror = () => { if (isCamera() && previewKey) $('previewMsg').textContent = 'No picture from this camera (in use elsewhere?)'; };
+$('preview').onload = () => { $('previewMsg').textContent = ''; };
+
+async function loadCameras() {
+  cameras = await (await fetch('/api/cameras')).json();
+  const keep = $('camera').value;
+  $('camera').innerHTML = cameras.map(c => `<option>${c.name}</option>`).join('');
+  if (cameras.some(c => c.name === keep)) $('camera').value = keep;
+  showCameraInfo();
+  updateButtons();
+  previewKey = '';                          // reload list = restart the preview
+  syncCameraPreview();
+}
+
+function showCameraInfo() {
+  const c = cameras.find(c => c.name === $('camera').value);
+  $('cameraInfo').textContent = !cameras.length ? 'No camera found. Plug it in and reload.'
+    : c.mic ? `mic: ${c.mic}` : 'no microphone found: the stream carries silence';
+  updatePlan();
+}
+
+function showPreview() {
+  clearInterval(clockTimer);
+  previewKey = '';
+  $('preview').removeAttribute('src');      // closes a running camera stream
+  $('previewMsg').textContent = '';
+  $('onair').classList.add('d-none');
+  $('screenTag').classList.remove('d-none');
+  $('preview').classList.remove('d-none');
+  $('pictureBox').classList.toggle('d-none', isClock() || isCamera());
+  $('cameraBox').classList.toggle('d-none', !isCamera());
+  $('reload').classList.toggle('d-none', isClock());
+  $('pictureHelp').classList.toggle('d-none', val('source') !== 'picture');
+  $('clockHelp').classList.toggle('d-none', !isClock());
+  if (isClock()) {
+    const refresh = () => { $('preview').src = '/api/clock-preview.png?' + Date.now(); };   // drawn by the server: also while on air
+    refresh(); clockTimer = setInterval(refresh, 2000);
+  } else if (isCamera()) {
+    loadCameras();
+  } else {
+    const n = $('picture').value;
+    $('preview').src = n ? '/pictures/' + encodeURIComponent(n) : '';
+  }
+  updatePlan(); updateButtons();
+}
+
+async function updatePlan() {
+  $('levelVal').textContent = $('level').value;
+  const p = await (await fetch(`/api/plan?sr=${val('sr')}&fec=${encodeURIComponent(val('fec'))}&source=${val('source')}`)).json();
+  $('pCap').textContent = `${p.capacity_kbps} kb/s`;
+  $('pMux').textContent = `${p.mux_kbps} kb/s`;
+  $('pCodec').textContent = `H.265 · ${p.encoder}`;
+  $('pSize').textContent = `${p.size} · ${p.fps}`;
+  $('pVideo').textContent = `${p.video_kbps} kb/s`;
+  $('pAudio').textContent = `${p.audio.replace('AAC-HE v2', 'HE-AACv2')} ${p.audio_kbps}k ` + (isClock() ? 'tones' : isCamera() ? 'mic' : 'melody');
+}
+
+let lastState = 'idle';
+function updateButtons(state) {
+  if (state !== undefined) lastState = state;
+  busy = lastState === 'starting' || lastState === 'transmitting' || lastState === 'stopping';
+  const noSource = isClock() ? false : isCamera() ? !$('camera').value : !$('picture').value;
+  const toggle = $('toggle');             // one button: Start when idle, Stop while starting or on air
+  if (busy) {
+    $('toggleText').textContent = lastState === 'stopping' ? 'Stopping...' : 'Stop';
+    $('toggleUse').setAttribute('href', '#i-stop');
+    toggle.className = 'go stop';
+    toggle.disabled = lastState === 'stopping';
+  } else {
+    $('toggleText').textContent = 'Start';
+    $('toggleUse').setAttribute('href', '#i-play');
+    toggle.className = 'go';
+    toggle.disabled = noSource || !board || flashing;
+  }
+  $('recheck').disabled = busy || flashing;
+  $('flashBtn').disabled = busy || flashing;
+  document.querySelectorAll('input[name=sr], input[name=fec], input[name=source], #level, #picture, #camera, #reload').forEach(e => e.disabled = busy);
+}
+
+async function poll() {
+  try {
+    const s = await (await fetch('/api/status')).json();
+    flashing = s.flashing;
+    const [cls, text] = s.flashing ? ['warn', 'flashing'] : (CHIP[s.state] || ['', s.state]);
+    chip('state', cls, text);
+    $('elapsed').textContent = hms(s.elapsed);
+    $('buffer').textContent = s.buffer || '-';
+    $('packets').textContent = s.packets || '-';
+    const log = $('log'), atEnd = log.scrollTop + log.clientHeight >= log.scrollHeight - 8;
+    log.textContent = s.log.join('\n');
+    if (atEnd) log.scrollTop = log.scrollHeight;
+    $('error').classList.toggle('d-none', !s.error);
+    $('error').textContent = s.error;
+    updateButtons(s.state);
+    syncCameraPreview();
+  } catch (e) { chip('state', 'bad', 'server offline'); }
+}
+
+$('toggle').onclick = async () => {
+  $('toggle').disabled = true;              // no double clicks; the next status poll sets the button again
+  if (busy) { await post('/api/stop'); poll(); return; }
+  if (isCamera()) setPreview('');           // free the camera before the transmission opens it
+  const r = await post('/api/start', {source: val('source'), picture: $('picture').value, camera: $('camera').value,
+                                       sr: +val('sr'), fec: val('fec'), level: +$('level').value});
+  if (!r.ok) { $('error').classList.remove('d-none'); $('error').textContent = r.data.error || 'start failed'; }
+  poll();
+};
+$('reload').onclick = () => isCamera() ? loadCameras() : loadPictures();
+$('camera').onchange = showCameraInfo;
+$('recheck').onclick = checkBoard;
+$('picture').onchange = showPreview;
+$('level').oninput = updatePlan;
+document.querySelectorAll('input[name=sr], input[name=fec]').forEach(e => e.onchange = updatePlan);
+document.querySelectorAll('input[name=source]').forEach(e => e.onchange = showPreview);
+
+// ---- flash firmware: pick a port, confirm twice, watch esptool
+let flashArm = 0, flashPoll = null;
+const flashSet = (text) => { $('flashGoText').textContent = text; };
+
+async function loadFlashPorts() {
+  const d = await (await fetch('/api/flash/ports')).json();
+  $('flashPort').innerHTML = d.ports.map(p => `<option value="${p.port}">${p.port} · ${p.serial || 'no serial'}${p.saved ? ' · saved board' : ''}</option>`).join('');
+  const saved = d.ports.find(p => p.saved);
+  if (saved) $('flashPort').value = saved.port;
+  $('flashFw').textContent = d.firmware.text;
+  $('flashFw').style.color = d.firmware.ok ? '' : 'var(--bad)';
+  $('flashGo').disabled = !d.ports.length || !d.firmware.ok;
+  if (!d.ports.length) $('flashNote').lastChild.textContent = 'no Espressif USB device found: plug the board in';
+}
+
+function flashReset() { flashArm = 0; flashSet('Flash'); $('flashPort').disabled = false; }
+
+async function flashShow() {
+  const s = await (await fetch('/api/flash/status')).json();
+  const bar = $('flashBar'), prog = bar.parentElement;
+  if (s.port && !$('flashPort').options.length) $('flashPort').innerHTML = `<option>${s.port}</option>`;   // page reloaded mid-flash
+  bar.style.width = s.percent + '%';
+  prog.className = 'progress' + (s.state === 'done' ? ' ok' : s.state === 'error' ? ' bad' : '');
+  $('flashLog').classList.toggle('d-none', !s.log.length);
+  $('flashLog').textContent = s.log.join('\n');
+  $('flashLog').scrollTop = $('flashLog').scrollHeight;
+  if (s.state === 'flashing') { flashSet('Flashing ' + s.percent + '%'); return; }
+  clearInterval(flashPoll); flashPoll = null;
+  flashReset();
+  $('flashNote').lastChild.textContent = s.state === 'done' ? s.result : s.error;
+  $('flashNote').style.color = s.state === 'done' ? 'var(--ok)' : 'var(--bad)';
+  $('flashGo').disabled = false;
+  if (s.state === 'done') {
+    toast('Firmware flashed', 'ok', s.result.replace(/^flashed:\s*/, ''));
+    setTimeout(() => location.reload(), 2500);          // fresh page: board check, ports, everything
+  } else {
+    toast('Flashing failed', 'bad', s.error);
+  }
+}
+
+function toast(text, kind, detail) {
+  const t = $('toast');
+  t.className = 'toast ' + kind;
+  t.innerHTML = '<svg class="i"><use href="#i-' + (kind === 'ok' ? 'chip' : 'info') + '"/></svg><div></div>';
+  t.lastChild.textContent = text;
+  if (detail) { const d = document.createElement('small'); d.textContent = detail; t.lastChild.appendChild(d); }
+  if (kind === 'bad') setTimeout(() => t.classList.add('d-none'), 8000);
+}
+
+function flashWatch() {
+  $('flashPanel').classList.remove('d-none');
+  $('flashGo').disabled = true; $('flashPort').disabled = true;
+  clearInterval(flashPoll); flashPoll = setInterval(flashShow, 600); flashShow();
+}
+
+$('flashBtn').onclick = () => {
+  const open = $('flashPanel').classList.toggle('d-none') === false;
+  if (open) { $('flashNote').lastChild.textContent = 'erases the whole board, then writes the firmware (also works on a blank board)'; $('flashNote').style.color = ''; flashReset(); loadFlashPorts(); }
+};
+$('flashClose').onclick = () => { if (!flashPoll) $('flashPanel').classList.add('d-none'); };
+$('flashGo').onclick = async () => {
+  const port = $('flashPort').value;
+  if (!flashArm) {                          // first click arms, second click (within 6 s) flashes
+    flashArm = Date.now(); flashSet('Confirm: erase + flash ' + port);
+    setTimeout(() => { if (flashArm && !flashPoll) flashReset(); }, 6000);
+    return;
+  }
+  const r = await post('/api/flash/start', {port});
+  if (!r.ok) { $('flashNote').lastChild.textContent = r.data.error || 'could not start'; $('flashNote').style.color = 'var(--bad)'; flashReset(); return; }
+  $('flashNote').style.color = '';
+  flashArm = 0;
+  flashWatch();
+};
+fetch('/api/flash/status').then(r => r.json()).then(s => { if (s.state === 'flashing') flashWatch(); });   // page reloaded while flashing
+
+tick(); setInterval(tick, 1000);
+checkBoard(); loadPictures(); updatePlan(); poll(); setInterval(poll, 1000);
+</script>
+</body>
+</html>

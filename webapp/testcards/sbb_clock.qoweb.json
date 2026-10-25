@@ -1,0 +1,197 @@
+{
+  "profiles": {
+    "SR 250 / FEC 1/2": {
+      "tuning": {
+        "size": "854x480",
+        "fps": 30,
+        "multipass": "disabled",
+        "rate": 1.055
+      },
+      "step": 0,
+      "passed": true,
+      "tested": "2026-10-03 18:51",
+      "evidence": "overflows 0 -> 0, null 7.5% -> 4.9%, video 196.1 -> 202.7 kb/s, 3 test(s)"
+    },
+    "SR 250 / FEC 2/3": {
+      "tuning": {
+        "size": "960x540",
+        "fps": 30,
+        "multipass": "disabled",
+        "rate": 1.081
+      },
+      "step": 0,
+      "passed": true,
+      "tested": "2026-10-03 18:51",
+      "evidence": "overflows 0 -> 0, null 9.4% -> 5.0%, video 255.6 -> 269.6 kb/s, 3 test(s)"
+    },
+    "SR 250 / FEC 3/4": {
+      "tuning": {
+        "size": "960x540",
+        "fps": 30,
+        "multipass": "disabled",
+        "rate": 1.056
+      },
+      "step": 0,
+      "passed": true,
+      "tested": "2026-10-03 18:52",
+      "evidence": "overflows 0 -> 0, null 7.6% -> 4.2%, video 298.5 -> 310.8 kb/s, 3 test(s)"
+    },
+    "SR 250 / FEC 4/5": {
+      "tuning": {
+        "size": "960x540",
+        "fps": 30,
+        "multipass": "disabled",
+        "rate": 1.088
+      },
+      "step": 0,
+      "passed": true,
+      "tested": "2026-10-03 18:52",
+      "evidence": "overflows 0 -> 0, null 8.0% -> 4.0%, video 319.4 -> 335.0 kb/s, 3 test(s)"
+    },
+    "SR 333 / FEC 1/2": {
+      "tuning": {
+        "size": "960x540",
+        "fps": 30,
+        "multipass": "disabled",
+        "rate": 1.081
+      },
+      "step": 0,
+      "passed": true,
+      "tested": "2026-10-03 18:53",
+      "evidence": "overflows 0 -> 0, null 9.4% -> 6.2%, video 254.3 -> 264.6 kb/s, 3 test(s)"
+    },
+    "SR 333 / FEC 2/3": {
+      "tuning": {
+        "size": "1280x720",
+        "fps": 30,
+        "multipass": "disabled",
+        "rate": 1.159
+      },
+      "step": 0,
+      "passed": true,
+      "tested": "2026-10-03 18:53",
+      "evidence": "overflows 0 -> 0, null 14.9% -> 5.6%, video 321.6 -> 361.4 kb/s, 3 test(s)"
+    },
+    "SR 333 / FEC 3/4": {
+      "tuning": {
+        "size": "1280x720",
+        "fps": 30,
+        "multipass": "disabled",
+        "rate": 1.231
+      },
+      "step": 0,
+      "passed": true,
+      "tested": "2026-10-03 18:53",
+      "evidence": "overflows 0 -> 0, null 19.5% -> 10.3%, video 344.7 -> 389.2 kb/s, 3 test(s)"
+    },
+    "SR 333 / FEC 4/5": {
+      "tuning": {
+        "size": "1280x720",
+        "fps": 30,
+        "multipass": "disabled",
+        "rate": 1.289
+      },
+      "step": 0,
+      "passed": true,
+      "tested": "2026-10-03 18:54",
+      "evidence": "overflows 0 -> 0, null 22.8% -> 10.4%, video 353.9 -> 417.7 kb/s, 3 test(s)"
+    },
+    "SR 500 / FEC 1/2": {
+      "tuning": {
+        "size": "1280x720",
+        "fps": 30,
+        "multipass": "disabled",
+        "rate": 1.224
+      },
+      "step": 0,
+      "passed": true,
+      "tested": "2026-10-03 18:54",
+      "evidence": "overflows 0 -> 0, null 19.1% -> 10.7%, video 346.2 -> 386.8 kb/s, 3 test(s)"
+    },
+    "SR 500 / FEC 2/3": {
+      "tuning": {
+        "size": "1600x900",
+        "fps": 30,
+        "multipass": "disabled",
+        "rate": 1.3
+      },
+      "step": 0,
+      "passed": true,
+      "tested": "2026-10-03 18:55",
+      "evidence": "overflows 0 -> 0, null 25.6% -> 10.8%, video 410.6 -> 506.1 kb/s, 2 test(s)"
+    },
+    "SR 500 / FEC 3/4": {
+      "tuning": {
+        "size": "1600x900",
+        "fps": 30,
+        "multipass": "disabled",
+        "rate": 1.3
+      },
+      "step": 0,
+      "passed": true,
+      "tested": "2026-10-03 18:55",
+      "evidence": "overflows 0 -> 0, null 28.9% -> 20.3%, video 446.2 -> 508.7 kb/s, 2 test(s)"
+    },
+    "SR 500 / FEC 4/5": {
+      "tuning": {
+        "size": "1600x900",
+        "fps": 30,
+        "multipass": "disabled",
+        "rate": 1.3
+      },
+      "step": 0,
+      "passed": true,
+      "tested": "2026-10-03 18:55",
+      "evidence": "overflows 0 -> 0, null 32.6% -> 25.7%, video 452.5 -> 506.1 kb/s, 2 test(s)"
+    },
+    "SR 1000 / FEC 1/2": {
+      "tuning": {
+        "size": "1920x1080",
+        "fps": 30,
+        "multipass": "disabled",
+        "rate": 1.3
+      },
+      "step": 0,
+      "passed": true,
+      "tested": "2026-10-03 18:55",
+      "evidence": "overflows 0 -> 0, null 37.6% -> 35.0%, video 470.5 -> 496.0 kb/s, 2 test(s)"
+    },
+    "SR 1000 / FEC 2/3": {
+      "tuning": {
+        "size": "1920x1080",
+        "fps": 30,
+        "multipass": "disabled",
+        "rate": 1.3
+      },
+      "step": 0,
+      "passed": true,
+      "tested": "2026-10-03 18:56",
+      "evidence": "overflows 0 -> 0, null 50.2% -> 44.5%, video 510.8 -> 584.1 kb/s, 2 test(s)"
+    },
+    "SR 1000 / FEC 3/4": {
+      "tuning": {
+        "size": "1920x1080",
+        "fps": 30,
+        "multipass": "disabled",
+        "rate": 1.3
+      },
+      "step": 0,
+      "passed": true,
+      "tested": "2026-10-03 18:56",
+      "evidence": "overflows 0 -> 0, null 55.6% -> 45.6%, video 511.9 -> 657.9 kb/s, 2 test(s)"
+    },
+    "SR 1000 / FEC 4/5": {
+      "tuning": {
+        "size": "1920x1080",
+        "fps": 30,
+        "multipass": "disabled",
+        "rate": 1.3
+      },
+      "step": 0,
+      "passed": true,
+      "tested": "2026-10-03 18:56",
+      "evidence": "overflows 0 -> 0, null 53.9% -> 46.9%, video 548.3 -> 656.5 kb/s, 2 test(s)"
+    }
+  },
+  "source": "SBB clock (clock_card.py), found by tools/tune_clock.py"
+}

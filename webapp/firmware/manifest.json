@@ -1,0 +1,30 @@
+{
+  "name": "ESP32-DATV firmware (SP8ESA) for the XIAO ESP32-C3, PTT on GPIO10 (D10)",
+  "c3cast_version": "0.3.0",
+  "chip": "esp32c3",
+  "flash": {
+    "mode": "dio",
+    "freq": "80m",
+    "size": "4MB"
+  },
+  "files": [
+    {
+      "offset": "0x0",
+      "file": "bootloader.bin",
+      "size": 13408,
+      "sha256": "b81ac67ac3eade6031e6b9df275b3d0b494ad9e092181fdc4f7dfc4f5f20627e"
+    },
+    {
+      "offset": "0x8000",
+      "file": "partitions.bin",
+      "size": 3072,
+      "sha256": "7f00b6c042a89b15b0cac534f82ed988caf29278ff5700b0c511eb1b5bb7c820"
+    },
+    {
+      "offset": "0x10000",
+      "file": "firmware.bin",
+      "size": 716064,
+      "sha256": "5b27077988a55a452b4ee2519258c2177d3e72b22a53f6995deb70458d9455fa"
+    }
+  ]
+}

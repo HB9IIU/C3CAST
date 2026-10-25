@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ app_name }} setup</title>
+  <link rel="stylesheet" href="/static/c3cast.css?v={{ app_version }}">
+</head>
+<body>
+{% include "_icons.html" %}
+<div class="wrap" style="max-width:55rem">
+
+  <header class="bar">
+    <svg class="i logo"><use href="#i-logo"/></svg>
+    <h1 class="brand">{{ app_name }} setup<small>v{{ app_version }} · by HB9IIU</small></h1>
+    <span class="grow"></span>
+    <a href="/" class="btn"><svg class="i"><use href="#i-back"/></svg>Transmitter</a>
+  </header>
+
+  <section class="panel">
+    <div class="ph"><svg class="i"><use href="#i-clock"/></svg>SBB clock card</div>
+    <div class="pb">
+      <div class="two field">
+        <div>
+          <div class="lab"><label for="callsign">Callsign</label></div>
+          <input id="callsign" class="inp" maxlength="12" autocomplete="off" spellcheck="false">
+        </div>
+        <div>
+          <div class="lab"><label for="locator">Locator</label></div>
+          <input id="locator" class="inp" maxlength="8" autocomplete="off" spellcheck="false" placeholder="JN36kl">
+        </div>
+      </div>
+      <div class="field">
+        <div class="lab"><label for="ahead">Clock lead time</label><b id="aheadVal"></b></div>
+        <input id="ahead" type="range" min="0" max="15" step="0.1">
+        <div class="note" style="margin-top:.3rem">Clock and tones run this far ahead, to read right once the signal has passed the encoder, the ESP and your receiver. Compare with a real clock and adjust. Shows this PC's local time.</div>
+      </div>
+      <div class="row field">
+        <button id="save" class="btn"><svg class="i"><use href="#i-save"/></svg>Save</button>
+        <span id="msg" class="note"></span>
+      </div>
+      <div class="screen"><img id="clockPreview" alt=""><span class="tag">PREVIEW</span></div>
+    </div>
+  </section>
+
+  <section class="panel" style="margin-top:.6rem">
+    <div class="ph"><svg class="i"><use href="#i-plug"/></svg>Saved board</div>
+    <div class="pb">
+      <div id="board" class="note field" style="font-size:.92rem;color:var(--text)"></div>
+      <div class="row">
+        <button id="forget" class="btn danger"><svg class="i"><use href="#i-refresh"/></svg>Forget board</button>
+        <span class="note">the next check scans the Espressif USB ports again</span>
+      </div>
+    </div>
+  </section>
+
+  <footer><span>{{ app_name }} v{{ app_version }} &middot; by HB9IIU</span><span>firmware: SP8ESA ESP32-DATV</span></footer>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+async function post(url, body) {
+  const r = await fetch(url, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body || {})});
+  return {ok: r.ok, data: await r.json().catch(() => ({}))};
+}
+const say = (ok, text) => { $('msg').className = 'note ' + (ok ? 'ok-text' : 'bad-text'); $('msg').textContent = text; };
+function show(s) {
+  $('callsign').value = s.callsign; $('locator').value = s.locator; $('ahead').value = s.clock_ahead;
+  $('aheadVal').textContent = Number(s.clock_ahead).toFixed(1) + ' s';
+  $('board').textContent = s.board.port ? `${s.board.port} · USB serial ${s.board.serial || 'unknown'}` : 'none saved';
+  $('clockPreview').src = '/api/clock-preview.png?' + Date.now();
+}
+async function load() { show(await (await fetch('/api/setup')).json()); }
+$('ahead').oninput = () => $('aheadVal').textContent = Number($('ahead').value).toFixed(1) + ' s';
+$('save').onclick = async () => {
+  const r = await post('/api/setup', {callsign: $('callsign').value, locator: $('locator').value, clock_ahead: $('ahead').value});
+  say(r.ok, r.ok ? 'saved' : (r.data.error || 'could not save'));
+  if (r.ok) load();
+};
+$('forget').onclick = async () => {
+  const r = await post('/api/connection/forget');
+  say(r.ok, r.ok ? 'board forgotten' : (r.data.error || 'could not forget'));
+  load();
+};
+load();
+</script>
+</body>
+</html>
