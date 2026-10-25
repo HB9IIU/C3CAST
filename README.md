@@ -11,6 +11,8 @@ C3CAST is a simple helper around the excellent **[ESP32-DATV](https://github.com
 **Kacper SP8ESA**. His firmware does the real work: it turns the ESP32-C3's own Wi-Fi radio into a DVB-S / DVB-S2
 transmitter on 13 cm. Please read his project for how it works, its measurements and its limits; this page does not repeat them.
 
+# 🔌 PLUG &nbsp;·&nbsp; ⚡ FLASH &nbsp;·&nbsp; ▶ PLAY
+
 C3CAST only wraps it for a **Seeed Studio XIAO ESP32-C3** so that a ham can get on the air without a toolchain:
 
 1. **Plug** the XIAO into a USB port (the native USB port, no extra adapter).
@@ -67,6 +69,15 @@ if it does not, use **Flash**. Set your callsign, locator and clock lead time on
 - The signal comes from the chip's DAC, so unwanted **images** are present (SP8ESA shows them in his plots). Use a proper
   **filter** before any amplifier, and check the spectrum on a bench first. Start with a dummy load or attenuator.
 - C3CAST is made for experiments, not for calibrated power: see *Output level* in `docs/BUILD_AND_TEST_NOTES.md`.
+
+## Bench test
+
+No spectrum analyser at hand? HB9IIU's **[Pocket QO-100 Spectrum Viewer](https://github.com/HB9IIU/ESP32-CYD-pocket-qo-100-spectrum-viewer)**
+(an ESP32 "Cheap Yellow Display") listens in the 2401-2410 MHz band and draws a live spectrum and waterfall. Put it near the XIAO and
+C3CAST's 2405.000 MHz shows up as a TX slot, so you can see at a glance that the signal is really on the air, with no cable involved.
+
+It is a receive-only *"is it transmitting?"* indicator with relative levels, not a measurement. To look at images and spurs, use a
+spectrum analyser or an SDR with proper attenuation. Never connect the transmitter output directly to the viewer.
 
 ## Status
 
