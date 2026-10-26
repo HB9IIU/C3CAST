@@ -49,8 +49,12 @@ if not (ff / "bin" / "ffmpeg.exe").is_file():
     sys.exit("tools/ffmpeg/bin/ffmpeg.exe is missing")
 (OUT / "tools" / "ffmpeg" / "bin").mkdir(parents=True)
 shutil.copy2(ff / "bin" / "ffmpeg.exe", OUT / "tools" / "ffmpeg" / "bin" / "ffmpeg.exe")
-shutil.copytree(ff / "licenses", OUT / "tools" / "ffmpeg" / "licenses")
-shutil.copy2(ff / "README.txt", OUT / "tools" / "ffmpeg" / "README.txt")
+# the old notices in tools/ffmpeg/licenses describe the previous (FDK) build; the package gets the notice for this GPL build
+lic = OUT / "tools" / "ffmpeg" / "licenses"
+shutil.copytree(ff / "licenses", lic, ignore=shutil.ignore_patterns("FDK-AAC-NOTICE.txt", "FFmpeg-NOTICE.txt"))
+shutil.copy2(ROOT / "docs" / "FFMPEG-NOTICE.txt", lic / "FFmpeg-NOTICE.txt")
+shutil.copy2(ff / "buildconf.txt", lic / "buildconf.txt")
+shutil.copy2(ROOT / "docs" / "FFMPEG-NOTICE.txt", OUT / "tools" / "ffmpeg" / "README.txt")
 (OUT / "pictures").mkdir()
 for pic in (ROOT / "webapp" / "pictures").iterdir():
     if pic.is_file():
@@ -71,8 +75,7 @@ shutil.copy2(ROOT / "LICENSE.upstream", OUT / "LICENSE-firmware-SP8ESA.txt")
     "\r\n"
     "Licence: PolyForm Noncommercial 1.0.0. LICENSE covers C3CAST (HB9IIU); LICENSE-firmware-SP8ESA.txt covers the\r\n"
     "ESP32-DATV firmware by SP8ESA that C3CAST flashes to the board.\r\n"
-    "NOTE: tools\\ffmpeg is a GPL build (x265, NVENC, native AAC). Its matching source and notices are not included yet:\r\n"
-    "do not pass this package on until they are (docs/RELEASE_CHECKLIST.md in the project).\r\n",
+    "ffmpeg (in the tools folder) is a GPL build: its licence, notices and where to get its source are in tools/ffmpeg/README.txt.\r\n",
     encoding="utf-8")
 
 zip_path = shutil.make_archive(str(DIST / NAME), "zip", DIST, NAME)

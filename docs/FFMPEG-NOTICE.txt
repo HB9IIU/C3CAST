@@ -1,0 +1,32 @@
+FFmpeg in the C3CAST portable package
+=====================================
+
+The portable package contains ffmpeg.exe and ffprobe.exe (tools/ffmpeg/bin). They are separate command-line programs
+that C3CAST starts as child processes. They are NOT part of C3CAST's own code and are not covered by C3CAST's licence.
+
+Licence
+  GNU General Public License, version 2 or later (full text: COPYING.GPLv2 in this folder).
+  The build uses --enable-gpl (libx265) and does not use --enable-nonfree, --enable-version3 or FDK AAC.
+  FFmpeg's own licence information: FFmpeg-LGPL-2.1.txt and https://ffmpeg.org/legal.html
+
+What is in this build
+  FFmpeg   N-128097-g46f23be8b (git commit 46f23be8b, unmodified)    https://ffmpeg.org
+  x265     4.3+73-g5143a2a (git commit 5143a2a, one local build patch)  https://www.x265.org
+  Encoders used by C3CAST: libx265 (software H.265), hevc_nvenc (NVIDIA GPU H.265), native aac (AAC-LC).
+  Also linked: FreeType, HarfBuzz, Fontconfig, zlib, bzip2, liblzma, libiconv and the NVIDIA ffnvcodec headers, each under its own licence.
+  Compiled with GCC 16.2.0 (MSYS2/MABS). Full configure line: buildconf.txt in this folder.
+
+Corresponding source (GPL)
+  The exact source of this build is published with every C3CAST release, next to the package, so you do not have to rely on
+  an upstream link staying available:
+    ffmpeg-N-128097-g46f23be8b-source.zip   FFmpeg source at commit 46f23be8b
+    x265-4.3+73-g5143a2a-source.zip         x265 source at commit 5143a2a
+    x265-local-build.patch                  the one change made to x265 at build time
+    ffmpeg-buildconf.txt                    the configure options used
+    build_c3cast_ffmpeg.bat                 the build script
+    SHA256SUMS.txt                          checksums of the files above
+  Releases: https://github.com/HB9IIU/C3CAST/releases
+  Upstream: https://git.ffmpeg.org/ffmpeg.git and https://bitbucket.org/multicoreware/x265_git
+
+C3CAST itself (HB9IIU) and the ESP32-DATV firmware (SP8ESA) are under PolyForm Noncommercial 1.0.0; see LICENSE and
+LICENSE-firmware-SP8ESA.txt in the package folder.
