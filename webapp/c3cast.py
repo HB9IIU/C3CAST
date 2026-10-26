@@ -5,6 +5,8 @@ import sys
 def main():
     if len(sys.argv) > 2 and sys.argv[1] == "--worker":
         name, rest = sys.argv[2], sys.argv[3:]
+        for stream in (sys.stdout, sys.stderr):     # from source the helpers run as "python -u"; here the pipe must not buffer
+            stream.reconfigure(line_buffering=True)
         if name == "runner":                    # upstream tx_dvbs.py with a clean stop (the transmitter)
             import runner
             runner.main(rest)
