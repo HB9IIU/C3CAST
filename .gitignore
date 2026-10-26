@@ -20,8 +20,7 @@ sdkconfig.seeed_xiao_esp32c3
 media/
 
 # Editor files: keep only the task that starts the web app
-.vscode/*
-!.vscode/tasks.json
+.vscode/
 
 # Personal notes and the duplicate board photo in the root (docs/board-pic.png is used)
 projecBrief.txt
