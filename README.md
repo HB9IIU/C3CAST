@@ -1,6 +1,4 @@
-<p align="center"><img src="docs/logo.png" width="120" alt="C3CAST logo"></p>
-
-# C3CAST
+# <img src="docs/logo.png" height="44" align="absmiddle" alt=""> C3CAST
 
 ### The 5 EUR DATV modulator
 
