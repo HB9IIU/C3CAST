@@ -14,10 +14,8 @@ The board costs about 5 EUR. To get on the air via QO-100 you also need RF outpu
   <b>&#9654; Press to play the demo video</b>
 </p>
 
-<p align="center">
-  <b><a href="https://github.com/HB9IIU/C3CAST/releases/latest">&#11015; Download C3CAST for Windows</a></b>
-  &nbsp;·&nbsp; Windows 10/11 &nbsp;·&nbsp; no installation
-</p>
+<h1 align="center"><a href="https://github.com/HB9IIU/C3CAST/releases/latest">&#11015; Download C3CAST for Windows</a></h1>
+<p align="center">Windows 10/11 &nbsp;·&nbsp; no installation &nbsp;·&nbsp; unzip and double-click</p>
 
 C3CAST is a simple helper around the excellent **[ESP32-DATV](https://github.com/SP8ESA/ESP32-DATV)** firmware by
 **Kacper SP8ESA**. His firmware does the real work: it turns the ESP32-C3's own Wi-Fi radio into a DVB-S / DVB-S2
