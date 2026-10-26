@@ -26,3 +26,7 @@ media/
 # Personal notes and the duplicate board photo in the root (docs/board-pic.png is used)
 projecBrief.txt
 /board-pic.png
+
+# Portable build outputs
+build/
+dist/

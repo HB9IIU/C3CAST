@@ -125,7 +125,7 @@ if not exist "%FFBIN%" (
 if errorlevel 1 exit /b 1
 findstr /c:"--enable-nonfree" /c:"--enable-libfdk-aac" build\c3cast-buildconf.txt >nul && goto :bad
 findstr /c:"--enable-gpl" build\c3cast-buildconf.txt >nul || goto :bad
-findstr /c:"--enable-version3" build\c3cast-buildconf.txt >nul || goto :bad
+rem GPLv2-or-later is also valid; MABS may omit --enable-version3.
 "%FFBIN%" -hide_banner -encoders >build\c3cast-encoders.txt 2>&1
 if errorlevel 1 exit /b 1
 findstr /c:"libfdk_aac" build\c3cast-encoders.txt >nul && goto :bad

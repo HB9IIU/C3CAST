@@ -1,11 +1,18 @@
+<p align="center"><img src="docs/logo.png" width="120" alt="C3CAST logo"></p>
+
 # C3CAST
 
 ### The 5 EUR DATV modulator
 
 **Plug. Flash. Play.** A small web console for DVB-S2 amateur TV from a low-cost ESP32-C3 board.
 
-<!-- screenshot: add docs/screenshot.png (the main page) -->
-![C3CAST](docs/screenshot.png)
+<p align="center">
+  <a href="https://youtu.be/eaLuslmMdow">
+    <img src="https://i.ytimg.com/vi/eaLuslmMdow/hqdefault.jpg" alt="C3CAST demo video" width="640">
+  </a>
+  <br>
+  <b>&#9654; Press to play the demo video</b>
+</p>
 
 C3CAST is a simple helper around the excellent **[ESP32-DATV](https://github.com/SP8ESA/ESP32-DATV)** firmware by
 **Kacper SP8ESA**. His firmware does the real work: it turns the ESP32-C3's own Wi-Fi radio into a DVB-S / DVB-S2
@@ -44,30 +51,44 @@ built and tested on this XIAO. SP8ESA's own project uses an ESP32-C3 SuperMini.
   board you pick and confirm. No Arduino IDE, no PlatformIO needed to use it.
 - **Three sources**: a PNG/JPG picture, a live **SBB station-clock test card**, or a **USB camera** with callsign, UTC time and a
   scrolling marquee on the picture.
-- **Link settings**: 2405.000 MHz, DVB-S2 QPSK, symbol rates 125 / 250 / 333 / 500 / 1000 kS/s, FEC 3/4 or 4/5, output level 1 to 480.
-- **Sensible video settings automatically**: picture size, bitrate and audio follow the symbol rate (H.265 and HE-AAC, the same
+- **Frequency**: click a free slot on the **live QO-100 wideband spectrum** (the BATC feed) or just type it
+  (2300 to 2450 MHz, always possible, also offline and for bench tests). The page shows the downlink slot and whether it is free.
+- **Link settings**: DVB-S2 QPSK, symbol rates 125 / 250 / 333 / 500 / 1000 kS/s, FEC 3/4 or 4/5, output level 1 to 480.
+- **Sensible video settings automatically**: picture size, bitrate and audio follow the symbol rate (H.265 and AAC-LC, the same
   strategy as QOCAST). It uses the NVIDIA GPU encoder when there is one, otherwise software encoding. Nothing to configure.
 - **PTT output on D10**: high while RF is on, low otherwise; to key a relay or an amplifier through its own driver.
 - **Finds the board by itself** (and remembers it), shows UTC, runs offline (no internet needed), one Start/Stop button.
 
 ## Quick start (Windows)
 
-You need: a XIAO ESP32-C3, a USB cable, Windows, Python 3.11, and an ffmpeg build with `libfdk_aac` (see *Notes* below).
+No installation, no Python, no drivers to set up:
+
+1. Download the portable package **C3CAST-Portable-x64** (the `.zip` on the Releases page) and unzip it anywhere.
+2. Double-click **C3CAST.exe**. A small window opens (close it to quit) and your browser shows the page.
+3. Plug in the XIAO. If the page does not say *board connected*, press **Flash**.
+
+Your own pictures go in the `pictures` folder next to the exe, your settings are saved in `config.json` there, and callsign, locator
+and clock lead time are on the **Setup** page.
+
+### Build from source (developers)
+
+You need Python 3.11, and an ffmpeg with the H.265 and AAC encoders in `tools/ffmpeg/bin/` (it is not part of this repository).
 
 ```
 py -3.11 -m venv .venv-host
-.venv-host\Scripts\pip install -r webapp\requirements.txt
-.venv-host\Scripts\python webapp\app.py
+.venv-host\Scripts\pip install -r webapp
+equirements.txt
+.venv-host\Scripts\python webapppp.py
 ```
 
-Open <http://127.0.0.1:5000>. In VS Code the task **DATV: Start web app** does the same. The page then says *board connected*;
-if it does not, use **Flash**. Set your callsign, locator and clock lead time on the **Setup** page.
+Then open <http://127.0.0.1:5000>. To build the portable package: `python tools\export_firmware.py`, then
+`python toolsuild_portable.py` (needs `pip install pyinstaller`); the result is in `dist/`.
 
 ## Please read before transmitting
 
 - **Licensed radio amateurs only.** You are responsible for the frequency, power and bandwidth you use.
-- The signal comes from the chip's DAC, so unwanted **images** are present (SP8ESA shows them in his plots). Use a proper
-  **filter** before any amplifier, and check the spectrum on a bench first. Start with a dummy load or attenuator.
+- **For on-air operation, use suitable RF output filtering and verify the transmitted spectrum**, as recommended by SP8ESA.
+  See the [upstream project for measurements](https://github.com/SP8ESA/ESP32-DATV#spectra). Start bench tests with a dummy load or attenuator.
 - C3CAST is made for experiments, not for calibrated power: see *Output level* in `docs/BUILD_AND_TEST_NOTES.md`.
 
 ## Bench test
@@ -81,14 +102,14 @@ spectrum analyser or an SDR with proper attenuation. Never connect the transmitt
 
 ## Status
 
-Version **0.3.0**. Verified on air so far: DVB-S2 QPSK at 500 kS/s with the USB camera source, received on a MiniTioune. The other
+Version **1.0.0-beta.1** (first beta). Verified on air so far: DVB-S2 QPSK at 500 kS/s with the USB camera source, received on a MiniTioune. The other
 symbol rates, FEC values and sources are checked offline (streams analysed without errors) but not all confirmed on air yet.
 The firmware comes from the SP8ESA project, so its limits apply: see his page for compatibility details.
 
 ## Notes
 
-- **ffmpeg** is not included: the build used here (H.265 NVENC/x265 plus FDK AAC) cannot be redistributed. Put an ffmpeg with those
-  encoders in `tools/ffmpeg/bin/` (QOCAST ships a suitable one).
+- **ffmpeg** (H.265 and AAC) is included in the portable package. When building from source, put one in `tools/ffmpeg/bin/`;
+  it is not part of this repository.
 - **Camera** support uses Windows DirectShow; other systems are not supported yet.
 - **Firmware source** is in `src/` (PlatformIO, ESP-IDF 6.1). To rebuild it: `pio run`, then `python tools/export_firmware.py`
   to refresh what the Flash button writes.
@@ -97,7 +118,7 @@ The firmware comes from the SP8ESA project, so its limits apply: see his page fo
 ## Credits and licence
 
 - **ESP32-DATV firmware: Kacper SP8ESA** (<https://github.com/SP8ESA/ESP32-DATV>). All the clever part is his work.
-- **QOCAST by HB9IIU**: the SBB clock card and the encoder settings (which come from DATV-Easy's automatic mode).
+- **BATC**: the live QO-100 wideband spectrum feed (`eshail.batc.org.uk`), shown read-only. It needs an internet connection.
 
 **Licence: PolyForm Noncommercial 1.0.0, the same as the firmware** (see `LICENSE`). Free for noncommercial use, which the licence
 explicitly says includes hobby projects and amateur pursuits. Anyone you pass a copy to must get the licence text and the

@@ -19,21 +19,24 @@ from flask import Flask, Response, abort, jsonify, render_template, request, sen
 
 APP_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(APP_DIR))
+import bandplan  # noqa: E402
 import camera  # noqa: E402
+import paths  # noqa: E402
 import qo100_enc  # noqa: E402
 import flasher  # noqa: E402
 import version  # noqa: E402
 
-PICTURES = Path(os.environ.get("DATV_PICTURES", APP_DIR / "pictures"))
-CONFIG = APP_DIR / "config.json"                    # remembered board: {"port": "COM4", "serial": "<USB serial number>"}
-FREQ_MHZ = "2405.000"
+PICTURES = Path(os.environ.get("DATV_PICTURES", paths.DATA / "pictures"))
+CONFIG = paths.DATA / "config.json"                    # remembered board: {"port": "COM4", "serial": "<USB serial number>"}
+FREQ_DEFAULT = "2405.000"                           # uplink MHz until you choose another
+FREQ_MIN, FREQ_MAX = 2300.0, 2450.0                 # the firmware refuses anything outside; the whole signal must fit
 SYMBOL_RATES = (125000, 250000, 333000, 500000, 1000000)
 FECS = ("3/4", "4/5")
 LEVEL_MIN, LEVEL_MAX, LEVEL_DEFAULT = 1, 480, 100   # the firmware's own limits; narrow after measuring (see docs notes)
 MAX_SECONDS = 3600                                  # safety cap: a forgotten tab cannot transmit forever
 EXTS = {".png", ".jpg", ".jpeg"}
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder=str(paths.RESOURCE / "templates"), static_folder=str(paths.RESOURCE / "static"))
 lock = threading.Lock()
 conn = {"connected": False, "port": "", "serial": "", "info": "", "how": "", "candidates": [], "tried": []}
 tx = {"state": "idle", "proc": None, "t0": 0.0, "log": collections.deque(maxlen=60),
@@ -87,12 +90,28 @@ def save_config(port, serial_number):
     write_config(port=port, serial=serial_number)
 
 
-SETUP_DEFAULTS = {"callsign": "HB9IIU", "locator": "JN36kl", "clock_ahead": 5.0}
+SETUP_DEFAULTS = {"callsign": "NOCALL", "locator": "JNxxyy", "clock_ahead": 5.0}      # a fresh install: everyone sets their own on the Setup page
 
 
 def get_setup():
     cfg = load_config()
     return {k: cfg.get(k, v) for k, v in SETUP_DEFAULTS.items()}
+
+
+def get_freq():
+    return load_config().get("freq", FREQ_DEFAULT)
+
+
+def check_freq(value, sr):
+    """(uplink MHz as text with 3 decimals, error). The signal is about 1.35 x the symbol rate wide and must fit inside the band."""
+    try:
+        f = round(float(str(value).strip().replace(",", ".")), 3)
+    except ValueError:
+        return None, "frequency must be a number in MHz"
+    half = sr * 1.35 / 2e6                              # MHz
+    if not FREQ_MIN + half <= f <= FREQ_MAX - half:
+        return None, f"frequency must be {FREQ_MIN + half:.3f} to {FREQ_MAX - half:.3f} MHz at this symbol rate"
+    return f"{f:.3f}", ""
 
 
 def check_setup(d):
@@ -232,7 +251,7 @@ def same_origin_only():
 
 @app.get("/")
 def index():
-    return render_template("index.html", rates=SYMBOL_RATES, fecs=FECS, freq=FREQ_MHZ,
+    return render_template("index.html", rates=SYMBOL_RATES, fecs=FECS, freq=get_freq(),
                            lmin=LEVEL_MIN, lmax=LEVEL_MAX, ldef=LEVEL_DEFAULT, max_seconds=MAX_SECONDS)
 
 
@@ -418,6 +437,14 @@ def api_camera_preview():
                     mimetype="multipart/x-mixed-replace; boundary=frame", headers={"Cache-Control": "no-store"})
 
 
+@app.get("/api/bandplan")
+def api_bandplan():
+    """QO-100 slot rules (QOCAST's bandplan.py) for the spectrum, the downlink-to-uplink offset and the remembered frequency."""
+    return jsonify(offset_mhz=bandplan.DOWNLINK_TO_UPLINK_OFFSET_KHZ / 1000,
+                   allowed={str(sr): [k / 1000 for k in bandplan.allowed_slots(sr // 1000)] for sr in SYMBOL_RATES},
+                   freq=get_freq(), min=FREQ_MIN, max=FREQ_MAX)
+
+
 @app.get("/api/plan")
 def api_plan():
     try:
@@ -461,6 +488,9 @@ def api_start():
         time.sleep(0.5)                     # let DirectShow release it
     if sr not in SYMBOL_RATES or fec not in FECS or not LEVEL_MIN <= level <= LEVEL_MAX:
         return jsonify(error="value outside the allowed list"), 400
+    freq, freq_error = check_freq(d.get("freq", get_freq()), sr)
+    if freq_error:
+        return jsonify(error=freq_error), 400
     with lock:
         if tx["proc"] is not None or tx["state"] in ("starting", "stopping"):
             return jsonify(error="already transmitting"), 409
@@ -472,13 +502,13 @@ def api_start():
         tx.update(state="starting", error="", buffer="", packets="", stopping=False)
         tx["log"].clear()
         tx["settings"] = {"source": source, "picture": {"picture": name, "clock": "SBB clock", "camera": camera_name}[source],
-                          "sr": sr, "fec": fec, "level": level}
+                          "sr": sr, "fec": fec, "level": level, "freq": freq}
     try:
         setup = get_setup()
-        cmd = [sys.executable, "-u", str(APP_DIR / "stream_tx.py"), "--source", source,
+        cmd = [*paths.worker_cmd("stream_tx"), "--source", source,
                "--picture", str(PICTURES / name) if source == "picture" else "",
                "--camera", camera_name, "--mic", mic,
-               "--port", port, "--freq", FREQ_MHZ, "--baud", str(sr), "--fec", fec, "--amp", str(level),
+               "--port", port, "--freq", freq, "--baud", str(sr), "--fec", fec, "--amp", str(level),
                "--seconds", str(MAX_SECONDS), "--callsign", setup["callsign"], "--locator", setup["locator"],
                "--ahead", str(setup["clock_ahead"])]
         flags = subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0
@@ -488,6 +518,7 @@ def api_start():
         with lock:
             tx.update(state="error", error=str(e))
         return jsonify(error=str(e)), 500
+    write_config(freq=freq)                              # remembered for next time
     with lock:
         tx["proc"] = proc
     threading.Thread(target=reader, args=(proc,), daemon=True).start()
@@ -499,7 +530,83 @@ def api_stop():
     return jsonify(ok=stop_tx())
 
 
-if __name__ == "__main__":
+@app.route("/favicon.ico")
+def favicon():
+    return send_from_directory(app.static_folder, "c3cast.ico")
+
+
+@app.post("/api/quit")
+def api_quit():
+    """The END button: stop any transmission, then shut the server down (after this reply has been sent)."""
+    stop_tx()
+    if SERVER:
+        threading.Timer(0.5, SERVER[0].shutdown).start()
+    return jsonify(ok=True)
+
+
+SERVER = []        # the running server, for /api/quit
+
+
+def free_port(first):
+    """The first free local port from `first` on (a second C3CAST, or another program, may hold 5000)."""
+    import socket
+    for port in range(first, first + 20):
+        with socket.socket() as s:
+            try:
+                s.bind(("127.0.0.1", port))
+                return port
+            except OSError:
+                continue
+    raise SystemExit(f"no free local port from {first} on")
+
+
+WELCOME = """
+  ============================================================
+    {name} v{version}   -   the 5 EUR DATV modulator
+    Plug. Flash. Play.                          by HB9IIU
+  ============================================================
+
+    Welcome, and thank you for trying C3CAST!
+
+    Your browser opens at   {url}
+    (if it does not, copy that address into your browser)
+
+    Keep this window open while you use C3CAST;
+    close it to quit.
+
+    Licensed radio amateurs only. Use a filter before any
+    amplifier. Firmware: ESP32-DATV by SP8ESA.
+
+    73 de HB9IIU
+  ============================================================
+"""
+
+
+def serve():
+    """Run the web app. It opens the browser (C3CAST_NO_BROWSER=1 stops that; C3CAST_PORT sets the first port).
+    The server is started directly (not through app.run), so Flask's and Werkzeug's development-server banner, with its red
+    warning, and the line per request stay out of the console: only the welcome note and real errors show."""
+    import logging
+    from werkzeug.serving import make_server
     PICTURES.mkdir(parents=True, exist_ok=True)
     threading.Thread(target=qo100_enc.video_encoder, daemon=True).start()     # GPU or software: decided once, silently
-    app.run(host="127.0.0.1", port=5000, threaded=True)
+    port = free_port(int(os.environ.get("C3CAST_PORT", "5000")))
+    url = f"http://127.0.0.1:{port}"
+    logging.getLogger("werkzeug").setLevel(logging.ERROR)
+    server = make_server("127.0.0.1", port, app, threaded=True)
+    SERVER.append(server)
+    print(WELCOME.format(name=version.APP_NAME, version=version.__version__, url=url), flush=True)
+    if not os.environ.get("C3CAST_NO_BROWSER"):
+        import webbrowser
+        threading.Timer(1.2, webbrowser.open, [url]).start()
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        stop_tx()
+    print(flush=True)
+    print("  73 de HB9IIU", flush=True)
+    print(flush=True)
+
+
+if __name__ == "__main__":
+    serve()

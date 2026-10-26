@@ -16,7 +16,9 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
 # Copied from HB9IIU/QOCAST clock_card.py. Only change: FONT_DIR (QOCAST's runtime_paths) is local here.
-FONT_DIR = Path(__file__).resolve().parent / "fonts"
+import paths
+
+FONT_DIR = paths.RESOURCE / "fonts"
 
 WIDTH, HEIGHT = 1280, 720       # the layout below is drawn for 720p
 FPS = 30

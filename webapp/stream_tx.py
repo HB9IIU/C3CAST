@@ -18,6 +18,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent / "host"))
 sys.path.insert(0, str(HERE))
 import clock_card  # noqa: E402
+import paths  # noqa: E402
 import qo100_enc  # noqa: E402
 import version  # noqa: E402
 
@@ -103,7 +104,7 @@ def main(argv=None):
         return 1
     s = source_settings(a.source, sr_ks, a.fec)
     runner = subprocess.Popen(
-        [sys.executable, "-u", str(HERE / "runner.py"), "--port", a.port, "--freq", a.freq, "--baud", str(a.baud),
+        [*paths.worker_cmd("runner"), "--port", a.port, "--freq", a.freq, "--baud", str(a.baud),
          "--dvbs2", "--mod", "qpsk", "--fec", a.fec, "--ts", "-", "--amp", str(a.amp), "--seconds", str(a.seconds),
          "--pa-enable"],                    # arms the PTT output (GPIO10 / D10): high while RF is on, low otherwise
         stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)

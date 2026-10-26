@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ app_name }} setup</title>
+  <link rel="icon" type="image/png" href="/static/favicon.png">
   <link rel="stylesheet" href="/static/c3cast.css?v={{ app_version }}">
 </head>
 <body>
@@ -11,8 +12,8 @@
 <div class="wrap" style="max-width:55rem">
 
   <header class="bar">
-    <svg class="i logo"><use href="#i-logo"/></svg>
-    <h1 class="brand">{{ app_name }} setup<small>v{{ app_version }} · by HB9IIU</small></h1>
+    <img class="logo" src="/static/logo.svg" alt="">
+    <h1 class="brand">{{ app_name }} setup<small>v{{ app_version }} · by HB9IIU</small>{% if 'beta' in app_version %}<span class="beta">BETA</span>{% endif %}</h1>
     <span class="grow"></span>
     <a href="/" class="btn"><svg class="i"><use href="#i-back"/></svg>Transmitter</a>
   </header>

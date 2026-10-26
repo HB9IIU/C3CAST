@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ app_name }}</title>
+  <link rel="icon" type="image/png" href="/static/favicon.png">
   <link rel="stylesheet" href="/static/c3cast.css?v={{ app_version }}">
 </head>
 <body>
@@ -12,16 +13,30 @@
 <div class="wrap">
 
   <header class="bar">
-    <svg class="i logo"><use href="#i-logo"/></svg>
-    <h1 class="brand">{{ app_name }}<small>v{{ app_version }} · by HB9IIU</small></h1>
+    <img class="logo" src="/static/logo.svg" alt="">
+    <h1 class="brand">{{ app_name }}<small>v{{ app_version }} · by HB9IIU</small>{% if 'beta' in app_version %}<span class="beta">BETA</span>{% endif %}</h1>
     <span class="grow"></span>
     <span class="utc" id="utc"><b>--:--:--</b> UTC</span>
     <span id="state" class="chip"><i class="led"></i><span id="stateText">idle</span></span>
     <a href="/setup" class="btn" title="Setup"><svg class="i"><use href="#i-sliders"/></svg>Setup</a>
+    <button id="quitBtn" class="btn danger" title="Stop any transmission and close C3CAST"><svg class="i"><use href="#i-power"/></svg>END</button>
   </header>
+  <div id="askQuit" class="modal d-none">
+    <div class="panel box">
+      <div class="ph"><svg class="i"><use href="#i-power"/></svg>End C3CAST</div>
+      <div class="pb">
+        <p>Stops any transmission and closes C3CAST.</p>
+        <div class="row" style="justify-content:center">
+          <button id="quitYes" class="btn danger" type="button"><svg class="i"><use href="#i-power"/></svg>END</button>
+          <button id="quitNo" class="btn" type="button">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="bye" class="modal off d-none"><div><img class="logo" src="/static/logo.svg" alt=""><p>C3CAST has stopped.<br>73 de HB9IIU</p><small>you can close this tab</small></div></div>
 
   <div class="dev">
-    <span id="conn" class="chip"><i class="led"></i><span id="connText">checking</span></span>
+    <span id="conn" class="chip wait"><i class="led"></i><span id="connText">checking</span></span>
     <span id="connInfo" class="info"></span>
     <span class="grow"></span>
     <button id="flashBtn" class="btn" title="Flash the firmware to a board"><svg class="i"><use href="#i-chip"/></svg>Flash</button>
@@ -79,24 +94,34 @@
 
     <section class="panel">
       <div class="ph"><svg class="i"><use href="#i-wave"/></svg>Link<span class="grow"></span>
-        <span style="letter-spacing:.06em;text-transform:none;font-weight:400">{{ freq }} MHz &middot; DVB-S2 QPSK</span></div>
+        <span style="letter-spacing:.06em;text-transform:none;font-weight:400"><span id="hdrFreq">{{ freq }}</span> MHz &middot; DVB-S2 QPSK</span></div>
       <div class="pb">
         <div class="field">
-          <div class="lab">Symbol rate<span>kS/s</span></div>
-          <div class="seg">
-            {% for r in rates %}
-            <input type="radio" name="sr" id="sr{{ r }}" value="{{ r }}" {{ 'checked' if r == 500000 }}>
-            <label for="sr{{ r }}">{{ r // 1000 }}</label>
-            {% endfor %}
-          </div>
+          <div class="lab">QO-100 wideband<span id="specChip" class="chip"><i class="led"></i><span id="specChipText">connecting</span></span></div>
+          <canvas id="spectrum" class="spectrum"></canvas>
         </div>
         <div class="field">
-          <div class="lab">FEC</div>
-          <div class="seg fit">
-            {% for f in fecs %}
-            <input type="radio" name="fec" id="fec{{ loop.index }}" value="{{ f }}" {{ 'checked' if loop.first }}>
-            <label for="fec{{ loop.index }}">{{ f }}</label>
-            {% endfor %}
+          <div class="lab"><label for="freq">Frequency</label><span>MHz uplink</span></div>
+          <div class="freqrow"><input id="freq" class="inp" inputmode="decimal" autocomplete="off" spellcheck="false" value="{{ freq }}"><span id="freqDn" class="dn">DN -</span></div>
+        </div>
+        <div class="field srfec">
+          <div>
+            <div class="lab">Symbol rate<span>kS/s</span></div>
+            <div class="seg">
+              {% for r in rates %}
+              <input type="radio" name="sr" id="sr{{ r }}" value="{{ r }}" {{ 'checked' if r == 500000 }}>
+              <label for="sr{{ r }}">{{ r // 1000 }}</label>
+              {% endfor %}
+            </div>
+          </div>
+          <div>
+            <div class="lab">FEC</div>
+            <div class="seg fit">
+              {% for f in fecs %}
+              <input type="radio" name="fec" id="fec{{ loop.index }}" value="{{ f }}" {{ 'checked' if loop.first }}>
+              <label for="fec{{ loop.index }}">{{ f }}</label>
+              {% endfor %}
+            </div>
           </div>
         </div>
         <div class="field">
@@ -131,15 +156,26 @@
   <footer><span>{{ app_name }} v{{ app_version }} &middot; by HB9IIU</span><span>firmware: SP8ESA ESP32-DATV &middot; PTT on D10</span></footer>
 </div>
 
+<script src="/static/spectrum.js?v={{ app_version }}"></script>
 <script>
 const $ = id => document.getElementById(id);
 const val = name => document.querySelector(`input[name=${name}]:checked`).value;
 const CHIP = {idle: ['', 'idle'], starting: ['warn', 'starting'], transmitting: ['air', 'on air'], stopping: ['warn', 'stopping'], error: ['bad', 'error']};
-let busy = false, board = false, flashing = false;
+let busy = false, board = false, flashing = false, freqOk = true;
+let band = {offset_mhz: 8089.5, allowed: {}, min: 2300, max: 2450};
 
 const chip = (id, cls, text) => { $(id).className = 'chip ' + cls; $(id + 'Text').textContent = text; };
 const hms = s => [Math.floor(s / 3600), Math.floor(s / 60) % 60, s % 60].map(n => String(n).padStart(2, '0')).join(':');
 const tick = () => { $('utc').innerHTML = '<b>' + new Date().toISOString().slice(11, 19) + '</b> UTC'; };
+
+$('quitBtn').onclick = () => $('askQuit').classList.remove('d-none');
+$('quitNo').onclick = () => $('askQuit').classList.add('d-none');
+$('quitYes').onclick = async () => {
+  $('askQuit').classList.add('d-none');
+  await post('/api/quit');
+  $('bye').classList.remove('d-none');
+  window.close();
+};
 
 async function post(url, body) {
   const r = await fetch(url, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body || {})});
@@ -147,7 +183,7 @@ async function post(url, body) {
 }
 
 async function checkBoard() {
-  chip('conn', '', 'checking'); $('connInfo').textContent = '';
+  chip('conn', 'wait', 'checking'); $('connInfo').textContent = '';
   const c = await (await fetch('/api/connection')).json();
   board = c.connected;
   const many = !c.connected && c.candidates.length > 1;
@@ -156,8 +192,9 @@ async function checkBoard() {
     : many ? 'several boards answer:'
     : c.saved_missing ? `Saved board ${c.saved.port} (${c.saved.serial}) is not connected. Plug it in, then Check.` +
         (c.tried.length ? ` Other Espressif port(s) ${c.tried.join(', ')} did not answer as ESP32DATV.` : '')
-    : c.tried.length ? `Found ${c.tried.join(', ')} but no ESP32DATV answer. Close the serial monitor, or use Flash to install the firmware.`
+    : c.tried.length ? `Board found (${c.tried.join(', ')}), but it is not running the C3CAST firmware yet. Click Flash to install it (a new board needs this once).`
     : 'No Espressif USB device found. Is the board plugged in?';
+  $('flashBtn').classList.toggle('hot', !c.connected && !many && !c.saved_missing && c.tried.length > 0);
   if (many) c.candidates.forEach(a => {
     const b = document.createElement('button');
     b.className = 'btn';
@@ -191,7 +228,7 @@ function setPreview(url) {                  // '' stops the camera stream (the s
 function syncCameraPreview() {
   if (!isCamera()) return;
   $('onair').classList.toggle('d-none', !busy);
-  $('screenTag').classList.toggle('d-none', busy);
+  $('screenTag').classList.add('d-none');          // the camera picture already carries the overlay
   $('preview').classList.toggle('d-none', busy);
   if (busy) $('previewMsg').textContent = '';
   setPreview(!busy && $('camera').value ? '/api/camera-preview?camera=' + encodeURIComponent($('camera').value) : '');
@@ -223,7 +260,7 @@ function showPreview() {
   $('preview').removeAttribute('src');      // closes a running camera stream
   $('previewMsg').textContent = '';
   $('onair').classList.add('d-none');
-  $('screenTag').classList.remove('d-none');
+  $('screenTag').classList.toggle('d-none', isCamera());
   $('preview').classList.remove('d-none');
   $('pictureBox').classList.toggle('d-none', isClock() || isCamera());
   $('cameraBox').classList.toggle('d-none', !isCamera());
@@ -250,7 +287,8 @@ async function updatePlan() {
   $('pCodec').textContent = `H.265 · ${p.encoder}`;
   $('pSize').textContent = `${p.size} · ${p.fps}`;
   $('pVideo').textContent = `${p.video_kbps} kb/s`;
-  $('pAudio').textContent = `${p.audio.replace('AAC-HE v2', 'HE-AACv2')} ${p.audio_kbps}k ` + (isClock() ? 'tones' : isCamera() ? 'mic' : 'melody');
+  $('pAudio').textContent = `${p.audio} ${p.audio_kbps}k ${p.channels === 1 ? 'mono' : 'stereo'}`;
+  $('pAudio').title = 'sound: ' + (isClock() ? 'clock tones' : isCamera() ? 'camera microphone' : 'test melody');
 }
 
 let lastState = 'idle';
@@ -268,11 +306,12 @@ function updateButtons(state) {
     $('toggleText').textContent = 'Start';
     $('toggleUse').setAttribute('href', '#i-play');
     toggle.className = 'go';
-    toggle.disabled = noSource || !board || flashing;
+    toggle.disabled = noSource || !board || flashing || !freqOk;
   }
   $('recheck').disabled = busy || flashing;
   $('flashBtn').disabled = busy || flashing;
-  document.querySelectorAll('input[name=sr], input[name=fec], input[name=source], #level, #picture, #camera, #reload').forEach(e => e.disabled = busy);
+  document.querySelectorAll('input[name=sr], input[name=fec], input[name=source], #level, #picture, #camera, #reload, #freq').forEach(e => e.disabled = busy);
+  window.QO_LOCKED = busy || flashing;
 }
 
 async function poll() {
@@ -299,7 +338,7 @@ $('toggle').onclick = async () => {
   if (busy) { await post('/api/stop'); poll(); return; }
   if (isCamera()) setPreview('');           // free the camera before the transmission opens it
   const r = await post('/api/start', {source: val('source'), picture: $('picture').value, camera: $('camera').value,
-                                       sr: +val('sr'), fec: val('fec'), level: +$('level').value});
+                                       sr: +val('sr'), fec: val('fec'), level: +$('level').value, freq: $('freq').value});
   if (!r.ok) { $('error').classList.remove('d-none'); $('error').textContent = r.data.error || 'start failed'; }
   poll();
 };
@@ -309,6 +348,7 @@ $('recheck').onclick = checkBoard;
 $('picture').onchange = showPreview;
 $('level').oninput = updatePlan;
 document.querySelectorAll('input[name=sr], input[name=fec]').forEach(e => e.onchange = updatePlan);
+document.querySelectorAll('input[name=sr]').forEach(e => e.addEventListener('change', freqChanged));
 document.querySelectorAll('input[name=source]').forEach(e => e.onchange = showPreview);
 
 // ---- flash firmware: pick a port, confirm twice, watch esptool
@@ -387,7 +427,48 @@ $('flashGo').onclick = async () => {
 fetch('/api/flash/status').then(r => r.json()).then(s => { if (s.state === 'flashing') flashWatch(); });   // page reloaded while flashing
 
 tick(); setInterval(tick, 1000);
-checkBoard(); loadPictures(); updatePlan(); poll(); setInterval(poll, 1000);
+// ---- frequency: type it, or click a free slot on the QO-100 spectrum (the downlink slot minus 8089.5 MHz is the uplink)
+const freqMHz = () => parseFloat($('freq').value.replace(',', '.'));
+const slotFor = (up) => ((band.allowed['125000'] || []).find(s => Math.abs(s - (up + band.offset_mhz)) < 0.0006));
+
+function freqChanged() {
+  const f = freqMHz(), sr = +val('sr'), half = sr * 1.35 / 2e6;
+  freqOk = Number.isFinite(f) && f >= band.min + half && f <= band.max - half;
+  $('hdrFreq').textContent = Number.isFinite(f) ? f.toFixed(3) : '-';
+  $('freqDn').textContent = Number.isFinite(f) ? 'DN ' + (f + band.offset_mhz).toFixed(3) : 'DN -';
+  window.QO_ALLOWED_MHZ = band.allowed[String(sr)] || [];
+  window.QO_WIDE = sr === 1000000;
+  window.QO_SR_KS = sr / 1000;
+  if (window.batcSetSelected) window.batcSetSelected(freqOk ? f + band.offset_mhz : null);
+  updateHint();
+  updateButtons();
+}
+
+function updateHint() {
+  const f = freqMHz(), sr = +val('sr'), half = sr * 1.35 / 2e6, box = $('freq');
+  const say = (text, color) => { box.title = text; box.classList.toggle('bad', color === 'var(--bad)'); };   // tooltip + red value
+  if (!freqOk) return say(`${(band.min + half).toFixed(3)} to ${(band.max - half).toFixed(3)} MHz at this symbol rate`, 'var(--bad)');
+  const slot = slotFor(f);
+  if (slot === undefined) return say('not on the QO-100 slot grid (fine for a bench test)');
+  const label = 'slot ' + slot.toFixed(2) + ' DN';
+  if (!(band.allowed[String(sr)] || []).some(s => Math.abs(s - slot) < 0.0006)) return say(label + ' · not allowed at ' + sr / 1000 + ' kS/s', 'var(--amber)');
+  const wide = sr === 1000000 ? [slot - 0.5, slot, slot + 0.5] : [slot];
+  const states = wide.map(s => window.batcSlotState ? window.batcSlotState(s) : null);
+  if (states.some(s => s === true)) return say(label + ' · occupied', 'var(--bad)');
+  if (states.every(s => s === false)) return say(label + ' · free', 'var(--ok)');
+  say(label + ' · status unknown (spectrum offline)');
+}
+
+async function loadBandplan() {
+  try { band = await (await fetch('/api/bandplan')).json(); } catch (e) { /* defaults stay */ }
+  freqChanged();
+}
+window.onBatcSlotSelected = (center) => { $('freq').value = (center - band.offset_mhz).toFixed(3); freqChanged(); };
+$('freq').addEventListener('input', freqChanged);
+$('freq').addEventListener('change', () => { if (Number.isFinite(freqMHz())) $('freq').value = freqMHz().toFixed(3); freqChanged(); });
+setInterval(updateHint, 1500);
+
+loadBandplan(); checkBoard(); loadPictures(); updatePlan(); poll(); setInterval(poll, 1000);
 </script>
 </body>
 </html>

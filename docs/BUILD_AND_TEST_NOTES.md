@@ -145,3 +145,11 @@ webapp/flasher.py + /api/flash/*: esptool 5.6 `write-flash --erase-all` (dio, 80
 0x10000 app) of webapp/firmware/ (tools/export_firmware.py copies the PlatformIO build there with manifest + SHA-256).
 Only Espressif USB ports can be picked; two-click confirmation on the page. Tested on the XIAO (COM4): flashed, hash verified,
 answers INFO "PA_GPIO 10". COM6 (other board) was not touched. Upstream licence PolyForm Noncommercial 1.0.0: bundle includes it.
+
+## Frequency selection and the QO-100 spectrum (2026-10-25)
+webapp/static/spectrum.js is QOCAST's batc-spectrum.js without the receiver and simulator parts; webapp/bandplan.py is QOCAST's
+bandplan.py unchanged. The page reads /api/bandplan (slots per symbol rate, offset 8089.5 MHz, limits, remembered frequency).
+Tested in headless Edge in real time against the live feed: chip goes 'live', slot occupancy computed, a click on slot 10494.75 DN
+gives 2405.250 MHz UP, at 1000 kS/s that slot is still legal, 2300.2 MHz is refused (hint + Start disabled). The BATC feed was also
+read directly (101 upgrade, 922 Uint16 bins per frame). Server side: frequency validated in /api/start (check_freq), saved on start.
+Audio is now native AAC-LC (see CHANGELOG 0.4.0); matrix of 40 runs (picture/clock x software/NVENC x 10 SR/FEC) clean.

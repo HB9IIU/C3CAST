@@ -10,11 +10,11 @@ import subprocess
 import threading
 from pathlib import Path
 
+import paths
 import qo100_enc
 import version
 
-HERE = Path(__file__).resolve().parent
-FOLDER = HERE / "overlays"
+FOLDER = paths.DATA / "overlays"
 MARQUEE_TEXT = f"TRANSMITTED WITH {version.APP_NAME} v{version.__version__} · FIRMWARE BY SP8ESA"
 TIME_TEXT = "%{gmtime:%H\\:%M\\:%S} UTC"       # ffmpeg text expansion; the file holds %{gmtime:%H\:%M\:%S} UTC
 FONT = "C:/Windows/Fonts/arialbd.ttf"           # banner: bold

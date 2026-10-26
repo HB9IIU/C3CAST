@@ -1,6 +1,6 @@
 """Encoder strategy copied from HB9IIU/QOCAST (qo100_table.py, engine.build_ffmpeg_command, engine.melody_expression).
 
-DATV-Easy V3.08 "All Automatic" picture sizes and audio rates, H.265 on NVENC (CBR, p7, low latency), AAC-HE v2 audio,
+DATV-Easy V3.08 "All Automatic" picture sizes and audio rates, H.265 on NVENC (CBR, p7, low latency), native ffmpeg AAC-LC audio (mono below 1000 kS/s),
 video bitrate = (mux - audio - 51520) / 1.12. The clock additionally uses QOCAST's tested per-profile tuning
 (testcards/sbb_clock.qoweb.json: size, fps, video-rate stretch).
 
@@ -18,35 +18,37 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent / "host"))
 import dvbs2  # noqa: E402
+import paths  # noqa: E402
 
-FFMPEG = HERE.parent / "tools" / "ffmpeg" / "bin" / "ffmpeg.exe"     # QOCAST's build: hevc_nvenc + libfdk_aac
+FFMPEG = paths.TOOLS / "ffmpeg" / "bin" / "ffmpeg.exe"     # GPL build: libx265, hevc_nvenc, native aac (no FDK)
 MUX_MARGIN = 0.965
 SDT_PERIOD_S = 0.5
-CLOCK_TUNING_FILE = HERE / "testcards" / "sbb_clock.qoweb.json"
+CLOCK_TUNING_FILE = paths.RESOURCE / "testcards" / "sbb_clock.qoweb.json"
 
-# (SR kS/s, FEC) -> picture size and audio. 125 kS/s is QOCAST's own choice (very little video).
+# (SR kS/s, FEC) -> picture size (DATV-Easy / QOCAST) and audio (AAC-LC: kb/s and channels chosen for LC, mono below 1000 kS/s;
+# QOCAST's HE-AAC v2 needed less). 125 kS/s is QOCAST's own choice (very little video).
 _S = dict
 QO100 = {
-    (125, "1/2"): _S(size="640x360", audio_k=16, aac_he_v2=True, pcr_ms=30, pat_s=0.45),
-    (125, "2/3"): _S(size="640x360", audio_k=16, aac_he_v2=True, pcr_ms=30, pat_s=0.45),
-    (125, "3/4"): _S(size="640x360", audio_k=16, aac_he_v2=True, pcr_ms=30, pat_s=0.45),
-    (125, "4/5"): _S(size="640x360", audio_k=16, aac_he_v2=True, pcr_ms=30, pat_s=0.45),
-    (250, "1/2"): _S(size="854x480", audio_k=16, aac_he_v2=True, pcr_ms=30, pat_s=0.45),
-    (250, "2/3"): _S(size="960x540", audio_k=24, aac_he_v2=True, pcr_ms=30, pat_s=0.4),
-    (250, "3/4"): _S(size="960x540", audio_k=24, aac_he_v2=True, pcr_ms=30, pat_s=0.4),
-    (250, "4/5"): _S(size="960x540", audio_k=24, aac_he_v2=True, pcr_ms=30, pat_s=0.4),
-    (333, "1/2"): _S(size="960x540", audio_k=24, aac_he_v2=True, pcr_ms=30, pat_s=0.4),
-    (333, "2/3"): _S(size="1280x720", audio_k=32, aac_he_v2=True, pcr_ms=20, pat_s=0.4),
-    (333, "3/4"): _S(size="1280x720", audio_k=32, aac_he_v2=True, pcr_ms=20, pat_s=0.4),
-    (333, "4/5"): _S(size="1280x720", audio_k=32, aac_he_v2=True, pcr_ms=20, pat_s=0.4),
-    (500, "1/2"): _S(size="1280x720", audio_k=32, aac_he_v2=True, pcr_ms=20, pat_s=0.4),
-    (500, "2/3"): _S(size="1600x900", audio_k=48, aac_he_v2=True, pcr_ms=20, pat_s=0.2),
-    (500, "3/4"): _S(size="1600x900", audio_k=48, aac_he_v2=True, pcr_ms=20, pat_s=0.2),
-    (500, "4/5"): _S(size="1600x900", audio_k=48, aac_he_v2=True, pcr_ms=20, pat_s=0.2),
-    (1000, "1/2"): _S(size="1920x1080", audio_k=96, aac_he_v2=True, pcr_ms=20, pat_s=0.1),
-    (1000, "2/3"): _S(size="1920x1080", audio_k=96, aac_he_v2=True, pcr_ms=20, pat_s=0.1),
-    (1000, "3/4"): _S(size="1920x1080", audio_k=96, aac_he_v2=True, pcr_ms=20, pat_s=0.1),
-    (1000, "4/5"): _S(size="1920x1080", audio_k=128, aac_he_v2=False, pcr_ms=20, pat_s=0.1),
+    (125, "1/2"): _S(size="640x360", audio_k=16, channels=1, pcr_ms=30, pat_s=0.45),
+    (125, "2/3"): _S(size="640x360", audio_k=24, channels=1, pcr_ms=30, pat_s=0.45),
+    (125, "3/4"): _S(size="640x360", audio_k=24, channels=1, pcr_ms=30, pat_s=0.45),
+    (125, "4/5"): _S(size="640x360", audio_k=24, channels=1, pcr_ms=30, pat_s=0.45),
+    (250, "1/2"): _S(size="854x480", audio_k=24, channels=1, pcr_ms=30, pat_s=0.45),
+    (250, "2/3"): _S(size="960x540", audio_k=32, channels=1, pcr_ms=30, pat_s=0.4),
+    (250, "3/4"): _S(size="960x540", audio_k=32, channels=1, pcr_ms=30, pat_s=0.4),
+    (250, "4/5"): _S(size="960x540", audio_k=32, channels=1, pcr_ms=30, pat_s=0.4),
+    (333, "1/2"): _S(size="960x540", audio_k=32, channels=1, pcr_ms=30, pat_s=0.4),
+    (333, "2/3"): _S(size="1280x720", audio_k=32, channels=1, pcr_ms=20, pat_s=0.4),
+    (333, "3/4"): _S(size="1280x720", audio_k=32, channels=1, pcr_ms=20, pat_s=0.4),
+    (333, "4/5"): _S(size="1280x720", audio_k=32, channels=1, pcr_ms=20, pat_s=0.4),
+    (500, "1/2"): _S(size="1280x720", audio_k=32, channels=1, pcr_ms=20, pat_s=0.4),
+    (500, "2/3"): _S(size="1600x900", audio_k=48, channels=1, pcr_ms=20, pat_s=0.2),
+    (500, "3/4"): _S(size="1600x900", audio_k=48, channels=1, pcr_ms=20, pat_s=0.2),
+    (500, "4/5"): _S(size="1600x900", audio_k=48, channels=1, pcr_ms=20, pat_s=0.2),
+    (1000, "1/2"): _S(size="1920x1080", audio_k=96, channels=2, pcr_ms=20, pat_s=0.1),
+    (1000, "2/3"): _S(size="1920x1080", audio_k=96, channels=2, pcr_ms=20, pat_s=0.1),
+    (1000, "3/4"): _S(size="1920x1080", audio_k=96, channels=2, pcr_ms=20, pat_s=0.1),
+    (1000, "4/5"): _S(size="1920x1080", audio_k=128, channels=2, pcr_ms=20, pat_s=0.1),
 }
 
 # Notes of the testcard melody: (Hz, seconds). Volume steps up on each repeat so levels can be checked.
@@ -122,7 +124,7 @@ def settings(sr_ks, fec, tuning=None):
     # its target, so with the stretch video + audio could exceed the multiplex: software encoding uses the plain budget.
     rate = tuning.get("rate", 1.0) if encoder == "hevc_nvenc" else 1.0
     return {"encoder": encoder, "size": tuning.get("size") or t["size"], "fps": tuning.get("fps", 30), "multipass": tuning.get("multipass", "disabled"),
-            "capacity": cap, "muxrate": mux, "audio_k": t["audio_k"], "aac_he_v2": t["aac_he_v2"],
+            "capacity": cap, "muxrate": mux, "audio_k": t["audio_k"], "channels": t["channels"],
             "pcr_ms": t["pcr_ms"], "pat_s": t["pat_s"], "sdt_s": SDT_PERIOD_S,
             "video_bps": round(video * rate), "bufsize": round(bufsize * rate), "rate": rate}
 
@@ -131,7 +133,7 @@ def plan(sr_ks, fec, source):
     s = settings(sr_ks, fec, clock_tuning(sr_ks, fec) if source == "clock" else None)
     return {"capacity_kbps": round(s["capacity"] / 1000), "mux_kbps": round(s["muxrate"] / 1000), "size": s["size"], "fps": s["fps"],
             "video_kbps": round(s["video_bps"] / 1000), "audio_kbps": s["audio_k"], "rate": s["rate"],
-            "audio": "AAC-HE v2" if s["aac_he_v2"] else "AAC-LC",
+            "audio": "AAC-LC", "channels": s["channels"],
             "encoder": "GPU" if s["encoder"] == "hevc_nvenc" else "software"}
 
 
@@ -154,15 +156,14 @@ def ffmpeg_command(s, inputs, service_name, provider, video_filter=None, audio_f
     """QOCAST's build_ffmpeg_command, with the transport stream on stdout. ``inputs`` must give video then audio.
     video_filter: a -vf chain that sets the picture size (stills); without it the frames are scaled with -s like QOCAST."""
     video = str(s["video_bps"])
-    audio_profile = "aac_he_v2" if s["aac_he_v2"] else "aac_low"
     size = ["-vf", video_filter] if video_filter else ["-s", s["size"]]
     extra = [] if s["multipass"] == "disabled" else ["-multipass", s["multipass"]]
     return [
         str(FFMPEG), "-nostdin", "-hide_banner", "-loglevel", "warning",
         *inputs,
         *_video_options(s, size, video, extra),
-        "-c:a", "libfdk_aac", "-profile:a", audio_profile,
-        *(["-af", audio_filter] if audio_filter else []), "-ac", "2", "-b:a", f"{s['audio_k']}k",
+        "-c:a", "aac", "-profile:a", "aac_low",
+        *(["-af", audio_filter] if audio_filter else []), "-ac", str(s["channels"]), "-b:a", f"{s['audio_k']}k",
         "-ar", "48000", "-pcr_period", str(s["pcr_ms"]),
         "-pat_period", str(s["pat_s"]), "-sdt_period", str(s["sdt_s"]),
         "-max_delay", "1600000", "-mpegts_original_network_id", "100",

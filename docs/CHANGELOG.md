@@ -1,7 +1,23 @@
 # C3CAST changelog
 
 The version lives in `webapp/version.py` (shown on the page, the setup page and in the camera marquee).
-Rules: a new feature raises the middle number, a fix the last one.
+Rules: the first public release is a beta: 1.0.0-beta.1, beta.2, ... then 1.0.0 once it has proved itself. After that a new
+feature raises the middle number and a fix the last one. 0.1 to 0.4 below are the internal development versions.
+
+## 1.0.0-beta.1 (first beta)
+Everything of 0.1 to 0.4 below. Also: the defaults of a fresh install are callsign NOCALL and locator JNxxyy (set yours on the Setup
+page; a real locator is required to save), a BETA tag in the header, brighter status text.
+The console shows a welcome note (73 de HB9IIU) instead of Flask's development-server banner and its red warning, and no line per request.
+
+## 0.4.0 (2026-10-25)
+- Frequency: a live QO-100 wideband spectrum (BATC feed) in the right pane, ported from QOCAST (batc-spectrum.js and bandplan.py,
+  without its receiver parts), in amber. The 14 slots of 500 kHz are green (free), red (occupied) or grey (not allowed at this symbol
+  rate: all up to 333 kS/s, 9 at 500, 3 at 1000 which also needs both neighbours free); click a free slot to set the frequency
+  (uplink = downlink - 8089.5 MHz).
+- Frequency field: type it any time (2300 to 2450 MHz, the whole signal must fit; also offline, for bench tests). A hint says
+  free / occupied / not allowed / off the slot grid. The last frequency is remembered (config.json), default 2405.000.
+- Audio: native AAC-LC (the new GPL ffmpeg has no FDK): mono below 1000 kS/s, stereo at 1000; 24 kb/s at 125 kS/s.
+- Software and NVENC encoding tested for picture, clock and camera (including the C920 with its microphone).
 
 ## 0.3.0 (2026-10-25)
 - Flash firmware from the page: Flash button in the board row, pick an Espressif USB port, confirm twice, esptool 5.6 erases

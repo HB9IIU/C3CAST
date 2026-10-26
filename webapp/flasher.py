@@ -7,8 +7,9 @@ import subprocess
 import sys
 from pathlib import Path
 
-HERE = Path(__file__).resolve().parent
-FIRMWARE = HERE / "firmware"
+import paths
+
+FIRMWARE = paths.RESOURCE / "firmware"
 BAUD = "460800"
 
 
@@ -32,7 +33,7 @@ def check_bundle():
 def command(port, m):
     """esptool: erase everything, write bootloader, partition table and app, then reset the board."""
     fl = m["flash"]
-    cmd = [sys.executable, "-u", "-m", "esptool", "--chip", m["chip"], "--port", port, "--baud", BAUD,
+    cmd = [*paths.worker_cmd("esptool"), "--chip", m["chip"], "--port", port, "--baud", BAUD,
            "--before", "default-reset", "--after", "hard-reset",
            "write-flash", "--erase-all", "--flash-mode", fl["mode"], "--flash-freq", fl["freq"], "--flash-size", fl["size"]]
     for f in m["files"]:
