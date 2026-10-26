@@ -454,8 +454,8 @@ function updateHint() {
   if (!(band.allowed[String(sr)] || []).some(s => Math.abs(s - slot) < 0.0006)) return say(label + ' · not allowed at ' + sr / 1000 + ' kS/s', 'var(--amber)');
   const wide = sr === 1000000 ? [slot - 0.5, slot, slot + 0.5] : [slot];
   const states = wide.map(s => window.batcSlotState ? window.batcSlotState(s) : null);
-  if (states.some(s => s === true)) return say(label + ' · occupied', 'var(--bad)');
-  if (states.every(s => s === false)) return say(label + ' · free', 'var(--ok)');
+  if (states.some(s => s === true)) return say(label + ' · signal seen', 'var(--bad)');
+  if (states.every(s => s === false)) return say(label + ' · looks free (listen first)', 'var(--ok)');
   say(label + ' · status unknown (spectrum offline)');
 }
 
