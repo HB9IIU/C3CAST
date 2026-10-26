@@ -55,6 +55,7 @@ shutil.copytree(ff / "licenses", lic, ignore=shutil.ignore_patterns("FDK-AAC-NOT
 shutil.copy2(ROOT / "docs" / "FFMPEG-NOTICE.txt", lic / "FFmpeg-NOTICE.txt")
 shutil.copy2(ff / "buildconf.txt", lic / "buildconf.txt")
 shutil.copy2(ROOT / "docs" / "FFMPEG-NOTICE.txt", OUT / "tools" / "ffmpeg" / "README.txt")
+shutil.copytree(ff / "source", OUT / "tools" / "ffmpeg" / "source")      # the GPL source travels inside the package
 (OUT / "pictures").mkdir()
 for pic in (ROOT / "webapp" / "pictures").iterdir():
     if pic.is_file():

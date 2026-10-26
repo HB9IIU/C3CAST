@@ -17,15 +17,14 @@ What is in this build
   Compiled with GCC 16.2.0 (MSYS2/MABS). Full configure line: buildconf.txt in this folder.
 
 Corresponding source (GPL)
-  The exact source of this build is published with every C3CAST release, next to the package, so you do not have to rely on
-  an upstream link staying available:
+  The exact source of this build is included in this package, in the folder "source" next to this file, so you do not have to
+  rely on an upstream link staying available:
     ffmpeg-N-128097-g46f23be8b-source.zip   FFmpeg source at commit 46f23be8b
     x265-4.3+73-g5143a2a-source.zip         x265 source at commit 5143a2a
     x265-local-build.patch                  the one change made to x265 at build time
     ffmpeg-buildconf.txt                    the configure options used
     build_c3cast_ffmpeg.bat                 the build script
     SHA256SUMS.txt                          checksums of the files above
-  Releases: https://github.com/HB9IIU/C3CAST/releases
   Upstream: https://git.ffmpeg.org/ffmpeg.git and https://bitbucket.org/multicoreware/x265_git
 
 C3CAST itself (HB9IIU) and the ESP32-DATV firmware (SP8ESA) are under PolyForm Noncommercial 1.0.0; see LICENSE and
