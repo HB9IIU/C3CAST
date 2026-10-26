@@ -68,20 +68,6 @@ No installation, no Python, no drivers to set up:
 Your own pictures go in the `pictures` folder next to the exe, your settings are saved in `config.json` there, and callsign, locator
 and clock lead time are on the **Setup** page.
 
-### Build from source (developers)
-
-You need Python 3.11, and an ffmpeg with the H.265 and AAC encoders in `tools/ffmpeg/bin/` (it is not part of this repository).
-
-```
-py -3.11 -m venv .venv-host
-.venv-host\Scripts\pip install -r webapp
-equirements.txt
-.venv-host\Scripts\python webapppp.py
-```
-
-Then open <http://127.0.0.1:5000>. To build the portable package: `python tools\export_firmware.py`, then
-`python toolsuild_portable.py` (needs `pip install pyinstaller`); the result is in `dist/`.
-
 ## Please read before transmitting
 
 - **Licensed radio amateurs only.** You are responsible for the frequency, power and bandwidth you use.
