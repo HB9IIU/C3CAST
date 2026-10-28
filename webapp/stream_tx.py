@@ -32,14 +32,14 @@ def source_settings(source, sr_ks, fec):
     return qo100_enc.settings(sr_ks, fec, qo100_enc.clock_tuning(sr_ks, fec) if source == "clock" else None)
 
 
-def build(source, picture, sr_ks, fec, callsign, locator, ahead, start_time, camera="", mic=""):
+def build(source, picture, sr_ks, fec, callsign, locator, ahead, start_time, camera="", mic="", delay_ms=0):
     """Return (settings, ffmpeg command) for the source. The clock takes raw frames on stdin; a picture or the
     camera is read by ffmpeg itself."""
     provider = f"{version.APP_NAME} @ {locator}"        # what receivers show as "Provider"
     if source == "camera":
         import camera as cam
         s = source_settings(source, sr_ks, fec)
-        inputs, vf, audio_filter = cam.inputs_and_filter(camera, mic, s["size"], s["fps"], callsign)
+        inputs, vf, audio_filter = cam.inputs_and_filter(camera, mic, s["size"], s["fps"], callsign, delay_ms)
         return s, qo100_enc.ffmpeg_command(s, inputs, callsign, provider, video_filter=vf, audio_filter=audio_filter)
     if source == "clock":
         s = source_settings(source, sr_ks, fec)
@@ -72,6 +72,7 @@ def main(argv=None):
     ap.add_argument("--picture", default="")
     ap.add_argument("--camera", default="")
     ap.add_argument("--mic", default="")
+    ap.add_argument("--delay", type=int, default=0, help="camera: audio delay in ms (negative: picture delay)")
     ap.add_argument("--port", required=True)
     ap.add_argument("--freq", required=True)
     ap.add_argument("--baud", type=int, required=True)
@@ -124,7 +125,7 @@ def main(argv=None):
                 status = 1
         else:
             start_time = time.time() + 0.5
-            s, command = build(a.source, a.picture, sr_ks, a.fec, a.callsign, a.locator, a.ahead, start_time, a.camera, a.mic)
+            s, command = build(a.source, a.picture, sr_ks, a.fec, a.callsign, a.locator, a.ahead, start_time, a.camera, a.mic, a.delay)
             ffmpeg = subprocess.Popen(command, stdin=subprocess.PIPE if a.source == "clock" else subprocess.DEVNULL,
                                       stdout=runner.stdin, stderr=subprocess.PIPE)
             runner.stdin.close()        # ffmpeg holds the pipe now; the transmitter sees EOF if ffmpeg dies

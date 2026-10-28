@@ -4,6 +4,17 @@ The version lives in `webapp/version.py` (shown on the page, the setup page and 
 Rules: the first public release is a beta: 1.0.0-beta.1, beta.2, ... then 1.0.0 once it has proved itself. After that a new
 feature raises the middle number and a fix the last one. 0.1 to 0.4 below are the internal development versions.
 
+## 1.0.0-beta.2
+USB camera: choose the sound source (the camera's own microphone, any other Windows audio input, or silence) and adjust the
+sound delay from -500 to +500 ms (plus delays the sound, minus delays the picture); both are remembered.
+Experimental "Detect" button: clap in front of the camera (with a live picture and a microphone level bar) and C3CAST suggests a delay (clap test from QOCAST; it shows the camera and microphone offset only, with a possible error of about 100 ms, so fine-tune by ear and on a receiver).
+Fix in the exe: the transmitter's output is no longer buffered, so the exe now starts the video instead of sending only null packets.
+USB camera: a placeholder ("Starting the camera ...", or a hint when there is no picture) replaces the browser's broken-image icon.
+Pictures: round arrows on the preview (and the left and right keys) replace the dropdown; the label shows the position and file name, and an "i" button explains how to add your own pictures.
+Start is blocked, with a note pointing to the Setup page, while the callsign is still NOCALL (or the locator is still the placeholder).
+C3CAST now ends by itself, stopping any transmission, 10 s after you close its browser page (a reload does not count), or after 3 minutes without any page request.
+(C3CAST_NO_AUTOQUIT=1 turns this off.) The package ships the GPL source of its ffmpeg. Two new sample pictures (C3SCOPE).
+
 ## 1.0.0-beta.1 (first beta)
 Everything of 0.1 to 0.4 below. Also: the defaults of a fresh install are callsign NOCALL and locator JNxxyy (set yours on the Setup
 page; a real locator is required to save), a BETA tag in the header, brighter status text.

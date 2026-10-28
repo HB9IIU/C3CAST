@@ -23,6 +23,7 @@ import bandplan  # noqa: E402
 import camera  # noqa: E402
 import paths  # noqa: E402
 import qo100_enc  # noqa: E402
+import clap_test  # noqa: E402
 import flasher  # noqa: E402
 import version  # noqa: E402
 
@@ -96,6 +97,13 @@ SETUP_DEFAULTS = {"callsign": "NOCALL", "locator": "JNxxyy", "clock_ahead": 5.0}
 def get_setup():
     cfg = load_config()
     return {k: cfg.get(k, v) for k, v in SETUP_DEFAULTS.items()}
+
+
+def setup_ready():
+    """False while callsign or locator are still the fresh-install placeholders: nobody transmits as NOCALL."""
+    setup = get_setup()
+    return (setup["callsign"].strip().upper() not in ("", SETUP_DEFAULTS["callsign"])
+            and setup["locator"].strip().lower() != SETUP_DEFAULTS["locator"].lower())
 
 
 def get_freq():
@@ -249,10 +257,25 @@ def same_origin_only():
             abort(415)
 
 
+@app.before_request
+def page_seen():
+    """Any request from a page counts as 'someone is looking' (the page polls /api/status every second)."""
+    if request.path != "/api/bye":
+        WATCH["seen"] = time.time()
+
+
+@app.post("/api/bye")
+def api_bye():
+    """The page is closing (pagehide). A reload or the Setup link comes back within seconds and cancels this."""
+    WATCH["bye"] = time.time()
+    return "", 204
+
+
 @app.get("/")
 def index():
     return render_template("index.html", rates=SYMBOL_RATES, fecs=FECS, freq=get_freq(),
-                           lmin=LEVEL_MIN, lmax=LEVEL_MAX, ldef=LEVEL_DEFAULT, max_seconds=MAX_SECONDS)
+                           lmin=LEVEL_MIN, lmax=LEVEL_MAX, ldef=LEVEL_DEFAULT, max_seconds=MAX_SECONDS,
+                           setup_ready=setup_ready())
 
 
 @app.get("/pictures/<path:name>")
@@ -424,6 +447,46 @@ def api_cameras():
     return jsonify(camera.cameras())
 
 
+@app.get("/api/audio")
+def api_audio():
+    """Audio inputs for the camera source, and the remembered choice ("auto" = the camera's own microphone) and delay."""
+    cfg = load_config()
+    return jsonify(devices=camera.audio_devices(), audio=cfg.get("audio", "auto"), delay=cfg.get("audio_delay", 0))
+
+
+@app.post("/api/audio/detect")
+def api_audio_detect():
+    """Experimental clap test: start recording the camera and its microphone while the user claps; the page follows it with
+    /api/audio/detect/status and /api/audio/detect/frame (clap_test.py, sound_sync.py from QOCAST). Nothing is saved."""
+    d = request.get_json(silent=True) or {}
+    chosen = next((c for c in camera.cameras() if c["name"] == d.get("camera")), None)
+    if chosen is None:
+        return jsonify(error="unknown camera: reload the camera list"), 400
+    choice = d.get("audio", "auto")
+    mic = chosen["mic"] if choice == "auto" else "" if choice == "none" else choice
+    if not mic or (choice not in ("auto", "none") and choice not in camera.audio_devices()):
+        return jsonify(error="choose a microphone first"), 400
+    with lock:
+        if tx["proc"] is not None or tx["state"] in ("starting", "stopping"):
+            return jsonify(error="stop the transmission first"), 409
+    camera.stop_previews()                      # a preview holds the camera
+    time.sleep(0.5)
+    if not clap_test.start(chosen["name"], mic):
+        return jsonify(error="a measurement is already running"), 409
+    return jsonify(ok=True, seconds=clap_test.SECONDS, mic=mic)
+
+
+@app.get("/api/audio/detect/status")
+def api_audio_detect_status():
+    return jsonify(clap_test.snapshot())
+
+
+@app.get("/api/audio/detect/frame")
+def api_audio_detect_frame():
+    data = clap_test.frame()
+    return Response(data, mimetype="image/jpeg", headers={"Cache-Control": "no-store"}) if data else ("", 204)
+
+
 @app.get("/api/camera-preview")
 def api_camera_preview():
     """Live MJPEG preview of a camera with the overlay. Not while transmitting: the transmission owns the camera then."""
@@ -475,14 +538,31 @@ def api_start():
         return jsonify(error="bad request"), 400
     if source not in ("picture", "clock", "camera"):
         return jsonify(error="unknown source"), 400
+    if not setup_ready():
+        return jsonify(error="set your callsign and locator on the Setup page first"), 400
     if source == "picture" and name not in list_pictures():
         return jsonify(error="unknown picture"), 400
     camera_name = mic = ""
+    delay = 0
     if source == "camera":
         chosen = next((c for c in camera.cameras() if c["name"] == d.get("camera")), None)
         if chosen is None:
             return jsonify(error="unknown camera: reload the camera list"), 400
         camera_name, mic = chosen["name"], chosen["mic"] or ""
+        choice = d.get("audio", "auto")
+        if choice == "none":
+            mic = ""
+        elif choice != "auto":
+            if choice not in camera.audio_devices():
+                return jsonify(error="unknown audio device: reload the list"), 400
+            mic = choice
+        try:
+            delay = int(d.get("delay", 0))
+        except (TypeError, ValueError):
+            return jsonify(error="audio delay must be a number"), 400
+        if not -500 <= delay <= 500:
+            return jsonify(error="audio delay: -500 to 500 ms"), 400
+        write_config(audio=choice, audio_delay=delay)
     camera.stop_previews()                  # a preview holds the camera; the transmission needs it
     if source == "camera":
         time.sleep(0.5)                     # let DirectShow release it
@@ -507,7 +587,7 @@ def api_start():
         setup = get_setup()
         cmd = [*paths.worker_cmd("stream_tx"), "--source", source,
                "--picture", str(PICTURES / name) if source == "picture" else "",
-               "--camera", camera_name, "--mic", mic,
+               "--camera", camera_name, "--mic", mic, "--delay", str(delay),
                "--port", port, "--freq", freq, "--baud", str(sr), "--fec", fec, "--amp", str(level),
                "--seconds", str(MAX_SECONDS), "--callsign", setup["callsign"], "--locator", setup["locator"],
                "--ahead", str(setup["clock_ahead"])]
@@ -545,6 +625,30 @@ def api_quit():
 
 
 SERVER = []        # the running server, for /api/quit
+WATCH = {"seen": time.time(), "bye": 0.0}
+BYE_GRACE = 10          # s after the page said goodbye, with no page request since: quit
+SILENT_LIMIT = 180      # s without any request: quit (hidden tabs are throttled to about one request a minute)
+FIRST_PAGE_LIMIT = 120  # s to wait at startup for the first page
+
+
+def watch_pages():
+    """Quit (and stop any transmission) when no page is left: closed tab, crashed browser, sleeping PC. Never at startup before the
+    first page has had time to open. C3CAST_NO_AUTOQUIT=1 turns it off."""
+    started = time.time()
+    first_seen = False
+    while True:
+        time.sleep(1)
+        now = time.time()
+        first_seen = first_seen or WATCH["seen"] > started + 0.5
+        closed = WATCH["bye"] and now - WATCH["bye"] > BYE_GRACE and WATCH["seen"] < WATCH["bye"]
+        silent = now - WATCH["seen"] > (SILENT_LIMIT if first_seen else FIRST_PAGE_LIMIT)
+        if closed or silent:
+            print(flush=True)
+            print("  browser page closed: stopping" if closed else "  no browser page any more: stopping", flush=True)
+            stop_tx()
+            if SERVER:
+                SERVER[0].shutdown()
+            return
 
 
 def free_port(first):
@@ -595,6 +699,8 @@ def serve():
     logging.getLogger("werkzeug").setLevel(logging.ERROR)
     server = make_server("127.0.0.1", port, app, threaded=True)
     SERVER.append(server)
+    if not os.environ.get("C3CAST_NO_AUTOQUIT"):
+        threading.Thread(target=watch_pages, daemon=True).start()
     print(WELCOME.format(name=version.APP_NAME, version=version.__version__, url=url), flush=True)
     if not os.environ.get("C3CAST_NO_BROWSER"):
         import webbrowser

@@ -101,6 +101,18 @@ input[type=range]:disabled { opacity: .5; }
 /* preview screen */
 .screen { position: relative; aspect-ratio: 16 / 9; background: #000; border: 1px solid var(--line-hi); border-radius: 0.231rem; overflow: hidden; }
 .screen img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.carousel-arrow { position: absolute; z-index: 3; top: 50%; transform: translateY(-50%); width: 2.4rem; height: 2.4rem; display: grid; place-items: center;
+                 border-radius: 50%; border: 1px solid var(--line-hi); background: rgba(9, 12, 15, .7); color: var(--text); font-size: 1.5rem; line-height: 1; cursor: pointer;
+                 transition: background-color .15s, border-color .15s, color .15s; }
+.carousel-arrow:hover:not(:disabled) { border-color: var(--amber); color: var(--amber); background: var(--amber-bg); }
+.carousel-arrow:disabled { opacity: .4; cursor: not-allowed; }
+.carousel-arrow.prev { left: .6rem; }
+.carousel-arrow.next { right: .6rem; }
+.wait { position: absolute; inset: 0; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.8rem;
+         padding: 1rem; text-align: center; color: var(--dim); font: 0.95rem var(--mono); background: #05070a; }
+.wait .i { width: 3.2rem; height: 3.2rem; animation: pulse 1.6s ease-in-out infinite; }
+.wait.failed { color: var(--amber); }
+.wait.failed .i { animation: none; opacity: .8; }
 .screen .tag { position: absolute; left: 0.462rem; top: 0.462rem; padding: 0.154rem 0.462rem; background: rgba(0, 0, 0, .6); color: var(--dim); border-radius: 0.154rem;
                font: 0.731rem/1 var(--mono); letter-spacing: .16em; }
 .onair { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 0.769rem; background: #000;

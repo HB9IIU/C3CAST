@@ -214,8 +214,14 @@ def preview_stream(camera, callsign):
                 _previews.remove(proc)
 
 
-def inputs_and_filter(camera, mic, size, fps, callsign):
-    """(ffmpeg inputs, -vf chain, audio filter) for a camera at the transmitted picture ``size``."""
+def audio_devices():
+    """Names of all DirectShow audio inputs."""
+    return list_devices()["audio"]
+
+
+def inputs_and_filter(camera, mic, size, fps, callsign, delay_ms=0):
+    """(ffmpeg inputs, -vf chain, audio filter) for a camera at the transmitted picture ``size``.
+    delay_ms > 0 delays the sound (it arrives before the lips move), < 0 delays the picture."""
     width, height = size.split("x")
     capture_size = "1280x720" if int(width) <= 1280 else "1920x1080"
     device = f"video={camera}" + (f":audio={mic}" if mic else "")
@@ -224,4 +230,9 @@ def inputs_and_filter(camera, mic, size, fps, callsign):
     if not mic:
         inputs += ["-f", "lavfi", "-i", "anullsrc=r=48000:cl=mono"]      # no microphone: silence
     vf = f"fps={fps},scale={width}:{height},setsar=1,{overlay_filter(callsign)}"
-    return inputs, vf, (MICROPHONE_FILTER if mic else "lowpass=20000")
+    audio = MICROPHONE_FILTER if mic else "lowpass=20000"
+    if delay_ms > 0:
+        audio = f"adelay={delay_ms}:all=1," + audio
+    elif delay_ms < 0:
+        vf += f",setpts=PTS+{-delay_ms / 1000:g}/TB"
+    return inputs, vf, audio

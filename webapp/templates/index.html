@@ -33,6 +33,28 @@
       </div>
     </div>
   </div>
+  <div id="infoPictures" class="modal d-none">
+    <div class="panel box" style="width:min(92vw,30rem);text-align:left">
+      <div class="ph"><svg class="i"><use href="#i-info"/></svg>Your own pictures</div>
+      <div class="pb" style="line-height:1.55">
+        <p style="margin:0 0 .7rem">Use the <b>&lsaquo;</b> and <b>&rsaquo;</b> arrows on the picture (or the left and right keys) to choose what you transmit.</p>
+        <p style="margin:0 0 .7rem">To add your own, copy PNG or JPG files into the <b>pictures</b> folder next to C3CAST.exe, then press <b>Reload</b>. 16:9 pictures fill the screen best (1280x720 is ideal).</p>
+        <div class="row" style="justify-content:center"><button id="picInfoClose" class="btn" type="button">Close</button></div>
+      </div>
+    </div>
+  </div>
+  <div id="infoDelay" class="modal d-none">
+    <div class="panel box" style="width:min(92vw,34rem);text-align:left">
+      <div class="ph"><svg class="i"><use href="#i-info"/></svg>Audio delay<span class="grow"></span><small style="color:var(--amber)">experimental</small></div>
+      <div class="pb" style="line-height:1.55">
+        <p style="margin:0 0 .7rem"><b>The problem.</b> A USB camera often delivers its picture a little later than its microphone delivers the sound, so lips and voice drift apart.</p>
+        <p style="margin:0 0 .7rem"><b>The test.</b> Clap your hands 6 to 8 times in front of the camera, not in a steady rhythm. C3CAST records 12 seconds, finds every clap in the picture (your hands meeting) and in the sound, and measures how far apart they are.</p>
+        <p style="margin:0 0 .7rem"><b>The result.</b> A suggested delay in milliseconds: plus delays the sound, minus delays the picture. Press <b>Apply</b>, then fine-tune with&nbsp;+&nbsp;and&nbsp;&minus;. For a good result use good light, a quiet room and the microphone you will transmit with, and watch the level bar: it must move when you clap.</p>
+        <p style="margin:0 0 1rem;color:var(--dim)">The suggestion can be off by about 100 ms. Always check the lip-sync on a receiver and adjust.</p>
+        <div class="row" style="justify-content:center"><button id="infoClose" class="btn" type="button">Close</button></div>
+      </div>
+    </div>
+  </div>
   <div id="bye" class="modal off d-none"><div><img class="logo" src="/static/logo.svg" alt=""><p>C3CAST has stopped.<br>73 de HB9IIU</p><small>you can close this tab</small></div></div>
 
   <div class="dev">
@@ -72,19 +94,40 @@
             <label for="srcCamera"><svg class="i"><use href="#i-camera"/></svg>USB camera</label>
           </div>
         </div>
-        <div class="field" id="pictureBox"><select id="picture"></select></div>
+        <select id="picture" class="d-none" aria-hidden="true"></select>      <!-- holds the chosen picture; the arrows below pick it -->
         <div class="field d-none" id="cameraBox">
           <select id="camera"></select>
+          <select id="audio" style="margin-top:.5rem" title="Sound source"></select>
+          <div id="levelBar" class="d-none" style="height:.5rem;margin:.4rem 0;background:var(--line);border-radius:.25rem;overflow:hidden" title="Microphone level"><i id="levelFill" style="display:block;height:100%;width:0;background:var(--ok);transition:width .1s"></i></div>
+          <div class="row" style="margin-top:.5rem;gap:.5rem 1rem">
+            <span style="color:var(--dim)">Audio delay</span>
+            <span class="row" style="gap:.3rem" title="Sound delay: plus delays the sound, minus delays the picture">
+              <button id="delayDec" class="btn" type="button">&minus;</button>
+              <b id="delayVal" style="min-width:5.2rem;text-align:center;font-family:var(--mono)">0 ms</b>
+              <button id="delayInc" class="btn" type="button">+</button>
+            </span>
+            <span class="row" style="gap:.3rem">
+              <button id="detectBtn" class="btn" type="button" title="Clap in front of the camera and C3CAST suggests a delay (experimental)">Detect audio delay</button>
+              <button id="detectInfo" class="btn" type="button" title="What is this?" aria-label="What is this?"><svg class="i"><use href="#i-info"/></svg></button>
+            </span>
+          </div>
+          <div id="detectMsg" class="hint d-none"></div>
           <div id="cameraInfo" class="hint"></div>
         </div>
         <div class="screen">
           <img id="preview" alt="">
+          <button type="button" class="carousel-arrow prev d-none" id="picPrev" aria-label="Previous picture">&lsaquo;</button>
+          <button type="button" class="carousel-arrow next d-none" id="picNext" aria-label="Next picture">&rsaquo;</button>
+          <div id="screenWait" class="wait d-none"><svg class="i"><use href="#i-camera"/></svg><span id="waitText"></span></div>
           <span class="tag" id="screenTag">PREVIEW</span>
           <div id="onair" class="onair d-none"><i class="led"></i>ON AIR</div>
         </div>
         <div id="previewMsg" class="msg"></div>
         <div class="row" style="margin-top:.6rem">
-          <span id="pictureHelp" class="hint" style="margin:0"><svg class="i"><use href="#i-info"/></svg>PNG / JPG, 16:9 &rarr; webapp/pictures</span>
+          <span id="pictureHelp" class="row" style="gap:.5rem">
+            <span id="pictureLabel" class="hint" style="margin:0"></span>
+            <button id="pictureInfoBtn" class="btn" type="button" title="How do I add my own pictures?" aria-label="How do I add my own pictures?"><svg class="i"><use href="#i-info"/></svg></button>
+          </span>
           <span id="clockHelp" class="hint d-none" style="margin:0"><svg class="i"><use href="#i-info"/></svg>callsign, locator, lead time: <a href="/setup">setup</a></span>
           <span class="grow"></span>
           <button id="reload" class="btn"><svg class="i"><use href="#i-refresh"/></svg>Reload</button>
@@ -149,6 +192,7 @@
       <div><dt>ESP buffer</dt><dd id="buffer">-</dd></div>
       <div><dt>TS packets</dt><dd id="packets">-</dd></div>
     </dl>
+    <div id="setupWarn" class="err{% if setup_ready %} d-none{% endif %}">No callsign yet: set your callsign and locator on the <a href="/setup">Setup page</a> before you can transmit.</div>
     <div id="error" class="err d-none"></div>
     <pre id="log"></pre>
   </section>
@@ -217,12 +261,21 @@ async function loadPictures() {
 
 const isClock = () => val('source') === 'clock';
 const isCamera = () => val('source') === 'camera';
-let clockTimer = null, cameras = [], previewKey = '';
+let clockTimer = null, cameras = [], previewKey = '', camerasLoaded = false;
+
+// The camera picture takes a moment to arrive (or never does): a placeholder instead of the browser's broken-image icon.
+function cameraWait(state, text) {         // 'loading' | 'failed' | 'ok' | 'off'; text replaces the default message
+  $('screenWait').classList.toggle('d-none', state === 'ok' || state === 'off');
+  $('screenWait').classList.toggle('failed', state === 'failed');
+  $('waitText').textContent = state === 'loading' ? 'Starting the camera ...'
+    : state === 'failed' ? text || 'No picture from this camera. Is another program using it? Close it, then press Reload.' : '';
+  $('preview').style.visibility = state === 'loading' || state === 'failed' ? 'hidden' : '';
+}
 
 function setPreview(url) {                  // '' stops the camera stream (the server then frees the camera)
   if (url === previewKey) return;
   previewKey = url;
-  if (url) $('preview').src = url; else $('preview').removeAttribute('src');
+  if (url) { if (isCamera()) cameraWait('loading'); $('preview').src = url; } else $('preview').removeAttribute('src');
 }
 
 function syncCameraPreview() {
@@ -230,27 +283,87 @@ function syncCameraPreview() {
   $('onair').classList.toggle('d-none', !busy);
   $('screenTag').classList.add('d-none');          // the camera picture already carries the overlay
   $('preview').classList.toggle('d-none', busy);
-  if (busy) $('previewMsg').textContent = '';
+  if (busy) cameraWait('off');
+  else if (camerasLoaded && !$('camera').value) cameraWait('failed', 'No camera found. Plug it in, then press Reload.');
   setPreview(!busy && $('camera').value ? '/api/camera-preview?camera=' + encodeURIComponent($('camera').value) : '');
 }
-$('preview').onerror = () => { if (isCamera() && previewKey) $('previewMsg').textContent = 'No picture from this camera (in use elsewhere?)'; };
-$('preview').onload = () => { $('previewMsg').textContent = ''; };
+$('preview').onerror = () => { if (isCamera() && previewKey) cameraWait('failed'); };
+$('preview').onload = () => { if (isCamera()) cameraWait('ok'); };
 
 async function loadCameras() {
   cameras = await (await fetch('/api/cameras')).json();
+  camerasLoaded = true;
   const keep = $('camera').value;
   $('camera').innerHTML = cameras.map(c => `<option>${c.name}</option>`).join('');
   if (cameras.some(c => c.name === keep)) $('camera').value = keep;
+  await loadAudio();
   showCameraInfo();
   updateButtons();
   previewKey = '';                          // reload list = restart the preview
   syncCameraPreview();
 }
 
+let audioDelay = 0;
+const setDelay = v => { audioDelay = Math.max(-500, Math.min(500, v)); $('delayVal').textContent = (audioDelay > 0 ? '+' : '') + audioDelay + ' ms'; };
+$('delayDec').onclick = () => setDelay(audioDelay - 10);
+$('delayInc').onclick = () => setDelay(audioDelay + 10);
+
+$('detectInfo').onclick = () => $('infoDelay').classList.remove('d-none');
+$('infoClose').onclick = () => $('infoDelay').classList.add('d-none');
+$('infoDelay').onclick = e => { if (e.target === $('infoDelay')) $('infoDelay').classList.add('d-none'); };
+let detecting = false;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+$('detectBtn').onclick = async () => {
+  if (detecting) return;                   // the status poll re-enables the button; a second run would be refused anyway
+  detecting = true;
+  const msg = $('detectMsg'), btn = $('detectBtn'), bar = $('levelBar'), fill = $('levelFill');
+  msg.classList.remove('d-none');
+  btn.disabled = true;
+  setPreview('');                           // the camera is needed for the recording
+  cameraWait('loading');
+  msg.textContent = 'Starting the camera ...';
+  const finish = text => { detecting = false; btn.disabled = false; bar.classList.add('d-none'); previewKey = ''; syncCameraPreview(); if (text) msg.textContent = text; };
+  const r = await post('/api/audio/detect', {camera: $('camera').value, audio: $('audio').value});
+  if (!r.ok) return finish(r.data.error || 'measurement failed');
+  bar.classList.remove('d-none');
+  let s = {state: 'starting'};
+  try {
+    while (s.state === 'starting' || s.state === 'recording' || s.state === 'analysing') {
+      await sleep(120);
+      s = await (await fetch('/api/audio/detect/status')).json();
+      fill.style.width = Math.round(s.level * 100) + '%';
+      fill.style.background = s.level > 0.92 ? 'var(--bad)' : 'var(--ok)';
+      if (s.state === 'recording') $('preview').src = '/api/audio/detect/frame?t=' + Date.now();
+      msg.textContent = s.state === 'starting' ? 'Starting the camera ...'
+        : s.state === 'recording' ? 'Clap your hands 6 to 8 times, not in a steady rhythm: ' + s.left + ' s' : 'Measuring ...';
+    }
+  } catch (e) { return finish('Lost the connection to C3CAST.'); }
+  if (s.state === 'error') return finish(s.error || 'measurement failed');
+  finish();
+  if (!s.result.clear) { msg.textContent = 'No clear claps. Clap louder and keep your hands in view, then try again.'; return; }
+  const d = s.result.delay;
+  msg.innerHTML = '';
+  msg.append('Suggested delay: ' + (d > 0 ? '+' : '') + d + ' ms (' + (d > 0 ? 'sound arrives before the picture' : d < 0 ? 'sound arrives after the picture' : 'in sync') + '). ');
+  const apply = document.createElement('button');
+  apply.className = 'btn'; apply.type = 'button'; apply.textContent = 'Apply';
+  apply.onclick = () => { setDelay(Math.max(-500, Math.min(500, d))); msg.textContent = 'Applied. Fine-tune with the + and - buttons and check on a receiver.'; };
+  msg.append(apply);
+};
+
+async function loadAudio() {
+  const a = await (await fetch('/api/audio')).json();
+  const c = cameras.find(c => c.name === $('camera').value);
+  const pick = $('audio');
+  pick.innerHTML = `<option value="auto">Auto: ${c && c.mic ? c.mic : 'camera microphone'}</option><option value="none">No audio (silence)</option>` +
+    a.devices.map(n => `<option value="${n.replace(/"/g, '&quot;')}">${n}</option>`).join('');
+  pick.value = [...pick.options].some(o => o.value === a.audio) ? a.audio : 'auto';
+  setDelay(a.delay);
+}
+
 function showCameraInfo() {
   const c = cameras.find(c => c.name === $('camera').value);
   $('cameraInfo').textContent = !cameras.length ? 'No camera found. Plug it in and reload.'
-    : c.mic ? `mic: ${c.mic}` : 'no microphone found: the stream carries silence';
+    : $('audio').value === 'auto' && !c.mic ? 'no microphone found: the stream carries silence' : '';
   updatePlan();
 }
 
@@ -259,10 +372,10 @@ function showPreview() {
   previewKey = '';
   $('preview').removeAttribute('src');      // closes a running camera stream
   $('previewMsg').textContent = '';
+  if (!isCamera()) cameraWait('off');
   $('onair').classList.add('d-none');
   $('screenTag').classList.toggle('d-none', isCamera());
   $('preview').classList.remove('d-none');
-  $('pictureBox').classList.toggle('d-none', isClock() || isCamera());
   $('cameraBox').classList.toggle('d-none', !isCamera());
   $('reload').classList.toggle('d-none', isClock());
   $('pictureHelp').classList.toggle('d-none', val('source') !== 'picture');
@@ -271,11 +384,18 @@ function showPreview() {
     const refresh = () => { $('preview').src = '/api/clock-preview.png?' + Date.now(); };   // drawn by the server: also while on air
     refresh(); clockTimer = setInterval(refresh, 2000);
   } else if (isCamera()) {
+    camerasLoaded = false;
+    cameraWait('loading');                  // listing the cameras takes a second or two: no empty box, no broken icon
     loadCameras();
   } else {
     const n = $('picture').value;
     $('preview').src = n ? '/pictures/' + encodeURIComponent(n) : '';
+    const o = $('picture').options;
+    $('pictureLabel').textContent = n ? (o.length > 1 ? ($('picture').selectedIndex + 1) + ' / ' + o.length + ' · ' : '') + n : 'no pictures: see the i button';
   }
+  const carousel = val('source') === 'picture' && $('picture').options.length > 1;
+  $('picPrev').classList.toggle('d-none', !carousel);
+  $('picNext').classList.toggle('d-none', !carousel);
   updatePlan(); updateButtons();
 }
 
@@ -292,6 +412,7 @@ async function updatePlan() {
 }
 
 let lastState = 'idle';
+const setupReady = {{ 'true' if setup_ready else 'false' }};
 function updateButtons(state) {
   if (state !== undefined) lastState = state;
   busy = lastState === 'starting' || lastState === 'transmitting' || lastState === 'stopping';
@@ -306,11 +427,11 @@ function updateButtons(state) {
     $('toggleText').textContent = 'Start';
     $('toggleUse').setAttribute('href', '#i-play');
     toggle.className = 'go';
-    toggle.disabled = noSource || !board || flashing || !freqOk;
+    toggle.disabled = noSource || !board || flashing || !freqOk || !setupReady;
   }
   $('recheck').disabled = busy || flashing;
   $('flashBtn').disabled = busy || flashing;
-  document.querySelectorAll('input[name=sr], input[name=fec], input[name=source], #level, #picture, #camera, #reload, #freq').forEach(e => e.disabled = busy);
+  document.querySelectorAll('input[name=sr], input[name=fec], input[name=source], #level, #picture, #picPrev, #picNext, #camera, #audio, #delayDec, #delayInc, #detectBtn, #reload, #freq').forEach(e => e.disabled = busy);
   window.QO_LOCKED = busy || flashing;
 }
 
@@ -337,15 +458,30 @@ $('toggle').onclick = async () => {
   $('toggle').disabled = true;              // no double clicks; the next status poll sets the button again
   if (busy) { await post('/api/stop'); poll(); return; }
   if (isCamera()) setPreview('');           // free the camera before the transmission opens it
-  const r = await post('/api/start', {source: val('source'), picture: $('picture').value, camera: $('camera').value,
+  const r = await post('/api/start', {source: val('source'), picture: $('picture').value, camera: $('camera').value, audio: $('audio').value, delay: audioDelay,
                                        sr: +val('sr'), fec: val('fec'), level: +$('level').value, freq: $('freq').value});
   if (!r.ok) { $('error').classList.remove('d-none'); $('error').textContent = r.data.error || 'start failed'; }
   poll();
 };
 $('reload').onclick = () => isCamera() ? loadCameras() : loadPictures();
-$('camera').onchange = showCameraInfo;
+$('camera').onchange = () => { loadAudio().then(showCameraInfo); };
+$('audio').onchange = showCameraInfo;
 $('recheck').onclick = checkBoard;
-$('picture').onchange = showPreview;
+const stepPicture = d => {
+  const o = $('picture').options;
+  if (busy || val('source') !== 'picture' || o.length < 2) return;
+  $('picture').selectedIndex = ($('picture').selectedIndex + d + o.length) % o.length;
+  showPreview();
+};
+$('picPrev').onclick = () => stepPicture(-1);
+$('picNext').onclick = () => stepPicture(1);
+document.addEventListener('keydown', e => {
+  if (e.target.closest && e.target.closest('input, select, textarea, button')) return;
+  if (e.key === 'ArrowLeft') stepPicture(-1); else if (e.key === 'ArrowRight') stepPicture(1);
+});
+$('pictureInfoBtn').onclick = () => $('infoPictures').classList.remove('d-none');
+$('picInfoClose').onclick = () => $('infoPictures').classList.add('d-none');
+$('infoPictures').onclick = e => { if (e.target === $('infoPictures')) $('infoPictures').classList.add('d-none'); };
 $('level').oninput = updatePlan;
 document.querySelectorAll('input[name=sr], input[name=fec]').forEach(e => e.onchange = updatePlan);
 document.querySelectorAll('input[name=sr]').forEach(e => e.addEventListener('change', freqChanged));
@@ -469,6 +605,8 @@ $('freq').addEventListener('change', () => { if (Number.isFinite(freqMHz())) $('
 setInterval(updateHint, 1500);
 
 loadBandplan(); checkBoard(); loadPictures(); updatePlan(); poll(); setInterval(poll, 1000);
+
+window.addEventListener('pagehide', () => navigator.sendBeacon('/api/bye', new Blob(['{}'], {type: 'application/json'})));  // closing the tab ends C3CAST
 </script>
 </body>
 </html>

@@ -84,6 +84,8 @@ $('forget').onclick = async () => {
   load();
 };
 load();
+
+window.addEventListener('pagehide', () => navigator.sendBeacon('/api/bye', new Blob(['{}'], {type: 'application/json'})));  // closing the tab ends C3CAST
 </script>
 </body>
 </html>

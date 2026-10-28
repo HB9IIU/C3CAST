@@ -105,9 +105,19 @@ directly to it.
 
 ## Status
 
-Version **1.0.0-beta.1** (first beta). Verified on air so far: DVB-S2 QPSK at 500 kS/s with the USB camera source, received on a MiniTioune. The other
+Version **1.0.0-beta.2** (beta). Verified on air so far: DVB-S2 QPSK at 500 kS/s with the USB camera source, received on a MiniTioune. The other
 symbol rates, FEC values and sources are checked offline (streams analysed without errors) but not all confirmed on air yet.
 The firmware comes from the SP8ESA project, so its limits apply: see his page for compatibility details.
+
+### What's new in 1.0.0-beta.2
+
+- **USB camera sound:** choose the microphone (the camera's own, any other input, or silence) and adjust the audio delay from -500 to +500 ms.
+- **Detect audio delay** (experimental): clap in front of the camera, with a live picture and a microphone level bar, and C3CAST suggests a delay. The "i" button explains it.
+- **Closes by itself:** when you close the browser page C3CAST stops any transmission and quits. The **END** button still works.
+- **No transmitting as NOCALL:** Start stays disabled until you set your callsign and locator on the **Setup** page.
+- Two new sample pictures promoting **C3SCOPE**, a companion spectrum viewer, to transmit as test cards. The package also carries the source of its GPL ffmpeg.
+
+The full history is in the [changelog](docs/CHANGELOG.md).
 
 ## Notes
 
