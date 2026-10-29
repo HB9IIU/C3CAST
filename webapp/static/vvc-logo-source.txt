@@ -1,0 +1,8 @@
+VVC logo, downloaded from Fraunhofer HHI:
+https://www.hhi.fraunhofer.de/fileadmin/_processed_/8/3/csm_VVC_horizontal_RGB_444178a9be.jpg
+
+Reference page:
+https://www.hhi.fraunhofer.de/en/departments/vca/technologies-and-solutions/h266-vvc.html
+
+Original image retained without modification. Used to identify the video format;
+does not indicate certification or endorsement of C3CAST.

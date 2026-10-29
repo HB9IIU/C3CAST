@@ -1,0 +1,30 @@
+Sample videos supplied with C3CAST
+=================================
+
+These films are separate works, not covered by C3CAST's PolyForm Noncommercial
+licence. Their Creative Commons Attribution 3.0 licence permits redistribution
+subject to attribution and its other terms:
+https://creativecommons.org/licenses/by/3.0/
+Full legal terms: https://creativecommons.org/licenses/by/3.0/legalcode
+
+Bunny.mp4 — Big Buck Bunny excerpt
+  (c) copyright 2008, Blender Foundation / www.bigbuckbunny.org
+  Licence: Creative Commons Attribution 3.0 (CC BY 3.0).
+  Original film and attribution guidance: https://peach.blender.org/about/
+  Official downloads: https://peach.blender.org/download/
+  This is a shortened excerpt, supplied already re-encoded in H.265 at 1280x720.
+  C3CAST's release preparation does not modify this supplied input file.
+  The exact download/edit history of the supplied excerpt has not been recorded.
+
+sintel_trailer.mp4 — Sintel trailer (480p)
+  (c) copyright Blender Foundation | durian.blender.org
+  Licence: Creative Commons Attribution 3.0 (CC BY 3.0).
+  Official file: https://download.blender.org/durian/trailer/sintel_trailer-480p.mp4
+  Attribution guidance: https://durian.blender.org/sharing/
+  The project records this trailer as downloaded without modification.
+
+C3CAST re-encodes these files for transmission; the stored originals remain
+unchanged. Retain these credits and licence links when redistributing them.
+For broadcasts, retain appropriate visible/audible film attribution as required
+by the licence; the console's credit line is not inserted into the RF picture.
+Do not imply endorsement by the filmmakers or the Blender Foundation.

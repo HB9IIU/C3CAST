@@ -51,12 +51,18 @@ if not (ff / "bin" / "ffmpeg.exe").is_file():
 shutil.copy2(ff / "bin" / "ffmpeg.exe", OUT / "tools" / "ffmpeg" / "bin" / "ffmpeg.exe")
 # the old notices in tools/ffmpeg/licenses describe the previous (FDK) build; the package gets the notice for this GPL build
 lic = OUT / "tools" / "ffmpeg" / "licenses"
-shutil.copytree(ff / "licenses", lic, ignore=shutil.ignore_patterns("FDK-AAC-NOTICE.txt", "FFmpeg-NOTICE.txt"))
+shutil.copytree(ff / "licenses", lic, ignore=shutil.ignore_patterns("FDK-AAC-NOTICE.txt", "FFmpeg-NOTICE.txt", "BUILD-SUPPLIER-NOTICE.txt"))
 shutil.copy2(ROOT / "docs" / "FFMPEG-NOTICE.txt", lic / "FFmpeg-NOTICE.txt")
 shutil.copy2(ff / "buildconf.txt", lic / "buildconf.txt")
+shutil.copy2(ROOT / "docs" / "FFMPEG-THIRD-PARTY-LICENSES.txt", lic / "THIRD-PARTY-LICENSES.txt")
 shutil.copy2(ROOT / "docs" / "FFMPEG-NOTICE.txt", OUT / "tools" / "ffmpeg" / "README.txt")
 shutil.copytree(ff / "source", OUT / "tools" / "ffmpeg" / "source")      # the GPL source travels inside the package
 (OUT / "pictures").mkdir()
+(OUT / "videos").mkdir()
+shutil.copy2(ROOT / "docs" / "VIDEO-CREDITS.txt", OUT / "videos" / "CREDITS.txt")
+for clip in (ROOT / "webapp" / "videos").iterdir():
+    if clip.is_file() and not clip.is_symlink() and clip.suffix.lower() in {".mp4", ".mkv", ".mov", ".avi", ".webm", ".ts", ".m4v"}:
+        shutil.copy2(clip, OUT / "videos" / clip.name)
 for pic in (ROOT / "webapp" / "pictures").iterdir():
     if pic.is_file():
         shutil.copy2(pic, OUT / "pictures" / pic.name)

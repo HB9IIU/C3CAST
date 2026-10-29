@@ -78,6 +78,25 @@ def melody_expression():
 _encoder = None
 
 
+def ffmpeg_path(codec="h265"):
+    """A source-only VVC test override never changes the packaged runtime path."""
+    override = os.environ.get("C3CAST_VVC_TEST_FFMPEG", "") if codec == "h266" and not paths.FROZEN else ""
+    return Path(override) if override else FFMPEG
+
+
+def require_vvc():
+    """Fail before RF starts when the selected executable has no VVC encoder."""
+    try:
+        result = subprocess.run([str(ffmpeg_path("h266")), "-hide_banner", "-encoders"],
+                                capture_output=True, text=True, timeout=15,
+                                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise ValueError(f"Cannot check H.266 support: {exc}") from exc
+    if result.returncode or not any(len(line.split()) > 1 and line.split()[1] == "libvvenc"
+                                    for line in result.stdout.splitlines()):
+        raise ValueError("H.266 needs an FFmpeg build with libvvenc. Select H.265 or install the C3CAST VVC build.")
+
+
 def video_encoder():
     """"hevc_nvenc" when this PC has a working NVIDIA encoder, otherwise "libx265" (software). Decided once, silently, by
     a 0.2 s trial encode (a GPU-less PC lists hevc_nvenc too, but cannot use it). C3CAST_ENCODER=nvenc|software overrides."""
@@ -111,35 +130,51 @@ def clock_tuning(sr_ks, fec):
     return entry["tuning"] if entry and entry.get("passed") else {}
 
 
-def settings(sr_ks, fec, tuning=None):
+def settings(sr_ks, fec, tuning=None, codec="h265"):
     """Everything the ffmpeg command needs for one SR/FEC (tuning: size, fps, rate, multipass; may be empty)."""
+    if codec not in ("h265", "h266"):
+        raise ValueError("unknown video codec")
     tuning = tuning or {}
     t = QO100[(sr_ks, fec)]
     cap = dvbs2.ts_rate(sr_ks * 1000, fec, "normal", False, "qpsk")
     mux = int(cap * MUX_MARGIN)
     video = (mux - t["audio_k"] * 1000 - 51520) / 1.12            # DATV-Easy V3.08 formulas
     bufsize = video / 4 + 180000
-    encoder = video_encoder()
+    encoder = "libvvenc" if codec == "h266" else video_encoder()
     # QOCAST's video-rate stretch (up to 1.3) was tuned on NVENC, which undershoots on the static clock card. x265 follows
     # its target, so with the stretch video + audio could exceed the multiplex: software encoding uses the plain budget.
-    rate = tuning.get("rate", 1.0) if encoder == "hevc_nvenc" else 1.0
-    return {"encoder": encoder, "size": tuning.get("size") or t["size"], "fps": tuning.get("fps", 30), "multipass": tuning.get("multipass", "disabled"),
+    rate = 0.8 if codec == "h266" else tuning.get("rate", 1.0) if encoder == "hevc_nvenc" else 1.0
+    return {"codec": codec, "encoder": encoder, "size": tuning.get("size") or t["size"], "fps": tuning.get("fps", 30), "multipass": tuning.get("multipass", "disabled"),
             "capacity": cap, "muxrate": mux, "audio_k": t["audio_k"], "channels": t["channels"],
             "pcr_ms": t["pcr_ms"], "pat_s": t["pat_s"], "sdt_s": SDT_PERIOD_S,
             "video_bps": round(video * rate), "bufsize": round(bufsize * rate), "rate": rate}
 
 
-def plan(sr_ks, fec, source):
-    s = settings(sr_ks, fec, clock_tuning(sr_ks, fec) if source == "clock" else None)
+def plan(sr_ks, fec, source, codec="h265"):
+    s = source_settings(source, sr_ks, fec, codec)
     return {"capacity_kbps": round(s["capacity"] / 1000), "mux_kbps": round(s["muxrate"] / 1000), "size": s["size"], "fps": s["fps"],
             "video_kbps": round(s["video_bps"] / 1000), "audio_kbps": s["audio_k"], "rate": s["rate"],
-            "audio": "AAC-LC", "channels": s["channels"],
+            "audio": "AAC-LC", "channels": s["channels"], "codec": "H.266" if codec == "h266" else "H.265",
             "encoder": "GPU" if s["encoder"] == "hevc_nvenc" else "software"}
+
+
+def source_settings(source, sr_ks, fec, codec="h265"):
+    """VVC video-file profile measured separately; H.265 and other sources retain their profiles."""
+    s = settings(sr_ks, fec, clock_tuning(sr_ks, fec) if source == "clock" else None, codec)
+    if source == "video" and codec == "h266":
+        s.update(size="640x360", fps=24)
+        if s["video_bps"] > 300000:
+            s.update(video_bps=300000, bufsize=255000)
+    return s
 
 
 def _video_options(s, size, video, extra):
     """H.265 options: QOCAST's NVENC set on a GPU, otherwise libx265 with the same GOP (100 frames at 30 fps) and rate limits."""
     gop = str(round(100 * s["fps"] / 30))
+    if s["encoder"] == "libvvenc":
+        return ["-c:v", "libvvenc", *size, "-r", str(s["fps"]), "-pix_fmt", "yuv420p10le",
+                "-preset", "faster", "-period", "2", "-b:v", video,
+                "-maxrate", str((3 * int(video) + 1) // 2), "-bufsize", str(s["bufsize"])]
     if s["encoder"] == "hevc_nvenc":
         return ["-c:v", "hevc_nvenc", *size, "-r", str(s["fps"]),
                 "-b_ref_mode", "disabled", "-profile:v", "main", "-pix_fmt", "yuv420p",
@@ -159,7 +194,7 @@ def ffmpeg_command(s, inputs, service_name, provider, video_filter=None, audio_f
     size = ["-vf", video_filter] if video_filter else ["-s", s["size"]]
     extra = [] if s["multipass"] == "disabled" else ["-multipass", s["multipass"]]
     return [
-        str(FFMPEG), "-nostdin", "-hide_banner", "-loglevel", "warning",
+        str(ffmpeg_path(s.get("codec", "h265"))), "-nostdin", "-hide_banner", "-loglevel", "warning",
         *inputs,
         *_video_options(s, size, video, extra),
         "-c:a", "aac", "-profile:a", "aac_low",

@@ -36,9 +36,9 @@
         <input id="ahead" type="range" min="0" max="15" step="0.1">
         <div class="note" style="margin-top:.3rem">Clock and tones run this far ahead, to read right once the signal has passed the encoder, the ESP and your receiver. Compare with a real clock and adjust. Shows this PC's local time.</div>
       </div>
-      <div class="row field">
-        <button id="save" class="btn"><svg class="i"><use href="#i-save"/></svg>Save</button>
-        <span id="msg" class="note"></span>
+      <div class="field">
+        <button id="save" class="btn save-primary" type="button"><svg class="i"><use href="#i-save"/></svg>Save settings</button>
+        <div id="msg" class="note" role="status" style="margin-top:.5rem"></div>
       </div>
       <div class="screen"><img id="clockPreview" alt=""><span class="tag">PREVIEW</span></div>
     </div>

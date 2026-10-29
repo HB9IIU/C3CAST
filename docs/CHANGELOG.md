@@ -4,6 +4,27 @@ The version lives in `webapp/version.py` (shown on the page, the setup page and 
 Rules: the first public release is a beta: 1.0.0-beta.1, beta.2, ... then 1.0.0 once it has proved itself. After that a new
 feature raises the middle number and a fix the last one. 0.1 to 0.4 below are the internal development versions.
 
+## 1.0.0-beta.3
+- The Video source reads a file's streams with ffmpeg itself, so the packaged app does not need ffprobe.
+- Second source row with Video. The dropdown lists local videos (webapp/videos from source,
+  videos next to the exe when packaged). Files loop until Stop, preserve aspect ratio and use their soundtrack or silent
+  AAC when absent. Native browser preview is muted; unsupported browser formats can still be encoded by FFmpeg.
+- Output slider restricted to 0–100, with transmission limited to 1–100 by the web API and media worker. Zero disables
+  Start and is never passed through to the underlying transmitter's automatic (high amplitude) setting.
+- Output level starts at zero and resets to zero after Stop or any transmission ending, including an error. Select a
+  level again before the next transmission.
+- Optional H.266 / VVC experimental switch for picture, clock and USB camera, off whenever the page opens. The information
+  button explains compression, CPU load, startup delay and receiver compatibility in plain language.
+- VVC uses libvvenc, 10-bit input, preset faster and period 2. Target video rate is 80% of the existing unstretched budget;
+  maxrate is at least 1.5 times target. H.265 profiles, AAC audio, transport settings and radio settings are unchanged.
+- A clear warning (with a warning icon) says that most DATV viewers cannot decode H.266, beside the switch and in its popup, and C3CAST asks for confirmation before it transmits in H.266.
+- H.266 is refused before RF starts if FFmpeg has no libvvenc. Local runtime updated to GPL FFmpeg
+  N-128187-gc49ccf40c with VVenC, without nonfree/FDK-AAC. Short H.265/AAC and VVC/AAC MPEG-TS encode/decode checks
+  passed; NVENC trial passed. Exact FFmpeg, x265 and VVenC source archives retained. Portable releases are not rebuilt.
+- Command and web regression tests added. An offline benchmark tool and a 27-trial C920 report cover both FECs at
+  current profiles, lower-frame-rate/size alternatives and five live captures without RF. Higher-resolution VVC profiles
+  are too slow on the tested i5-11600K; profile changes still need review. Long runs and on-air tuning remain pending.
+
 ## 1.0.0-beta.2
 USB camera: choose the sound source (the camera's own microphone, any other Windows audio input, or silence) and adjust the
 sound delay from -500 to +500 ms (plus delays the sound, minus delays the picture); both are remembered.

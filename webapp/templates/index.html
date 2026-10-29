@@ -21,6 +21,18 @@
     <a href="/setup" class="btn" title="Setup"><svg class="i"><use href="#i-sliders"/></svg>Setup</a>
     <button id="quitBtn" class="btn danger" title="Stop any transmission and close C3CAST"><svg class="i"><use href="#i-power"/></svg>END</button>
   </header>
+  <div id="askVvc" class="modal d-none">
+    <div class="panel box" style="width:min(92vw,30rem);text-align:left">
+      <div class="ph"><svg class="i"><use href="#i-warn"/></svg>Transmit in H.266?</div>
+      <div class="pb">
+        <div class="warnbox" role="alert"><svg class="i"><use href="#i-warn"/></svg><div><b>Most DATV viewers cannot decode H.266.</b> They will see no picture. Use this mode only for tests with stations that have agreed to take part.</div></div>
+        <div class="row" style="justify-content:center;margin-top:1rem">
+          <button id="vvcGo" class="btn danger" type="button">Transmit in H.266</button>
+          <button id="vvcCancel" class="btn" type="button">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
   <div id="askQuit" class="modal d-none">
     <div class="panel box">
       <div class="ph"><svg class="i"><use href="#i-power"/></svg>End C3CAST</div>
@@ -55,6 +67,20 @@
       </div>
     </div>
   </div>
+  <dialog id="infoVvc" class="vvc-dialog" aria-labelledby="vvcTitle">
+    <div class="vvc-titlebar"><img src="{{ url_for('static', filename='vvc-logo.jpg') }}" alt="VVC — Versatile Video Coding" width="300" height="86"></div>
+    <div class="ph" id="vvcTitle"><svg class="i"><use href="#i-info"/></svg>H.266, in plain language</div>
+    <div class="pb">
+      <div class="warnbox" role="alert"><svg class="i"><use href="#i-warn"/></svg><div><b>Most DATV viewers cannot decode H.266.</b> They will see no picture. Use this mode only for tests with stations that have agreed to take part, and switch back to H.265 for normal operation.</div></div>
+      <p><b>A different way to pack the picture.</b> H.266 (also called VVC) is a newer video compression format. It aims to fit more picture detail into the same radio bandwidth. Better pictures are possible, but are not guaranteed.</p>
+      <p><b>Your PC does more work.</b> This experimental mode uses the CPU, even if you have an NVIDIA GPU. The picture can take several seconds to start. At larger picture sizes your PC may struggle to keep up.</p>
+      <p><b>The receiver must understand H.266.</b> VLC 3 and QOCAST's normal Player cannot display it. Use a recent ffplay with VVC decoding (FFmpeg 7.1 or newer), or the <a href="https://github.com/HB9IIU/HB9IIU-Experimental-H266-Player" target="_blank" rel="noopener noreferrer">HB9IIU Experimental H.266 Player</a> (opens in a new tab). Check your receiver before trying it on air.</p>
+      <p><b>The radio and sound stay the same.</b> Only video compression changes. Your frequency, symbol rate, FEC and AAC sound settings stay as selected. This mode has been tested only briefly on air by HB9IIU; more testing by other users is welcome.</p>
+      <p><b>Video-file test profile.</b> Movies use 640×360 at 24 fps, with video bitrate capped at 300 kb/s, to keep CPU work manageable. Camera, clock and picture profiles remain separate and can need a faster PC.</p>
+      <p>Leave the switch off for normal H.265 operation. It resets to off when this page opens.</p>
+      <form method="dialog"><button class="btn" type="submit">Got it</button></form>
+    </div>
+  </dialog>
   <div id="bye" class="modal off d-none"><div><img class="logo" src="/static/logo.svg" alt=""><p>C3CAST has stopped.<br>73 de HB9IIU</p><small>you can close this tab</small></div></div>
 
   <div class="dev">
@@ -95,6 +121,18 @@
           </div>
         </div>
         <select id="picture" class="d-none" aria-hidden="true"></select>      <!-- holds the chosen picture; the arrows below pick it -->
+        <div class="field">
+          <div class="seg">
+            <input type="radio" name="source" id="srcVideo" value="video">
+            <label for="srcVideo"><svg class="i"><use href="#i-play"/></svg>Video</label>
+          </div>
+        </div>
+        <div class="field d-none" id="videoBox">
+          <label class="lab" for="video">Video file</label>
+          <select id="video" aria-label="Video file"></select>
+          <div class="hint">Add files to the <b>videos</b> folder next to C3CAST.exe (from source: webapp/videos), then press Reload. The selected video loops until Stop.</div>
+          <div id="videoCredit" class="hint"></div>
+        </div>
         <div class="field d-none" id="cameraBox">
           <select id="camera"></select>
           <select id="audio" style="margin-top:.5rem" title="Sound source"></select>
@@ -116,6 +154,7 @@
         </div>
         <div class="screen">
           <img id="preview" alt="">
+          <video id="videoPreview" class="d-none" controls muted loop playsinline preload="metadata" aria-label="Video preview"></video>
           <button type="button" class="carousel-arrow prev d-none" id="picPrev" aria-label="Previous picture">&lsaquo;</button>
           <button type="button" class="carousel-arrow next d-none" id="picNext" aria-label="Next picture">&rsaquo;</button>
           <div id="screenWait" class="wait d-none"><svg class="i"><use href="#i-camera"/></svg><span id="waitText"></span></div>
@@ -169,7 +208,17 @@
         </div>
         <div class="field">
           <div class="lab">Level<b id="levelVal"></b></div>
-          <input type="range" id="level" min="{{ lmin }}" max="{{ lmax }}" value="{{ ldef }}">
+          <input type="range" id="level" min="{{ lmin }}" max="{{ lmax }}" value="{{ ldef }}" autocomplete="off">
+          <div id="levelZero" class="hint d-none">Level 0: transmission disabled. Choose 1–100 to start.</div>
+        </div>
+        <div class="field">
+          <div class="row">
+            <label class="vvc-switch"><input id="vvc" type="checkbox" autocomplete="off"> H.266 / VVC <small>experimental</small></label>
+            <button id="vvcInfo" class="btn" type="button" aria-label="Explain H.266" title="H.266 in plain language"><svg class="i"><use href="#i-info"/></svg></button>
+            <img class="vvc-option-logo" src="{{ url_for('static', filename='vvc-logo.jpg') }}" alt="VVC" width="300" height="86">
+          </div>
+          <div id="vvcWarn" class="warnbox d-none" role="alert"><svg class="i"><use href="#i-warn"/></svg><div><b>Most DATV viewers cannot decode H.266.</b> They will see no picture. Use this mode only for tests with stations that have agreed to take part, and switch back to H.265 for normal operation.</div></div>
+          <div id="vvcNote" class="hint d-none">CPU encoding · slower startup</div>
         </div>
         <dl class="kv field">
           <div><dt>Channel</dt><dd id="pCap">-</dd></div>
@@ -206,6 +255,15 @@ const $ = id => document.getElementById(id);
 const val = name => document.querySelector(`input[name=${name}]:checked`).value;
 const CHIP = {idle: ['', 'idle'], starting: ['warn', 'starting'], transmitting: ['air', 'on air'], stopping: ['warn', 'stopping'], error: ['bad', 'error']};
 let busy = false, board = false, flashing = false, freqOk = true;
+const selectedCodec = () => $('vvc').checked ? 'h266' : 'h265';
+$('level').value = 0; // Do not restore a previous power setting on page load.
+$('vvc').checked = false;
+$('vvcInfo').onclick = () => $('infoVvc').showModal();
+$('vvc').onchange = () => {
+  $('vvcNote').classList.toggle('d-none', !$('vvc').checked);
+  $('vvcWarn').classList.toggle('d-none', !$('vvc').checked);
+  updatePlan();
+};
 let band = {offset_mhz: 8089.5, allowed: {}, min: 2300, max: 2450};
 
 const chip = (id, cls, text) => { $(id).className = 'chip ' + cls; $(id + 'Text').textContent = text; };
@@ -261,6 +319,20 @@ async function loadPictures() {
 
 const isClock = () => val('source') === 'clock';
 const isCamera = () => val('source') === 'camera';
+const isVideo = () => val('source') === 'video';
+async function loadVideos() {
+  const names = await (await fetch('/api/videos')).json();
+  const pick = $('video'), keep = pick.value;
+  pick.replaceChildren(...names.map(name => new Option(name, name)));
+  if (!names.length) pick.add(new Option('No videos yet', ''));
+  if (names.includes(keep)) pick.value = keep;
+  if (isVideo()) showPreview();
+  updateButtons();
+}
+$('video').onchange = showPreview;
+$('videoPreview').onerror = () => {
+  if (isVideo() && $('video').value) $('previewMsg').textContent = 'Browser preview unavailable for this format. FFmpeg can still transmit a supported video file.';
+};
 let clockTimer = null, cameras = [], previewKey = '', camerasLoaded = false;
 
 // The camera picture takes a moment to arrive (or never does): a placeholder instead of the browser's broken-image icon.
@@ -369,18 +441,36 @@ function showCameraInfo() {
 
 function showPreview() {
   clearInterval(clockTimer);
+  $('videoPreview').pause();
+  $('videoPreview').removeAttribute('src');
+  $('videoPreview').load();
+  $('videoPreview').classList.toggle('d-none', !isVideo());
+  $('videoBox').classList.toggle('d-none', !isVideo());
   previewKey = '';
   $('preview').removeAttribute('src');      // closes a running camera stream
   $('previewMsg').textContent = '';
   if (!isCamera()) cameraWait('off');
   $('onair').classList.add('d-none');
   $('screenTag').classList.toggle('d-none', isCamera());
-  $('preview').classList.remove('d-none');
+  $('preview').classList.toggle('d-none', isVideo());
   $('cameraBox').classList.toggle('d-none', !isCamera());
   $('reload').classList.toggle('d-none', isClock());
   $('pictureHelp').classList.toggle('d-none', val('source') !== 'picture');
   $('clockHelp').classList.toggle('d-none', !isClock());
-  if (isClock()) {
+  if (isVideo()) {
+    const name = $('video').value;
+    const credit = {'Bunny.mp4': ['Big Buck Bunny excerpt — © 2008 Blender Foundation', 'https://peach.blender.org/about/'],
+                    'sintel_trailer.mp4': ['Sintel trailer — © Blender Foundation', 'https://durian.blender.org/sharing/']}[name];
+    $('videoCredit').replaceChildren();
+    if (credit) {
+      const link = document.createElement('a');
+      link.href = credit[1]; link.target = '_blank'; link.rel = 'noopener noreferrer';
+      link.textContent = credit[0];
+      $('videoCredit').append(link, ' · CC BY 3.0');
+    }
+    if (name) $('videoPreview').src = '/videos/' + encodeURIComponent(name);
+    else $('previewMsg').textContent = 'No videos yet. Add a video to the videos folder, then press Reload.';
+  } else if (isClock()) {
     const refresh = () => { $('preview').src = '/api/clock-preview.png?' + Date.now(); };   // drawn by the server: also while on air
     refresh(); clockTimer = setInterval(refresh, 2000);
   } else if (isCamera()) {
@@ -401,22 +491,30 @@ function showPreview() {
 
 async function updatePlan() {
   $('levelVal').textContent = $('level').value;
-  const p = await (await fetch(`/api/plan?sr=${val('sr')}&fec=${encodeURIComponent(val('fec'))}&source=${val('source')}`)).json();
+  $('levelZero').classList.toggle('d-none', +$('level').value !== 0);
+  updateButtons();
+  const codec = selectedCodec();
+  $('vvcNote').textContent = isVideo() ? 'Movie test profile: 640×360 · 24 fps · video up to 300 kb/s'
+    : 'CPU encoding · slower startup';
+  const p = await (await fetch(`/api/plan?sr=${val('sr')}&fec=${encodeURIComponent(val('fec'))}&source=${val('source')}&codec=${codec}`)).json();
+  if (codec !== selectedCodec()) return;
   $('pCap').textContent = `${p.capacity_kbps} kb/s`;
   $('pMux').textContent = `${p.mux_kbps} kb/s`;
-  $('pCodec').textContent = `H.265 · ${p.encoder}`;
+  $('pCodec').textContent = `${p.codec} · ${p.encoder}`;
   $('pSize').textContent = `${p.size} · ${p.fps}`;
   $('pVideo').textContent = `${p.video_kbps} kb/s`;
   $('pAudio').textContent = `${p.audio} ${p.audio_kbps}k ${p.channels === 1 ? 'mono' : 'stereo'}`;
-  $('pAudio').title = 'sound: ' + (isClock() ? 'clock tones' : isCamera() ? 'camera microphone' : 'test melody');
+  $('pAudio').title = 'sound: ' + (isClock() ? 'clock tones' : isCamera() ? 'camera microphone' : isVideo() ? 'video soundtrack, or silence when absent' : 'test melody');
 }
 
 let lastState = 'idle';
 const setupReady = {{ 'true' if setup_ready else 'false' }};
 function updateButtons(state) {
+  const wasBusy = busy;
   if (state !== undefined) lastState = state;
   busy = lastState === 'starting' || lastState === 'transmitting' || lastState === 'stopping';
-  const noSource = isClock() ? false : isCamera() ? !$('camera').value : !$('picture').value;
+  if (wasBusy && !busy) resetLevel();
+  const noSource = isClock() ? false : isCamera() ? !$('camera').value : isVideo() ? !$('video').value : !$('picture').value;
   const toggle = $('toggle');             // one button: Start when idle, Stop while starting or on air
   if (busy) {
     $('toggleText').textContent = lastState === 'stopping' ? 'Stopping...' : 'Stop';
@@ -427,12 +525,20 @@ function updateButtons(state) {
     $('toggleText').textContent = 'Start';
     $('toggleUse').setAttribute('href', '#i-play');
     toggle.className = 'go';
-    toggle.disabled = noSource || !board || flashing || !freqOk || !setupReady;
+    toggle.disabled = noSource || !board || flashing || !freqOk || !setupReady || +$('level').value === 0;
   }
   $('recheck').disabled = busy || flashing;
   $('flashBtn').disabled = busy || flashing;
-  document.querySelectorAll('input[name=sr], input[name=fec], input[name=source], #level, #picture, #picPrev, #picNext, #camera, #audio, #delayDec, #delayInc, #detectBtn, #reload, #freq').forEach(e => e.disabled = busy);
+  document.querySelectorAll('input[name=sr], input[name=fec], input[name=source], #level, #picture, #picPrev, #picNext, #camera, #audio, #delayDec, #delayInc, #detectBtn, #reload, #freq, #vvc').forEach(e => e.disabled = busy);
   window.QO_LOCKED = busy || flashing;
+  $('video').disabled = busy;
+  if (isVideo() && busy) $('videoPreview').pause();
+}
+
+function resetLevel() {
+  $('level').value = 0;
+  $('levelVal').textContent = '0';
+  $('levelZero').classList.remove('d-none');
 }
 
 async function poll() {
@@ -454,16 +560,27 @@ async function poll() {
   } catch (e) { chip('state', 'bad', 'server offline'); }
 }
 
-$('toggle').onclick = async () => {
+const startStop = async () => {
   $('toggle').disabled = true;              // no double clicks; the next status poll sets the button again
-  if (busy) { await post('/api/stop'); poll(); return; }
+  if (busy) {
+    const r = await post('/api/stop');
+    if (r.ok) resetLevel();
+    poll(); return;
+  }
   if (isCamera()) setPreview('');           // free the camera before the transmission opens it
-  const r = await post('/api/start', {source: val('source'), picture: $('picture').value, camera: $('camera').value, audio: $('audio').value, delay: audioDelay,
+  const r = await post('/api/start', {source: val('source'), codec: selectedCodec(), picture: $('picture').value, video: $('video').value, camera: $('camera').value, audio: $('audio').value, delay: audioDelay,
                                        sr: +val('sr'), fec: val('fec'), level: +$('level').value, freq: $('freq').value});
   if (!r.ok) { $('error').classList.remove('d-none'); $('error').textContent = r.data.error || 'start failed'; }
   poll();
 };
-$('reload').onclick = () => isCamera() ? loadCameras() : loadPictures();
+$('toggle').onclick = () => {
+  if (!busy && selectedCodec() === 'h266') { $('askVvc').classList.remove('d-none'); return; }   // H.266: ask first
+  startStop();
+};
+$('vvcGo').onclick = () => { $('askVvc').classList.add('d-none'); startStop(); };
+$('vvcCancel').onclick = () => $('askVvc').classList.add('d-none');
+$('askVvc').onclick = e => { if (e.target === $('askVvc')) $('askVvc').classList.add('d-none'); };
+$('reload').onclick = () => isCamera() ? loadCameras() : isVideo() ? loadVideos() : loadPictures();
 $('camera').onchange = () => { loadAudio().then(showCameraInfo); };
 $('audio').onchange = showCameraInfo;
 $('recheck').onclick = checkBoard;
@@ -485,7 +602,7 @@ $('infoPictures').onclick = e => { if (e.target === $('infoPictures')) $('infoPi
 $('level').oninput = updatePlan;
 document.querySelectorAll('input[name=sr], input[name=fec]').forEach(e => e.onchange = updatePlan);
 document.querySelectorAll('input[name=sr]').forEach(e => e.addEventListener('change', freqChanged));
-document.querySelectorAll('input[name=source]').forEach(e => e.onchange = showPreview);
+document.querySelectorAll('input[name=source]').forEach(e => e.onchange = () => isVideo() ? loadVideos() : showPreview());
 
 // ---- flash firmware: pick a port, confirm twice, watch esptool
 let flashArm = 0, flashPoll = null;
@@ -604,7 +721,7 @@ $('freq').addEventListener('input', freqChanged);
 $('freq').addEventListener('change', () => { if (Number.isFinite(freqMHz())) $('freq').value = freqMHz().toFixed(3); freqChanged(); });
 setInterval(updateHint, 1500);
 
-loadBandplan(); checkBoard(); loadPictures(); updatePlan(); poll(); setInterval(poll, 1000);
+loadBandplan(); checkBoard(); loadPictures(); loadVideos(); updatePlan(); poll(); setInterval(poll, 1000);
 
 window.addEventListener('pagehide', () => navigator.sendBeacon('/api/bye', new Blob(['{}'], {type: 'application/json'})));  // closing the tab ends C3CAST
 </script>

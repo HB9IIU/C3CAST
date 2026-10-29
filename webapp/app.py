@@ -28,12 +28,14 @@ import flasher  # noqa: E402
 import version  # noqa: E402
 
 PICTURES = Path(os.environ.get("DATV_PICTURES", paths.DATA / "pictures"))
+VIDEOS = paths.DATA / "videos"
+VIDEO_EXTS = {".mp4", ".mkv", ".mov", ".avi", ".webm", ".ts", ".m4v"}
 CONFIG = paths.DATA / "config.json"                    # remembered board: {"port": "COM4", "serial": "<USB serial number>"}
 FREQ_DEFAULT = "2405.000"                           # uplink MHz until you choose another
 FREQ_MIN, FREQ_MAX = 2300.0, 2450.0                 # the firmware refuses anything outside; the whole signal must fit
 SYMBOL_RATES = (125000, 250000, 333000, 500000, 1000000)
 FECS = ("3/4", "4/5")
-LEVEL_MIN, LEVEL_MAX, LEVEL_DEFAULT = 1, 480, 100   # the firmware's own limits; narrow after measuring (see docs notes)
+LEVEL_MIN, LEVEL_MAX, LEVEL_DEFAULT = 0, 100, 0   # zero inhibits Start; transmitted amplitude must be 1..100
 MAX_SECONDS = 3600                                  # safety cap: a forgotten tab cannot transmit forever
 EXTS = {".png", ".jpg", ".jpeg"}
 
@@ -184,6 +186,23 @@ def find_esp():
     return {"connected": False, "port": "", "serial": "", "info": "", "how": "", "candidates": answering,
             "tried": sorted(ports), "saved": {"port": saved_port, "serial": saved_serial} if saved_serial else None,
             "saved_missing": missing}
+
+
+def list_videos():
+    VIDEOS.mkdir(parents=True, exist_ok=True)
+    return sorted(p.name for p in VIDEOS.iterdir() if p.is_file() and not p.is_symlink() and p.suffix.lower() in VIDEO_EXTS)
+
+
+@app.get("/api/videos")
+def api_videos():
+    return jsonify(list_videos())
+
+
+@app.get("/videos/<path:name>")
+def video_file(name):
+    if name not in list_videos():
+        abort(404)
+    return send_from_directory(VIDEOS, name, conditional=True)
 
 
 def list_pictures():
@@ -512,9 +531,9 @@ def api_bandplan():
 def api_plan():
     try:
         sr, fec, source = int(request.args.get("sr", 0)), request.args.get("fec", ""), request.args.get("source", "picture")
-        if sr not in SYMBOL_RATES or fec not in FECS or source not in ("picture", "clock", "camera"):
+        if sr not in SYMBOL_RATES or fec not in FECS or source not in ("picture", "clock", "camera", "video"):
             raise ValueError
-        return jsonify(qo100_enc.plan(sr // 1000, fec, source))
+        return jsonify(qo100_enc.plan(sr // 1000, fec, source, request.args.get("codec", "h265")))
     except ValueError:
         abort(400)
 
@@ -532,16 +551,35 @@ def api_status():
 def api_start():
     d = request.get_json(silent=True) or {}
     source = d.get("source", "picture")
+    codec = d.get("codec", "h265")
+    if codec not in ("h265", "h266"):
+        return jsonify(error="unknown video codec"), 400
+    if codec == "h266":
+        try:
+            qo100_enc.require_vvc()
+        except ValueError as exc:
+            return jsonify(error=str(exc)), 400
     try:
         name, sr, fec, level = d.get("picture", ""), int(d["sr"]), d["fec"], int(d["level"])
     except (KeyError, TypeError, ValueError):
         return jsonify(error="bad request"), 400
-    if source not in ("picture", "clock", "camera"):
+    if not 1 <= level <= LEVEL_MAX:
+        return jsonify(error="output level must be 1 to 100; zero disables transmission"), 400
+    if source not in ("picture", "clock", "camera", "video"):
         return jsonify(error="unknown source"), 400
     if not setup_ready():
         return jsonify(error="set your callsign and locator on the Setup page first"), 400
     if source == "picture" and name not in list_pictures():
         return jsonify(error="unknown picture"), 400
+    video_name = d.get("video", "")
+    if source == "video" and video_name not in list_videos():
+        return jsonify(error="unknown video: add a file to the videos folder and press Reload"), 400
+    if source == "video":
+        try:
+            from stream_tx import video_has_audio
+            video_has_audio(VIDEOS / video_name, codec)
+        except ValueError as exc:
+            return jsonify(error=str(exc)), 400
     camera_name = mic = ""
     delay = 0
     if source == "camera":
@@ -566,7 +604,7 @@ def api_start():
     camera.stop_previews()                  # a preview holds the camera; the transmission needs it
     if source == "camera":
         time.sleep(0.5)                     # let DirectShow release it
-    if sr not in SYMBOL_RATES or fec not in FECS or not LEVEL_MIN <= level <= LEVEL_MAX:
+    if sr not in SYMBOL_RATES or fec not in FECS:
         return jsonify(error="value outside the allowed list"), 400
     freq, freq_error = check_freq(d.get("freq", get_freq()), sr)
     if freq_error:
@@ -581,12 +619,13 @@ def api_start():
         port = conn["port"]
         tx.update(state="starting", error="", buffer="", packets="", stopping=False)
         tx["log"].clear()
-        tx["settings"] = {"source": source, "picture": {"picture": name, "clock": "SBB clock", "camera": camera_name}[source],
-                          "sr": sr, "fec": fec, "level": level, "freq": freq}
+        tx["settings"] = {"source": source, "picture": {"picture": name, "clock": "SBB clock", "camera": camera_name, "video": video_name}[source],
+                          "sr": sr, "fec": fec, "level": level, "freq": freq, "codec": codec}
     try:
         setup = get_setup()
-        cmd = [*paths.worker_cmd("stream_tx"), "--source", source,
+        cmd = [*paths.worker_cmd("stream_tx"), "--source", source, "--codec", codec,
                "--picture", str(PICTURES / name) if source == "picture" else "",
+               "--video", str(VIDEOS / video_name) if source == "video" else "",
                "--camera", camera_name, "--mic", mic, "--delay", str(delay),
                "--port", port, "--freq", freq, "--baud", str(sr), "--fec", fec, "--amp", str(level),
                "--seconds", str(MAX_SECONDS), "--callsign", setup["callsign"], "--locator", setup["locator"],

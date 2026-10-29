@@ -8,6 +8,8 @@ __pycache__/
 webapp/config.json
 webapp/cache/
 webapp/overlays/
+webapp/videos/*
+!webapp/videos/.gitkeep
 captures/
 
 # ffmpeg with FDK AAC: non-free, must not be redistributed

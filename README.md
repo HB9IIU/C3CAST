@@ -56,7 +56,7 @@ built and tested on this XIAO. SP8ESA's own project uses an ESP32-C3 SuperMini.
   scrolling marquee on the picture.
 - **Frequency**: click a free slot on the **live QO-100 wideband spectrum** (the BATC feed) or just type it
   (2300 to 2450 MHz, always possible, also offline and for bench tests). The page shows the downlink slot and whether it *looks* free on the live spectrum. That is only a hint: always listen first.
-- **Link settings**: DVB-S2 QPSK, symbol rates 125 / 250 / 333 / 500 / 1000 kS/s, FEC 3/4 or 4/5, output level 1 to 480 ([what that means](#output-level)).
+- **Link settings**: DVB-S2 QPSK, symbol rates 125 / 250 / 333 / 500 / 1000 kS/s, FEC 3/4 or 4/5, output level 0 to 100 (0 disables Start; [what that means](#output-level)).
 - **Video settings are automatic**: picture size, bitrate and audio follow the symbol rate (H.265 and AAC-LC, the same
   strategy as QOCAST). It uses the NVIDIA GPU encoder when there is one, otherwise software encoding. You never set video parameters yourself.
 - **PTT output on D10**: high while RF is on, low otherwise; to key a relay or an amplifier through its own driver.
@@ -88,14 +88,40 @@ and clock lead time are on the **Setup** page.
 
 ### Output level
 
-The level (1 to 480) is a digital amplitude setting, **not calibrated power**. Start low and check your own spectrum before raising it.
+The slider covers 0 to 100; 0 disables Start and transmission uses levels 1 to 100 only. This is a digital amplitude setting,
+**not calibrated power**. Start low and check your own spectrum before raising it.
+It starts at zero and returns to zero whenever transmission stops; choose a level before each new transmission.
 HB9IIU measured one board: the output follows the setting closely up to about 100, compresses above about 250 (which usually means
 more distortion), and is unreliable below about 15.
 
 <p align="center"><img src="docs/output_level.png" alt="Output level versus measured output" width="720"></p>
 
-The instrument and its settings were not recorded, so treat the numbers as indicative. The full table is in
+The plot shows the firmware's whole range (1 to 480), which the measurements covered; the slider stops at 100. The instrument and its settings were not recorded, so treat the numbers as indicative. The full table is in
 [docs/BUILD_AND_TEST_NOTES.md](docs/BUILD_AND_TEST_NOTES.md).
+
+## Video files and experimental H.266 / VVC
+
+**Video:** put MP4, MKV, MOV, AVI, WebM, TS or M4V files in the `videos` folder next to C3CAST.exe (from source: `webapp/videos`),
+choose **Video** and press Reload. The selected file loops until Stop, with its soundtrack, or silence if it has none.
+Two sample films are included: an excerpt of *Big Buck Bunny* and the *Sintel* trailer, (c) Blender Foundation, CC BY 3.0
+(see `videos/CREDITS.txt`). The muted browser preview depends on the browser's codec support; transmission uses ffmpeg's decoders.
+
+<p align="center"><a href="https://www.hhi.fraunhofer.de/en/departments/vca/technologies-and-solutions/h266-vvc.html"><img src="webapp/static/vvc-logo.jpg" width="160" alt="VVC logo"></a><br>
+<sub>VVC logo (c) Fraunhofer HHI, shown only to identify the video format. No endorsement by Fraunhofer is implied.
+<a href="https://www.hhi.fraunhofer.de/en/departments/vca/technologies-and-solutions/h266-vvc.html">About H.266 / VVC</a></sub></p>
+
+> **⚠ Most DATV viewers cannot decode H.266.** They will see no picture. Use this mode only for tests with stations that have agreed to take part, and switch back to H.265 for normal operation. C3CAST asks you to confirm before it transmits in H.266.
+
+The **H.266 / VVC** switch is off whenever the console opens, and its "i" button explains the mode in plain language. H.265 stays
+the normal mode, with the same automatic GPU or software selection as before. H.266 uses the CPU through ffmpeg's `libvvenc`
+encoder, so it may take several seconds to produce a picture, and the larger profiles may not keep up in real time. Picture size
+and frame rate follow the existing profiles; a first [benchmark on an i5-11600K](docs/H266_BENCHMARK_2026-10-29.md) found the
+higher-resolution H.266 profiles too slow. Audio stays AAC-LC, and the transport stream and radio settings stay the same.
+It has been tested only briefly on air by HB9IIU; more testing by other users is welcome.
+
+To watch H.266, VLC 3 and QOCAST's normal Player are not enough: use the
+[HB9IIU Experimental H.266 Player](https://github.com/HB9IIU/HB9IIU-Experimental-H266-Player), or a recent ffplay with VVC decoding (ffmpeg 7.1 or newer), and check your receiving chain.
+Developer tests are in [docs/H266_TESTING.md](docs/H266_TESTING.md).
 
 ## Bench test
 
@@ -105,23 +131,21 @@ directly to it.
 
 ## Status
 
-Version **1.0.0-beta.2** (beta). Verified on air so far: DVB-S2 QPSK at 500 kS/s with the USB camera source, received on a MiniTioune. The other
+Version **1.0.0-beta.3** (beta). Verified on air so far: DVB-S2 QPSK at 500 kS/s with the USB camera source, received on a MiniTioune. The other
 symbol rates, FEC values and sources are checked offline (streams analysed without errors) but not all confirmed on air yet.
 The firmware comes from the SP8ESA project, so its limits apply: see his page for compatibility details.
 
-### What's new in 1.0.0-beta.2
+### What's new in 1.0.0-beta.3
 
-- **USB camera sound:** choose the microphone (the camera's own, any other input, or silence) and adjust the audio delay from -500 to +500 ms.
-- **Detect audio delay** (experimental): clap in front of the camera, with a live picture and a microphone level bar, and C3CAST suggests a delay. The "i" button explains it.
-- **Closes by itself:** when you close the browser page C3CAST stops any transmission and quits. The **END** button still works.
-- **No transmitting as NOCALL:** Start stays disabled until you set your callsign and locator on the **Setup** page.
-- Two new sample pictures promoting **C3SCOPE**, a companion spectrum viewer, to transmit as test cards. The package also carries the source of its GPL ffmpeg.
+- **Video files as a source:** put MP4, MKV and similar files in the `videos` folder, press Reload, and C3CAST loops the chosen video with its sound. Two sample films are included.
+- **Safer level control:** the output level now runs from 0 to 100 and starts at zero every time. Start stays disabled until you choose a level, and the level returns to zero after every stop.
+- **H.266 / VVC (experimental):** an optional switch that encodes the video with H.266 instead of H.265. **Most DATV viewers cannot decode H.266**: read the warning below before using it.
 
 The full history is in the [changelog](docs/CHANGELOG.md).
 
 ## Notes
 
-- **ffmpeg** (H.265 and AAC) is included in the portable package. When building from source, put one in `tools/ffmpeg/bin/`;
+- **ffmpeg** (H.265, H.266 and AAC) is included in the portable package. When building from source, put one in `tools/ffmpeg/bin/`;
   it is not part of this repository.
 - **Camera** support uses Windows DirectShow; other systems are not supported yet.
 - **Firmware source** is in `src/` (PlatformIO, ESP-IDF 6.1). To rebuild it: `pio run`, then `python tools/export_firmware.py`
