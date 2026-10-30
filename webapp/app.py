@@ -34,8 +34,9 @@ CONFIG = paths.DATA / "config.json"                    # remembered board: {"por
 FREQ_DEFAULT = "2405.000"                           # uplink MHz until you choose another
 FREQ_MIN, FREQ_MAX = 2300.0, 2450.0                 # the firmware refuses anything outside; the whole signal must fit
 SYMBOL_RATES = (125000, 250000, 333000, 500000, 1000000)
-FECS = ("3/4", "4/5")
-LEVEL_MIN, LEVEL_MAX, LEVEL_DEFAULT = 0, 100, 0   # zero inhibits Start; transmitted amplitude must be 1..100
+FECS = ("1/2", "3/5", "2/3", "3/4", "4/5")      # lower FEC: less signal needed (small dishes), less bitrate; the default stays 3/4
+LEVEL_HARD_MIN, LEVEL_HARD_MAX = 1, 480            # the firmware's own range; zero is never sent (the firmware would pick a strong automatic level)
+LEVEL_LIMITS_DEFAULT = (15, 100)                    # each user sets their own lowest and highest level on the Setup page
 MAX_SECONDS = 3600                                  # safety cap: a forgotten tab cannot transmit forever
 EXTS = {".png", ".jpg", ".jpeg"}
 
@@ -93,12 +94,32 @@ def save_config(port, serial_number):
     write_config(port=port, serial=serial_number)
 
 
-SETUP_DEFAULTS = {"callsign": "NOCALL", "locator": "JNxxyy", "clock_ahead": 5.0}      # a fresh install: everyone sets their own on the Setup page
+SETUP_DEFAULTS = {"callsign": "NOCALL", "locator": "JNxxyy", "clock_ahead": 5.0,
+                  "level_min": LEVEL_LIMITS_DEFAULT[0], "level_max": LEVEL_LIMITS_DEFAULT[1]}      # a fresh install: everyone sets their own on the Setup page
 
 
 def get_setup():
     cfg = load_config()
     return {k: cfg.get(k, v) for k, v in SETUP_DEFAULTS.items()}
+
+
+def whole(value):
+    """A whole number from a number or text; 15.5 is refused, not cut to 15."""
+    number = float(value)
+    if not number.is_integer():
+        raise ValueError("not a whole number")
+    return int(number)
+
+
+def level_limits():
+    """(lowest, highest) output level this user allows, from the Setup page. Levels below about 15 show a spike in the middle of the
+    signal; above about 250 it is distorted. Bad values in config.json fall back to the defaults."""
+    setup = get_setup()
+    try:
+        lo, hi = whole(setup["level_min"]), whole(setup["level_max"])
+    except (TypeError, ValueError):
+        return LEVEL_LIMITS_DEFAULT
+    return (lo, hi) if LEVEL_HARD_MIN <= lo <= hi <= LEVEL_HARD_MAX else LEVEL_LIMITS_DEFAULT
 
 
 def setup_ready():
@@ -139,6 +160,17 @@ def check_setup(d):
     if not 0 <= ahead <= 30:
         return None, "lead time: 0 to 30 seconds"
     return {"callsign": callsign, "locator": locator[:2].upper() + locator[2:4] + locator[4:6].lower() + locator[6:], "clock_ahead": ahead}, ""
+
+
+def check_limits(d):
+    """(lowest, highest, error) for the output level limits popup."""
+    try:
+        lo, hi = whole(d.get("level_min")), whole(d.get("level_max"))
+    except (TypeError, ValueError):
+        return None, None, "output level limits must be whole numbers"
+    if not LEVEL_HARD_MIN <= lo <= hi <= LEVEL_HARD_MAX:
+        return None, None, f"output level limits: {LEVEL_HARD_MIN} to {LEVEL_HARD_MAX}, and the lowest must not be above the highest"
+    return lo, hi, ""
 
 
 def espressif_ports():
@@ -196,6 +228,19 @@ def list_videos():
 @app.get("/api/videos")
 def api_videos():
     return jsonify(list_videos())
+
+
+@app.get("/api/video-info")
+def api_video_info():
+    """A plain-words description of the chosen video, and a warning when it is too heavy to decode live."""
+    name = request.args.get("name", "")
+    if name not in list_videos():
+        abort(404)
+    from stream_tx import video_info
+    try:
+        return jsonify(video_info(VIDEOS / name))
+    except ValueError as exc:
+        return jsonify(error=str(exc)), 400
 
 
 @app.get("/videos/<path:name>")
@@ -293,7 +338,7 @@ def api_bye():
 @app.get("/")
 def index():
     return render_template("index.html", rates=SYMBOL_RATES, fecs=FECS, freq=get_freq(),
-                           lmin=LEVEL_MIN, lmax=LEVEL_MAX, ldef=LEVEL_DEFAULT, max_seconds=MAX_SECONDS,
+                           lmin=0, lmax=level_limits()[1], ldef=0, level_min=level_limits()[0], max_seconds=MAX_SECONDS,
                            setup_ready=setup_ready())
 
 
@@ -352,6 +397,16 @@ def setup_page():
 def api_setup_get():
     cfg = load_config()
     return jsonify(**get_setup(), board={"port": cfg.get("port", ""), "serial": cfg.get("serial", "")})
+
+
+@app.post("/api/level-limits")
+def api_level_limits():
+    """The popup next to the Level slider: the user's lowest and highest output level. Zero is never a limit: it means Off."""
+    lo, hi, error = check_limits(request.get_json(silent=True) or {})
+    if error:
+        return jsonify(error=error), 400
+    write_config(level_min=lo, level_max=hi)
+    return jsonify(ok=True, level_min=lo, level_max=hi)
 
 
 @app.post("/api/setup")
@@ -519,6 +574,33 @@ def api_camera_preview():
                     mimetype="multipart/x-mixed-replace; boundary=frame", headers={"Cache-Control": "no-store"})
 
 
+PLAYER_EXE = paths.PLAYER / "HB9IIU-Experimental-H266-Player.exe"
+player = {"proc": None}
+
+
+@app.get("/api/player")
+def api_player():
+    """Is the optional H.266 Player present (folder H266-Player next to C3CAST.exe)? The page shows its button only then."""
+    return jsonify(available=PLAYER_EXE.is_file())
+
+
+@app.post("/api/player/open")
+def api_player_open():
+    """Start the H.266 Player as its own program (it keeps running if C3CAST is closed). One window at a time."""
+    if not PLAYER_EXE.is_file():
+        return jsonify(error="the H.266 Player is not installed: the folder H266-Player is missing"), 404
+    proc = player["proc"]
+    if proc is not None and proc.poll() is None:
+        return jsonify(ok=True, already=True)
+    try:
+        flags = getattr(subprocess, "DETACHED_PROCESS", 0) | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
+        player["proc"] = subprocess.Popen([str(PLAYER_EXE)], cwd=str(PLAYER_EXE.parent), creationflags=flags, close_fds=True,
+                                          stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except OSError as exc:
+        return jsonify(error=f"could not start the player: {exc}"), 500
+    return jsonify(ok=True)
+
+
 @app.get("/api/bandplan")
 def api_bandplan():
     """QO-100 slot rules (QOCAST's bandplan.py) for the spectrum, the downlink-to-uplink offset and the remembered frequency."""
@@ -563,8 +645,9 @@ def api_start():
         name, sr, fec, level = d.get("picture", ""), int(d["sr"]), d["fec"], int(d["level"])
     except (KeyError, TypeError, ValueError):
         return jsonify(error="bad request"), 400
-    if not 1 <= level <= LEVEL_MAX:
-        return jsonify(error="output level must be 1 to 100; zero disables transmission"), 400
+    lo, hi = level_limits()
+    if not lo <= level <= hi:
+        return jsonify(error=f"output level must be {lo} to {hi} (your limits on the Setup page); zero disables transmission"), 400
     if source not in ("picture", "clock", "camera", "video"):
         return jsonify(error="unknown source"), 400
     if not setup_ready():

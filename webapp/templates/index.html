@@ -18,9 +18,37 @@
     <span class="grow"></span>
     <span class="utc" id="utc"><b>--:--:--</b> UTC</span>
     <span id="state" class="chip"><i class="led"></i><span id="stateText">idle</span></span>
+    <button id="playerBtn" class="btn d-none" type="button" title="Open the H.266 Player: receive and watch DATV"><svg class="i"><use href="#i-monitor"/></svg>Player</button>
     <a href="/setup" class="btn" title="Setup"><svg class="i"><use href="#i-sliders"/></svg>Setup</a>
     <button id="quitBtn" class="btn danger" title="Stop any transmission and close C3CAST"><svg class="i"><use href="#i-power"/></svg>END</button>
   </header>
+  <div id="limitsDlg" class="modal d-none">
+    <div class="panel box" style="width:min(92vw,34rem);text-align:left">
+      <div class="ph"><svg class="i"><use href="#i-sliders"/></svg>Output level limits</div>
+      <div class="pb">
+        <p style="margin:0 0 .9rem">Drag the left handle for your <b>lowest</b> level and the right handle for your <b>highest</b>. The Level slider on the main page then runs between them, after its first step, <b>Off</b>.</p>
+        <div class="dual">
+          <div class="dual-track" id="dualTrack"></div>
+          <div class="dual-fill" id="dualFill"></div>
+          <input type="range" id="limLo" min="1" max="480" step="1" aria-label="Lowest level">
+          <input type="range" id="limHi" min="1" max="480" step="1" aria-label="Highest level">
+        </div>
+        <div class="row" style="justify-content:space-between;margin:.2rem 0 .9rem">
+          <span>Lowest <b id="limLoVal" style="color:var(--amber)"></b></span>
+          <span>Highest <b id="limHiVal" style="color:var(--amber)"></b></span>
+        </div>
+        <div class="limzones">
+          <div><i class="zone bad"></i> Below about 15 a spike appears in the middle of the signal. For less power use an attenuator.</div>
+          <div><i class="zone warn"></i> Above about 250 the signal is distorted.</div>
+        </div>
+        <div id="limError" class="note bad-text" style="margin-top:.6rem"></div>
+        <div class="row" style="justify-content:center;margin-top:1rem">
+          <button id="limSave" class="btn save-primary" type="button" style="width:auto;padding:.6rem 1.6rem">Save limits</button>
+          <button id="limCancel" class="btn" type="button">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
   <div id="askVvc" class="modal d-none">
     <div class="panel box" style="width:min(92vw,30rem);text-align:left">
       <div class="ph"><svg class="i"><use href="#i-warn"/></svg>Transmit in H.266?</div>
@@ -41,6 +69,22 @@
         <div class="row" style="justify-content:center">
           <button id="quitYes" class="btn danger" type="button"><svg class="i"><use href="#i-power"/></svg>END</button>
           <button id="quitNo" class="btn" type="button">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="infoVideo" class="modal d-none">
+    <div class="panel box" style="width:min(94vw,44rem);text-align:left">
+      <div class="ph"><svg class="i"><use href="#i-info"/></svg>Preparing a video</div>
+      <div class="pb" style="line-height:1.55">
+        <p style="margin:0 0 .6rem"><b>Almost any video works.</b> C3CAST fits the picture to the size your symbol rate and FEC allow, adds black bars if it is not 16:9, and loops it until Stop. What can go wrong is your PC decoding a very large file <b>live</b>.</p>
+        <p style="margin:0 0 .6rem"><b>Best:</b> MP4 with H.264 or H.265 and AAC sound, 16:9, <b>1280&times;720</b> or smaller, 25 or 30 frames per second (24 is ideal for the H.266 test mode). Any length is fine.</p>
+        <p style="margin:0 0 .6rem"><b>To prepare a file,</b> open a command window in the C3CAST folder and run this, with your own file names. It uses the ffmpeg that comes with C3CAST:</p>
+        <pre id="videoCmd" style="margin:0 0 .6rem;padding:.6rem .8rem;background:var(--bg);border:1px solid var(--line-hi);border-radius:.3rem;white-space:pre-wrap;word-break:break-all">tools\ffmpeg\bin\ffmpeg.exe -i input.mp4 -vf scale=-2:720,fps=30 -c:v libx265 -crf 24 -c:a aac -b:a 128k videos\output.mp4</pre>
+        <p style="margin:0 0 .9rem;color:var(--dim)">The new file lands in the <b>videos</b> folder. Press <b>Reload</b>, and it is in the list.</p>
+        <div class="row" style="justify-content:center">
+          <button id="videoCopy" class="btn" type="button">Copy the command</button>
+          <button id="videoClose" class="btn" type="button">Close</button>
         </div>
       </div>
     </div>
@@ -74,7 +118,7 @@
       <div class="warnbox" role="alert"><svg class="i"><use href="#i-warn"/></svg><div><b>Most DATV viewers cannot decode H.266.</b> They will see no picture. Use this mode only for tests with stations that have agreed to take part, and switch back to H.265 for normal operation.</div></div>
       <p><b>A different way to pack the picture.</b> H.266 (also called VVC) is a newer video compression format. It aims to fit more picture detail into the same radio bandwidth. Better pictures are possible, but are not guaranteed.</p>
       <p><b>Your PC does more work.</b> This experimental mode uses the CPU, even if you have an NVIDIA GPU. The picture can take several seconds to start. At larger picture sizes your PC may struggle to keep up.</p>
-      <p><b>The receiver must understand H.266.</b> VLC 3 and QOCAST's normal Player cannot display it. Use a recent ffplay with VVC decoding (FFmpeg 7.1 or newer), or the <a href="https://github.com/HB9IIU/HB9IIU-Experimental-H266-Player" target="_blank" rel="noopener noreferrer">HB9IIU Experimental H.266 Player</a> (opens in a new tab). Check your receiver before trying it on air.</p>
+      <p><b>The receiver must understand H.266.</b> VLC 3 and QOCAST's normal Player cannot display it. Use the <b>HB9IIU Experimental H.266 Player</b>: press <b>Player</b> at the top of this page (it lives in the <b>H266-Player</b> folder next to C3CAST.exe), or a recent ffplay with VVC decoding (FFmpeg 7.1 or newer). Check your receiver before trying it on air.</p>
       <p><b>The radio and sound stay the same.</b> Only video compression changes. Your frequency, symbol rate, FEC and AAC sound settings stay as selected. This mode has been tested only briefly on air by HB9IIU; more testing by other users is welcome.</p>
       <p><b>Video-file test profile.</b> Movies use 640×360 at 24 fps, with video bitrate capped at 300 kb/s, to keep CPU work manageable. Camera, clock and picture profiles remain separate and can need a faster PC.</p>
       <p>Leave the switch off for normal H.265 operation. It resets to off when this page opens.</p>
@@ -128,9 +172,11 @@
           </div>
         </div>
         <div class="field d-none" id="videoBox">
-          <label class="lab" for="video">Video file</label>
+          <div class="lab"><label for="video">Video file</label><button id="videoHelp" class="btn" type="button" title="How to prepare a video" aria-label="How to prepare a video"><svg class="i"><use href="#i-info"/></svg></button></div>
           <select id="video" aria-label="Video file"></select>
-          <div class="hint">Add files to the <b>videos</b> folder next to C3CAST.exe (from source: webapp/videos), then press Reload. The selected video loops until Stop.</div>
+          <div id="videoInfo" class="hint"></div>
+          <div id="videoWarn" class="warnbox d-none" role="alert"><svg class="i"><use href="#i-warn"/></svg><div id="videoWarnText"></div></div>
+          <div class="hint"><span>Add files to the <b>videos</b> folder next to C3CAST.exe (from source: webapp/videos), then press Reload. The selected video loops until Stop.</span></div>
           <div id="videoCredit" class="hint"></div>
         </div>
         <div class="field d-none" id="cameraBox">
@@ -200,16 +246,16 @@
             <div class="lab">FEC</div>
             <div class="seg fit">
               {% for f in fecs %}
-              <input type="radio" name="fec" id="fec{{ loop.index }}" value="{{ f }}" {{ 'checked' if loop.first }}>
+              <input type="radio" name="fec" id="fec{{ loop.index }}" value="{{ f }}" {{ 'checked' if f == '3/4' }}>
               <label for="fec{{ loop.index }}">{{ f }}</label>
               {% endfor %}
             </div>
           </div>
         </div>
         <div class="field">
-          <div class="lab">Level<b id="levelVal"></b></div>
+          <div class="lab"><span>Level <button id="limitsBtn" class="btn" type="button" title="Set your lowest and highest level">Limits</button></span><b id="levelVal"></b></div>
           <input type="range" id="level" min="{{ lmin }}" max="{{ lmax }}" value="{{ ldef }}" autocomplete="off">
-          <div id="levelZero" class="hint d-none">Level 0: transmission disabled. Choose 1–100 to start.</div>
+          <div id="levelZero" class="hint d-none"></div>
         </div>
         <div class="field">
           <div class="row">
@@ -330,6 +376,30 @@ async function loadVideos() {
   updateButtons();
 }
 $('video').onchange = showPreview;
+
+// What is in the chosen video, in plain words, with a warning when it is too heavy to decode live.
+const videoInfoCache = {};
+async function showVideoInfo() {
+  const name = $('video').value;
+  $('videoInfo').textContent = ''; $('videoWarn').classList.add('d-none');
+  if (!name) return;
+  if (!(name in videoInfoCache)) {
+    const r = await fetch('/api/video-info?name=' + encodeURIComponent(name));
+    videoInfoCache[name] = r.ok ? await r.json() : {summary: (await r.json().catch(() => ({}))).error || 'cannot read this file', heavy: '', notes: []};
+  }
+  if ($('video').value !== name) return;                                   // the user chose another file meanwhile
+  const info = videoInfoCache[name];
+  $('videoInfo').textContent = info.summary + (info.notes.length ? ' \u00b7 ' + info.notes.join(' ') : '');
+  if (info.heavy) { $('videoWarnText').textContent = info.heavy; $('videoWarn').classList.remove('d-none'); }
+}
+$('videoHelp').onclick = () => $('infoVideo').classList.remove('d-none');
+$('videoClose').onclick = () => $('infoVideo').classList.add('d-none');
+$('infoVideo').onclick = e => { if (e.target === $('infoVideo')) $('infoVideo').classList.add('d-none'); };
+$('videoCopy').onclick = async () => {
+  try { await navigator.clipboard.writeText($('videoCmd').textContent); $('videoCopy').textContent = 'Copied'; }
+  catch (e) { $('videoCopy').textContent = 'Select the text and copy it'; }
+  setTimeout(() => { $('videoCopy').textContent = 'Copy the command'; }, 2000);
+};
 $('videoPreview').onerror = () => {
   if (isVideo() && $('video').value) $('previewMsg').textContent = 'Browser preview unavailable for this format. FFmpeg can still transmit a supported video file.';
 };
@@ -468,7 +538,7 @@ function showPreview() {
       link.textContent = credit[0];
       $('videoCredit').append(link, ' · CC BY 3.0');
     }
-    if (name) $('videoPreview').src = '/videos/' + encodeURIComponent(name);
+    if (name) { $('videoPreview').src = '/videos/' + encodeURIComponent(name); showVideoInfo(); }
     else $('previewMsg').textContent = 'No videos yet. Add a video to the videos folder, then press Reload.';
   } else if (isClock()) {
     const refresh = () => { $('preview').src = '/api/clock-preview.png?' + Date.now(); };   // drawn by the server: also while on air
@@ -529,7 +599,7 @@ function updateButtons(state) {
   }
   $('recheck').disabled = busy || flashing;
   $('flashBtn').disabled = busy || flashing;
-  document.querySelectorAll('input[name=sr], input[name=fec], input[name=source], #level, #picture, #picPrev, #picNext, #camera, #audio, #delayDec, #delayInc, #detectBtn, #reload, #freq, #vvc').forEach(e => e.disabled = busy);
+  document.querySelectorAll('input[name=sr], input[name=fec], input[name=source], #level, #limitsBtn, #picture, #picPrev, #picNext, #camera, #audio, #delayDec, #delayInc, #detectBtn, #reload, #freq, #vvc').forEach(e => e.disabled = busy);
   window.QO_LOCKED = busy || flashing;
   $('video').disabled = busy;
   if (isVideo() && busy) $('videoPreview').pause();
@@ -599,7 +669,57 @@ document.addEventListener('keydown', e => {
 $('pictureInfoBtn').onclick = () => $('infoPictures').classList.remove('d-none');
 $('picInfoClose').onclick = () => $('infoPictures').classList.add('d-none');
 $('infoPictures').onclick = e => { if (e.target === $('infoPictures')) $('infoPictures').classList.add('d-none'); };
-$('level').oninput = updatePlan;
+// The slider's first step is Off (0); the next step is the user's lowest level, so levels below it (spike in the middle) cannot be picked.
+let levelMin = {{ level_min }}, levelMax = {{ lmax }};
+let levelPrev = 0;
+const levelHint = () => { $('levelZero').textContent = 'Level 0: transmission disabled. Choose ' + levelMin + '\u2013' + levelMax + ' to start (change the limits with the Limits button).'; };
+levelHint();
+$('level').oninput = () => {
+  let v = +$('level').value;
+  if (v > 0 && v < levelMin) v = levelPrev >= levelMin ? 0 : levelMin;
+  $('level').value = v;
+  levelPrev = v;
+  updatePlan();
+};
+
+// ---- output level limits: one track, two handles (lowest and highest)
+const LIM_MIN = 1, LIM_MAX = 480;
+const limPct = v => (v - LIM_MIN) / (LIM_MAX - LIM_MIN) * 100;
+function limDraw() {
+  const lo = +$('limLo').value, hi = +$('limHi').value;
+  $('limLoVal').textContent = lo; $('limHiVal').textContent = hi;
+  $('dualFill').style.left = limPct(lo) + '%';
+  $('dualFill').style.width = (limPct(hi) - limPct(lo)) + '%';
+  $('limLo').style.zIndex = lo > LIM_MAX * 0.9 ? 5 : 3;                 // when both handles sit at the top end, the lowest one stays reachable
+  $('dualTrack').style.background = 'linear-gradient(to right, rgba(239,83,80,.55) 0 ' + limPct(15) + '%, var(--line-hi) ' + limPct(15) + '% ' + limPct(250) +
+    '%, rgba(240,165,44,.45) ' + limPct(250) + '% 100%)';
+}
+function limMove(e) {                                                      // the handles cannot cross
+  const lo = $('limLo'), hi = $('limHi');
+  if (e.target === lo && +lo.value > +hi.value) lo.value = hi.value;
+  if (e.target === hi && +hi.value < +lo.value) hi.value = lo.value;
+  limDraw();
+}
+$('limLo').oninput = limMove;
+$('limHi').oninput = limMove;
+$('limitsBtn').onclick = () => {
+  $('limLo').value = levelMin; $('limHi').value = levelMax; $('limError').textContent = '';
+  limDraw();
+  $('limitsDlg').classList.remove('d-none');
+};
+$('limCancel').onclick = () => $('limitsDlg').classList.add('d-none');
+$('limitsDlg').onclick = e => { if (e.target === $('limitsDlg')) $('limitsDlg').classList.add('d-none'); };
+$('limSave').onclick = async () => {
+  const r = await post('/api/level-limits', {level_min: +$('limLo').value, level_max: +$('limHi').value});
+  if (!r.ok) { $('limError').textContent = r.data.error || 'could not save'; return; }
+  levelMin = r.data.level_min; levelMax = r.data.level_max;
+  $('level').max = levelMax;
+  $('level').value = 0; levelPrev = 0;                                     // a new range: back to Off, then choose a level again
+  levelHint(); updatePlan();
+  $('limitsDlg').classList.add('d-none');
+  toast('Output level limits saved: ' + levelMin + ' to ' + levelMax, 'ok');
+  setTimeout(() => $('toast').classList.add('d-none'), 2500);
+};
 document.querySelectorAll('input[name=sr], input[name=fec]').forEach(e => e.onchange = updatePlan);
 document.querySelectorAll('input[name=sr]').forEach(e => e.addEventListener('change', freqChanged));
 document.querySelectorAll('input[name=source]').forEach(e => e.onchange = () => isVideo() ? loadVideos() : showPreview());
@@ -643,6 +763,17 @@ async function flashShow() {
     toast('Flashing failed', 'bad', s.error);
   }
 }
+
+fetch('/api/player').then(r => r.json()).then(p => { if (p.available) $('playerBtn').classList.remove('d-none'); }).catch(() => {});
+$('playerBtn').onclick = async () => {
+  const r = await post('/api/player/open');
+  if (r.ok) {
+    toast(r.data.already ? 'The player is already open' : 'H.266 Player started', 'ok');
+    setTimeout(() => $('toast').classList.add('d-none'), 2500);      // this notice goes away by itself
+  } else {
+    toast('Cannot start the player', 'bad', r.data.error);
+  }
+};
 
 function toast(text, kind, detail) {
   const t = $('toast');

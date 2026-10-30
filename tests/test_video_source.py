@@ -81,7 +81,7 @@ class VideoSource(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp, patch.object(web,'VIDEOS',Path(tmp)), \
              patch.object(web,'setup_ready',return_value=True), patch.object(web.subprocess,'Popen') as worker:
             response=web.app.test_client().post('/api/start',json={'source':'video','video':'missing.mp4',
-                                                                 'sr':125000,'fec':'3/4','level':10})
+                                                                 'sr':125000,'fec':'3/4','level':50})
             self.assertEqual(response.status_code,400)
             self.assertIn('unknown video',response.json['error'])
             worker.assert_not_called()

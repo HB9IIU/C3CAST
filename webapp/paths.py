@@ -15,10 +15,12 @@ if FROZEN:
     RESOURCE = Path(sys._MEIPASS)
     DATA = Path(sys.executable).resolve().parent
     TOOLS = DATA / "tools"
+    PLAYER = DATA / "H266-Player"                  # the optional HB9IIU Experimental H.266 Player, next to C3CAST.exe
 else:
     RESOURCE = Path(__file__).resolve().parent
     DATA = RESOURCE
     TOOLS = RESOURCE.parent / "tools"
+    PLAYER = TOOLS / "h266-player"
 
 
 def worker_cmd(name):

@@ -35,18 +35,65 @@ def source_settings(source, sr_ks, fec, codec="h265"):
 
 def video_has_audio(path, codec="h265"):
     """Validate a local media file before RF; allow video-only files with silent AAC. ffmpeg itself reads the stream list,
-    so the packaged app does not need ffprobe."""
+    so the packaged app does not need ffprobe. Headers only: no output file, so nothing is decoded and a long film takes no time
+    (ffmpeg then ends with exit code 1, "at least one output file must be specified", which is expected)."""
     try:
-        result = subprocess.run([str(qo100_enc.ffmpeg_path(codec)), "-hide_banner", "-t", "0", "-i", str(path), "-f", "null", "-"],
+        result = subprocess.run([str(qo100_enc.ffmpeg_path(codec)), "-hide_banner", "-i", str(path)],
                                 capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=20,
                                 creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
     except (OSError, subprocess.SubprocessError) as exc:
         raise ValueError(f"Cannot read the selected video: {exc}") from exc
     streams = re.findall(r"Stream #\d+:\d+.*?: (Video|Audio): (.*)", result.stderr)      # one line per stream
     has_video = any(kind == "Video" and "attached pic" not in rest for kind, rest in streams)
-    if result.returncode or not has_video:
+    if not has_video:
         raise ValueError("The selected file has no readable video stream")
     return any(kind == "Audio" for kind, _ in streams)
+
+
+def video_info(path, codec="h265"):
+    """What ffmpeg finds in a local video, as plain text for the page: {"summary", "heavy", "notes"}. Only reads the stream list
+    (like video_has_audio), so the packaged app needs nothing more than ffmpeg. "heavy" is a warning when the file is large enough that
+    decoding it live may stutter; "notes" are things the user should know (black bars, silence). Headers only, like video_has_audio."""
+    try:
+        result = subprocess.run([str(qo100_enc.ffmpeg_path(codec)), "-hide_banner", "-i", str(path)],
+                                capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=20,
+                                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise ValueError(f"Cannot read the selected video: {exc}") from exc
+    text = result.stderr
+    video = next((m for m in re.finditer(r"Stream #\d+:\d+.*?: Video: (.*)", text) if "attached pic" not in m[1]), None)
+    if video is None:
+        raise ValueError("The selected file has no readable video stream")
+    line = video[1]
+    name = re.match(r"\w+", line)[0]
+    size = re.search(r", (\d{2,5})x(\d{2,5})[ ,\[]", line + " ")
+    rate = re.search(r"([\d.]+) fps", line) or re.search(r"([\d.]+) tbr", line)
+    width, height = (int(size[1]), int(size[2])) if size else (0, 0)
+    fps = float(rate[1]) if rate else 0.0
+    has_audio = re.search(r"Stream #\d+:\d+.*?: Audio:", text) is not None
+    length = re.search(r"Duration: (\d+):(\d+):(\d+)", text)
+    seconds = int(length[1]) * 3600 + int(length[2]) * 60 + int(length[3]) if length else 0
+    names = {"h264": "H.264", "hevc": "H.265", "vvc": "H.266", "av1": "AV1", "vp9": "VP9", "mpeg4": "MPEG-4", "mpeg2video": "MPEG-2", "vp8": "VP8"}
+    parts = [f"{width}\u00d7{height}" if width else "size unknown", f"{fps:g} fps" if fps else "frame rate unknown", names.get(name, name)]
+    if seconds:
+        parts.append(f"{seconds // 3600}:{seconds % 3600 // 60:02d}:{seconds % 60:02d}" if seconds >= 3600 else f"{seconds // 60}:{seconds % 60:02d}")
+    parts.append("with sound" if has_audio else "no sound")
+    heavy, notes = "", []
+    big = []
+    if width * height > 2100000:                                  # more pixels than 1920x1080, whichever way up
+        big.append("bigger than 1080p")
+    if fps > 30.5:
+        big.append(f"{fps:g} fps")
+    if name in ("av1",):
+        big.append("AV1 is slow to decode")
+    if big:
+        heavy = ("Heavy file (" + ", ".join(big) + "): your PC may stutter decoding it live. Nothing above 1080p and 30 fps is ever sent, "
+                 "so prepare the file first: press the i button.")
+    if width and height and abs(width / height - 16 / 9) > 0.03:
+        notes.append("Not 16:9: black bars will be added.")
+    if not has_audio:
+        notes.append("No sound in the file: silence will be sent.")
+    return {"summary": " \u00b7 ".join(parts), "heavy": heavy, "notes": notes}
 
 
 def build(source, picture, sr_ks, fec, callsign, locator, ahead, start_time, camera="", mic="", delay_ms=0, codec="h265", video=""):
@@ -114,8 +161,8 @@ def main(argv=None):
     ap.add_argument("--locator", required=True)
     ap.add_argument("--ahead", type=float, default=5.0)
     a = ap.parse_args(argv)
-    if not 1 <= a.amp <= 100:
-        ap.error("output level must be 1 to 100; zero disables transmission")
+    if not 1 <= a.amp <= 480:
+        ap.error("output level must be 1 to 480; zero disables transmission")
     sr_ks = a.baud // 1000
 
     stop = threading.Event()

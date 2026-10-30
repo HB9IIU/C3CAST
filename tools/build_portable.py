@@ -57,12 +57,15 @@ shutil.copy2(ff / "buildconf.txt", lic / "buildconf.txt")
 shutil.copy2(ROOT / "docs" / "FFMPEG-THIRD-PARTY-LICENSES.txt", lic / "THIRD-PARTY-LICENSES.txt")
 shutil.copy2(ROOT / "docs" / "FFMPEG-NOTICE.txt", OUT / "tools" / "ffmpeg" / "README.txt")
 shutil.copytree(ff / "source", OUT / "tools" / "ffmpeg" / "source")      # the GPL source travels inside the package
+if (ROOT / "tools" / "h266-player").is_dir():                      # the optional H.266 Player: its own folder, its own licences and source
+    # never the player's own logs or settings: it writes them next to its exe while it runs (they hold the tuner's serial number)
+    shutil.copytree(ROOT / "tools" / "h266-player", OUT / "H266-Player", ignore=shutil.ignore_patterns("*.log", "player2.json"))
 (OUT / "pictures").mkdir()
 (OUT / "videos").mkdir()
 shutil.copy2(ROOT / "docs" / "VIDEO-CREDITS.txt", OUT / "videos" / "CREDITS.txt")
-for clip in (ROOT / "webapp" / "videos").iterdir():
-    if clip.is_file() and not clip.is_symlink() and clip.suffix.lower() in {".mp4", ".mkv", ".mov", ".avi", ".webm", ".ts", ".m4v"}:
-        shutil.copy2(clip, OUT / "videos" / clip.name)
+SAMPLE_FILMS = ("Bunny.mp4", "sintel_trailer.mp4")        # only these ship: anything else in webapp/videos is the developer's own test material
+for clip in SAMPLE_FILMS:
+    shutil.copy2(ROOT / "webapp" / "videos" / clip, OUT / "videos" / clip)
 for pic in (ROOT / "webapp" / "pictures").iterdir():
     if pic.is_file():
         shutil.copy2(pic, OUT / "pictures" / pic.name)
@@ -77,6 +80,8 @@ shutil.copy2(ROOT / "LICENSE.upstream", OUT / "LICENSE-firmware-SP8ESA.txt")
     "\r\n"
     "Your own pictures go in the 'pictures' folder (PNG or JPG, 16:9, 1280x720 is ideal).\r\n"
     "Your settings are saved in config.json next to C3CAST.exe.\r\n"
+    "H266-Player is an optional receiver for H.265 and H.266 (its own program and licence): start it with the Player button in the page.\r\n"
+    "Delete that folder if you do not need it; the button then disappears.\r\n"
     "\r\n"
     "Licensed radio amateurs only. Use a filter before any amplifier and check the spectrum first.\r\n"
     "\r\n"

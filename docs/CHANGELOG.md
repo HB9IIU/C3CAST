@@ -4,6 +4,25 @@ The version lives in `webapp/version.py` (shown on the page, the setup page and 
 Rules: the first public release is a beta: 1.0.0-beta.1, beta.2, ... then 1.0.0 once it has proved itself. After that a new
 feature raises the middle number and a fix the last one. 0.1 to 0.4 below are the internal development versions.
 
+## 1.0.0-beta.4
+- The package includes the HB9IIU Experimental H.266 Player (folder H266-Player, GPL v3, with its source and licences). A **Player**
+  button at the top of the page starts it; the button appears only while the folder is present, so it can be deleted. The
+  H.266 popup now points to it instead of a web link, and is wider so it needs no scrollbar.
+- Output level limits are set by the user with a **Limits** button next to the Level slider: a popup with one track and two handles
+  (lowest and highest, within the firmware's 1 to 480; default 15 to 100, replacing the fixed 0 to 100), with the spike zone below
+  15 and the distortion zone above 250 coloured. The slider's first step is Off, then it runs from the lowest to the highest level; the server
+  checks the limits again at Start, and zero is still never sent. Levels below 15 show a spike in the middle of the signal.
+
+- Video source: the chosen file is described in plain words (size, frame rate, codec, length, sound), with a warning when it is bigger than
+  1080p or above 30 fps (your PC may stutter decoding it live), a note about black bars for a file that is not 16:9, and a note that silence
+  is sent when it has no sound. An **i** button explains the best format (MP4, H.264 or H.265, 16:9, 1280x720 or smaller, 25 or 30 fps) and
+  gives one command that prepares a file with the packaged ffmpeg (H.265: the package has no H.264 encoder).
+- More FEC values for small dishes (asked for by OK1PHU): **1/2, 3/5 and 2/3** next to 3/4 and 4/5; 3/4 stays the default.
+  A lower FEC needs less signal (about 3 dB less at 1/2 and 1.8 dB less at 3/5, compared with 3/4) and carries less video. 1/2 and 2/3
+  use QOCAST's picture sizes; 3/5 has none there, so it takes the larger of the two neighbouring sizes when that still gets about
+  0.011 bits per pixel, otherwise the smaller. Checked offline with the GPU and the software encoder at all five symbol rates (stream
+  rate and decoding as for 3/4); not yet received on air.
+
 ## 1.0.0-beta.3
 - The Video source reads a file's streams with ffmpeg itself, so the packaged app does not need ffprobe.
 - Second source row with Video. The dropdown lists local videos (webapp/videos from source,
