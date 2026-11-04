@@ -278,7 +278,10 @@
           <div><dt>Video</dt><dd id="pVideo">-</dd></div>
           <div><dt>Audio</dt><dd id="pAudio">-</dd></div>
         </dl>
-        <button id="toggle" class="go" type="button"><svg class="i"><use id="toggleUse" href="#i-play"/></svg><span id="toggleText">Start</span></button>
+        <div class="tx-action">
+          <p id="powerReminder" class="tx-power-warning"><svg class="i" aria-hidden="true"><use href="#i-warn"/></svg>Set power before Start</p>
+          <button id="toggle" class="go" type="button" aria-describedby="powerReminder"><svg class="i"><use id="toggleUse" href="#i-play"/></svg><span id="toggleText">Start</span></button>
+        </div>
       </div>
     </section>
 

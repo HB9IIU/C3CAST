@@ -40,7 +40,11 @@ a:hover { text-decoration: underline; }
 .tx-level { grid-column: 3; }
 .tx-codec { align-self: center; order: 2; }
 .tx-summary { order: 2; }
-.tx-body .go { align-self: stretch; order: 2; }
+.tx-action { align-self: stretch; order: 2; display: flex; flex-direction: column; gap: .35rem; min-width: 0; }
+.tx-power-warning { display: flex; align-items: center; justify-content: center; gap: .4rem; margin: 0; color: var(--bad); font: 700 .95rem/1.3 var(--sans); text-align: center; }
+.tx-action:has(.go.stop) .tx-power-warning { visibility: hidden; }
+.tx-action .go { flex: 1; min-height: 4rem; font-size: 1.35rem; }
+.tx-action .go .i { width: 1.35rem; height: 1.35rem; }
 .tx-summary dd { font-size: .85rem; }
 @media (max-width: 1000px) {
   .tx-body { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
