@@ -4,7 +4,7 @@
   const requested = new Set();
   const pending = new Map();
   const lastSignals = new Map();
-  const eyes = new Map(panels.map(panel => [panel, new MagicEye(panel.querySelector('.rx-eye-display'), 96)]));
+  const eyes = new Map(panels.map(panel => [panel, new MagicEye(panel.querySelector('.rx-eye-display'), 76)]));
   let activeReceiver = 1;
   let closing = false;
   function selectReceiver(number) {
@@ -50,7 +50,6 @@
   }
   for (const panel of panels) {
     panel.querySelector('.rx-pill').onclick = () => selectReceiver(Number(panel.dataset.receiver));
-    panel.querySelector('.rx-stop').onclick = () => { pending.delete(Number(panel.dataset.receiver)); send(panel, {type: 'stop'}); };
     panel.querySelector('.rx-settings').onclick = () => send(panel, {type: 'settings'});
     panel.querySelector('.rx-full').onclick = () => panel.requestFullscreen().catch(() => {});
   }

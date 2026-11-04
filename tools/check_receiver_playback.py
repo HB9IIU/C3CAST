@@ -129,8 +129,6 @@ def main():
                 page.wait_for_function('(codec)=>window.rxReports.some(r=>r.info?.video===codec)', arg=codec)
                 assert page.frame_locator('[data-receiver="2"] iframe').locator('#video').evaluate('v=>v.muted')
                 page.screenshot(path=str(output / f'c3cast-receiver-{name}.png'), full_page=True)
-                page.locator('[data-receiver="1"] .rx-stop').click()
-                page.locator('[data-receiver="2"] .rx-stop').click()
                 page.goto('about:blank')
                 for process, worker_log in pair:
                     process.stdin.close()

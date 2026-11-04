@@ -16,7 +16,7 @@ an existing assignment. If no hardware was found, polling keeps looking.
 Each available receiver starts its local browser service automatically. RX 1
 tunes the QO-100 beacon at 10491.500 MHz / 1500 kS/s. RX 2 waits for a selection.
 For another signal, select a receiver pill, then click the carrier in the spectrum.
-Stop stops playback; Settings exposes LNB power/input or RTL gain. RX 2 starts
+Settings exposes LNB power/input or RTL gain. RX 2 starts
 muted. Click the picture or fullscreen button to enlarge a receiver.
 
 Click the Receiver 1 (green) or Receiver 2 (violet) pill to select the player that
@@ -26,7 +26,9 @@ half-height measurement and standard-rate rounding. The beacon is fixed to
 10491.500 MHz / 1500 kS/s. Noise clicks report no signal and leave tuning alone.
 The manual frequency/SR fields have been replaced by stream information: station
 and provider, downlink/SR, video codec and resolution, audio codec, modulation/FEC,
-MER, and decoding margin. The EM34-style magic eye uses that margin, not raw MER:
+MER, and decoding margin. These are grouped into three compact lines beneath the
+station/lock header, alongside a 76 px magic eye; no per-player Stop button is shown.
+The EM34-style magic eye uses that margin, not raw MER:
 the shadow closes as margin approaches +5 dB. It is open while searching and dark
 when stopped. Missing quality readings are displayed as unavailable.
 

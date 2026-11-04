@@ -287,7 +287,6 @@
     {% for n in (1, 2) %}
     <section class="panel rx-panel" data-receiver="{{ n }}">
       <div class="ph"><button class="rx-pill" type="button" aria-pressed="{{ 'true' if n == 1 else 'false' }}">Receiver {{ n }}</button><span class="rx-device grow">No receiver connected</span>
-        <button class="btn rx-stop" type="button">Stop</button>
         <button class="btn rx-settings" type="button" title="Receiver settings">Settings</button>
         <button class="btn rx-full" type="button" title="Fullscreen receiver">⛶</button>
       </div>
@@ -295,15 +294,11 @@
       <div class="pb rx-details">
         <div class="rx-stream">
           <div class="row rx-station"><b data-rx-field="station">No stream</b><span class="grow"></span><span class="rx-lock">Idle</span></div>
-          <dl class="rx-stream-info">
-            <div class="rx-wide"><dt>Downlink · symbol rate</dt><dd data-rx-field="tuning">—</dd></div>
-            <div><dt>Video</dt><dd data-rx-field="video">—</dd></div>
-            <div><dt>Audio</dt><dd data-rx-field="audio">—</dd></div>
-            <div><dt>Modulation · FEC</dt><dd data-rx-field="mode">—</dd></div>
-            <div><dt>Signal quality</dt><dd data-rx-field="quality">—</dd></div>
-          </dl>
+          <div class="rx-info-line"><span data-rx-field="tuning" aria-label="Downlink and symbol rate">—</span><span data-rx-field="mode" aria-label="Modulation and FEC">—</span></div>
+          <div class="rx-info-line"><span data-rx-field="video" aria-label="Video format">—</span><span data-rx-field="audio" aria-label="Audio codec">—</span></div>
+          <div class="rx-info-line"><span data-rx-field="quality" aria-label="Signal quality">—</span><span class="rx-margin" aria-label="Decoding margin">Margin —</span></div>
         </div>
-        <div class="rx-eye"><div class="rx-eye-display"></div><span class="hint rx-margin">Margin —</span></div>
+        <div class="rx-eye"><div class="rx-eye-display"></div></div>
       </div>
       <div class="hint rx-message" role="status" aria-live="polite"></div>
     </section>
