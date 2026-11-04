@@ -91,7 +91,7 @@ SAMPLE_FILMS = ("Bunny.mp4", "sintel_trailer.mp4")        # only these ship: any
 for clip in SAMPLE_FILMS:
     shutil.copy2(ROOT / "webapp" / "videos" / clip, OUT / "videos" / clip)
 # Explicit release artwork only: never bundle private test pictures.
-SAMPLE_PICTURES = ("C3CAST_ ESP32-C3 DATV for QO-100.png", "C3SCOPE-closing.png", "C3SCOPE-promo.png", "SP8ESA.png", "tescard.png")
+SAMPLE_PICTURES = ("C3CAST_ ESP32-C3 DATV for QO-100.png", "C3SCOPE-closing.png", "C3SCOPE-promo.png", "SP8ESA.png", "real.png", "tescard.png")
 for picture in SAMPLE_PICTURES:
     shutil.copy2(ROOT / "webapp" / "pictures" / picture, OUT / "pictures" / picture)
 for document in ("docs/screenshot.png", f"docs/releases/v{version.__version__}.md", f"docs/releases/v{version.__version__}-validation.md", f"docs/releases/v{version.__version__}-components.json"):
