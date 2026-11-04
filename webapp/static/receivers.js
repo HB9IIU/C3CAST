@@ -50,6 +50,13 @@
   }
   for (const panel of panels) {
     panel.querySelector('.rx-pill').onclick = () => selectReceiver(Number(panel.dataset.receiver));
+    panel.querySelector('.rx-volume').oninput = event => {
+      const volume = Number(event.target.value);
+      send(panel, {type: 'audio', volume, muted: volume === 0});
+    };
+    panel.querySelector('.rx-mute').onclick = () => {
+      send(panel, {type: 'audio', muted: panel.querySelector('.rx-mute').getAttribute('aria-pressed') !== 'true'});
+    };
     panel.querySelector('.rx-settings').onclick = () => send(panel, {type: 'settings'});
     panel.querySelector('.rx-full').onclick = () => panel.requestFullscreen().catch(() => {});
   }
@@ -61,6 +68,21 @@
   window.addEventListener('message', event => {
     const panel = panels.find(p => p.querySelector('iframe')?.contentWindow === event.source);
     if (!panel || event.origin !== new URL(panel.querySelector('iframe').src).origin) return;
+    if (event.data?.type === 'audio') {
+      const volume = Number(event.data.volume);
+      if (!Number.isFinite(volume) || volume < 0 || volume > 1) return;
+      const muted = Boolean(event.data.muted) || volume === 0;
+      const slider = panel.querySelector('.rx-volume');
+      slider.disabled = false;
+      slider.value = volume;
+      slider.style.setProperty('--fill', `${muted ? 0 : volume * 100}%`);
+      const button = panel.querySelector('.rx-mute');
+      button.disabled = false;
+      button.setAttribute('aria-pressed', String(muted));
+      button.setAttribute('aria-label', `${muted ? 'Unmute' : 'Mute'} receiver ${panel.dataset.receiver}`);
+      button.querySelector('use').setAttribute('href', muted ? '#i-sound-off' : '#i-sound');
+      panel.querySelector('.rx-audio').classList.toggle('muted', muted);
+    }
     if (event.data?.type === 'enlarge') panel.requestFullscreen().catch(() => {});
     if (event.data?.type === 'rx') {
       const data = event.data;
@@ -94,6 +116,7 @@
       for (const rx of data.receivers) {
         const panel = panels[rx.number - 1];
         panel.querySelector('.rx-device').textContent = rx.label;
+        panel.querySelector('.rx-device').title = rx.label;
         if (rx.available && !requested.has(rx.number)) await start(panel);
         if (rx.state === 'running' && !panel.querySelector('iframe')) {
           const frame = document.createElement('iframe');
@@ -108,6 +131,8 @@
           panel.querySelector('.rx-picture').replaceChildren(frame);
         }
         if (rx.error) {
+          panel.querySelector('.rx-volume').disabled = true;
+          panel.querySelector('.rx-mute').disabled = true;
           const placeholder = document.createElement('div');
           placeholder.className = 'rx-placeholder';
           placeholder.textContent = 'Receiver stopped';

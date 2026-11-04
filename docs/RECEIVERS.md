@@ -18,6 +18,8 @@ tunes the QO-100 beacon at 10491.500 MHz / 1500 kS/s. RX 2 waits for a selection
 For another signal, select a receiver pill, then click the carrier in the spectrum.
 Settings exposes LNB power/input or RTL gain. RX 2 starts
 muted. Click the picture or fullscreen button to enlarge a receiver.
+Each player's volume slider and mute button sit in its header before Settings;
+the received picture has no volume-control overlay.
 
 Click the Receiver 1 (green) or Receiver 2 (violet) pill to select the player that
 spectrum clicks tune. Selecting a pill alone does not retune it. Clicking a carrier

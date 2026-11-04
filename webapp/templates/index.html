@@ -287,6 +287,10 @@
     {% for n in (1, 2) %}
     <section class="panel rx-panel" data-receiver="{{ n }}">
       <div class="ph"><button class="rx-pill" type="button" aria-pressed="{{ 'true' if n == 1 else 'false' }}">Receiver {{ n }}</button><span class="rx-device grow">No receiver connected</span>
+        <div class="rx-audio muted">
+          <input class="rx-volume" type="range" min="0" max="1" step="0.05" value="1" aria-label="Receiver {{ n }} volume" disabled>
+          <button class="rx-mute" type="button" aria-label="Unmute receiver {{ n }}" aria-pressed="true" disabled><svg class="i" aria-hidden="true"><use href="#i-sound-off"/></svg></button>
+        </div>
         <button class="btn rx-settings" type="button" title="Receiver settings">Settings</button>
         <button class="btn rx-full" type="button" title="Fullscreen receiver">⛶</button>
       </div>

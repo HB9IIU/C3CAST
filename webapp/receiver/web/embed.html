@@ -52,7 +52,9 @@ let live=false, t0=0, lockAt=null, pictureAt=null, lastLocked=false;
 let maxSr=1500, reconnect=false, receiver=null;
 let gainSteps=[];
 const rxNumber=new URLSearchParams(location.search).get('n')==='2'?2:1;
-if(new URLSearchParams(location.search).get('details')==='external')el('status').style.display='none';
+if(new URLSearchParams(location.search).get('details')==='external'){
+ el('status').style.display='none';el('sound').style.display='none';
+}
 document.documentElement.style.setProperty('--rx',rxNumber===2?'#b07cff':'#25c26e');
 el('callnum').textContent=rxNumber;
 let info=null;            // the latest /status: mode, video, audio, quality
@@ -138,6 +140,12 @@ video.addEventListener('playing',()=>{if(live&&pictureAt===null){pictureAt=perfo
 window.addEventListener('message',e=>{
  if(e.source!==parent||!e.data)return;
  if(e.data.type==='settings'){el('top').classList.toggle('open');return;}
+ if(e.data.type==='audio'){
+  if(Number.isFinite(e.data.volume)&&e.data.volume>=0&&e.data.volume<=1)volume.value=video.volume=e.data.volume;
+  if(typeof e.data.muted==='boolean')video.muted=e.data.muted;
+  if(!video.muted&&video.volume===0)volume.value=video.volume=0.5;
+  syncAudio();save();return;
+ }
  if(e.data.type==='stop'){stop();tuned=null;status.textContent='Stopped.';return;}
  if(e.data.type!=='tune')return;
  const signal={centerMhz:Number(e.data.centerMhz),sr:Number(e.data.sr)};
@@ -245,6 +253,7 @@ function syncAudio(){
  const off=video.muted||video.volume===0;
  muteButton.classList.toggle('off',off);volume.classList.toggle('muted',off);
  volume.style.setProperty('--fill',(off?0:Number(volume.value)*100)+'%');
+ parent.postMessage({type:'audio',volume:video.volume,muted:video.muted},'*');
 }
 muteButton.onclick=()=>{video.muted=!video.muted;if(!video.muted&&video.volume===0)video.volume=volume.value=0.5;syncAudio();save();};
 volume.oninput=()=>{video.volume=Number(volume.value);video.muted=video.volume===0;syncAudio();save();};
@@ -253,5 +262,6 @@ function save(){try{localStorage.setItem('c3cast-rx-volume-'+rxNumber,JSON.strin
 try{const v=JSON.parse(localStorage.getItem('c3cast-rx-volume-'+rxNumber)||'null');if(v){volume.value=video.volume=v.v;video.muted=!!v.m;}}catch(e){}
 if(rxNumber===2)video.muted=true;
 syncAudio();
+video.addEventListener('volumechange',syncAudio);
 window.addEventListener('pagehide',stop);
 </script></html>

@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'webapp'))
 import app
 from werkzeug.serving import make_server
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import sync_playwright, expect
 
 
 def port():
@@ -128,6 +128,26 @@ def main():
                 codec = {'h264': 'H.264', 'h265': 'H.265', 'h266': 'H.266'}[name]
                 page.wait_for_function('(codec)=>window.rxReports.some(r=>r.info?.video===codec)', arg=codec)
                 assert page.frame_locator('[data-receiver="2"] iframe').locator('#video').evaluate('v=>v.muted')
+                if name == 'h264':
+                    first = page.frame_locator('[data-receiver="1"] iframe')
+                    second = page.frame_locator('[data-receiver="2"] iframe')
+                    slider = page.locator('[data-receiver="1"] .rx-volume')
+                    expect(slider).to_be_enabled()
+                    expect(first.locator('#sound')).to_be_hidden()
+                    expect(second.locator('#sound')).to_be_hidden()
+                    slider.press('Home')
+                    expect(first.locator('#video')).to_have_js_property('volume', 0)
+                    expect(first.locator('#video')).to_have_js_property('muted', True)
+                    slider.evaluate("input=>{input.value='0.35';input.dispatchEvent(new Event('input',{bubbles:true}))}")
+                    expect(first.locator('#video')).to_have_js_property('volume', .35)
+                    expect(first.locator('#video')).to_have_js_property('muted', False)
+                    page.locator('[data-receiver="1"] .rx-mute').click()
+                    expect(first.locator('#video')).to_have_js_property('muted', True)
+                    page.locator('[data-receiver="1"] .rx-mute').click()
+                    expect(first.locator('#video')).to_have_js_property('muted', False)
+                    expect(first.locator('#video')).to_have_js_property('paused', False)
+                    expect(second.locator('#video')).to_have_js_property('muted', True)
+                    print('Header volume/mute control, independent RX 2 mute, and hidden video overlays passed.', flush=True)
                 page.screenshot(path=str(output / f'c3cast-receiver-{name}.png'), full_page=True)
                 page.goto('about:blank')
                 for process, worker_log in pair:
