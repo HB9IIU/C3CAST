@@ -27,7 +27,7 @@ data = [("webapp/templates", "templates"), ("webapp/static", "static"), ("webapp
         ("host/dvbs2_ldpc.json", "."), ("host/cal.json", ".")]
 hidden = ["runner", "stream_tx", "clock_card", "camera", "qo100_enc", "flasher", "paths", "version",
           "receivers", "tuner_assignment", "webplayer", "tuners", "rx_status", "ts_info", "usb_devices",
-          "window_session", "single_instance", "cpu_load",
+          "window_session", "single_instance", "cpu_load", "tuner_access",
           "tx_dvbs", "tx_media", "dvbs", "dvbs2", "esp_link", "serial.tools.list_ports_windows"]
 
 if not (ROOT / "webapp" / "firmware" / "manifest.json").is_file():

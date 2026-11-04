@@ -76,6 +76,7 @@
     panel.querySelector('.rx-mute').onclick = () => {
       send(panel, {type: 'audio', muted: panel.querySelector('.rx-mute').getAttribute('aria-pressed') !== 'true'});
     };
+    panel.querySelector('.rx-retry').onclick = () => start(panel);
     panel.querySelector('.rx-settings').onclick = () => send(panel, {type: 'settings'});
     panel.querySelector('.rx-full').onclick = () => panel.requestFullscreen().catch(() => {});
   }
@@ -139,6 +140,7 @@
           hideSecond.classList.toggle('d-none', !absent);
           if (!absent) hideRx2(false);
         }
+        panel.querySelector('.rx-retry').classList.toggle('d-none', !rx.error);
         panel.querySelector('.rx-device').textContent = rx.label;
         panel.querySelector('.rx-device').title = rx.label;
         if (rx.available && !requested.has(rx.number)) await start(panel);
@@ -154,14 +156,15 @@
           });
           panel.querySelector('.rx-picture').replaceChildren(frame);
         }
+        if (rx.state === 'starting') panel.querySelector('.rx-message').textContent = 'Checking receiver access and starting...';
         if (rx.error) {
           panel.querySelector('.rx-volume').disabled = true;
           panel.querySelector('.rx-mute').disabled = true;
           const placeholder = document.createElement('div');
           placeholder.className = 'rx-placeholder';
-          placeholder.textContent = 'Receiver stopped';
+          placeholder.textContent = rx.state === 'unavailable' ? 'Receiver unavailable - possibly in use by another application' : 'Receiver stopped';
           panel.querySelector('.rx-picture').replaceChildren(placeholder);
-          panel.querySelector('.rx-message').textContent = rx.error + ' · Click a spectrum signal to retry.';
+          panel.querySelector('.rx-message').textContent = rx.error + (rx.state === 'unavailable' ? '' : ' · Click Retry to try again.');
         }
       }
     } catch (_) { /* A restarting app will answer the next poll. */ }

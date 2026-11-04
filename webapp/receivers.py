@@ -10,6 +10,7 @@ import urllib.request
 
 import paths
 import tuner_assignment
+import tuner_access
 
 _lock = threading.RLock()
 _workers = {}
@@ -29,7 +30,7 @@ def status():
             if entry['state'] == 'running' and entry['proc'].poll() is not None:
                 entry.update(state='error', error='Receiver stopped unexpectedly; click a spectrum signal to restart')
         return [dict(number=n, label=slots[n-1]['label'] if len(slots) >= n else 'No receiver connected',
-                     available=len(slots) >= n, state=_workers.get(n, {}).get('state', 'stopped'),
+                     connected=len(slots) >= n, available=len(slots) >= n and _workers.get(n, {}).get('state') != 'unavailable', state=_workers.get(n, {}).get('state', 'stopped'),
                      error=_workers.get(n, {}).get('error', ''),
                      url=_workers.get(n, {}).get('url')) for n in (1, 2)]
 
@@ -66,6 +67,17 @@ def start(number):
 
 def _launch(number, slot, entry, shared):
     try:
+        if not shared:
+            tuner_access.check(slot)
+        else:
+            deadline = time.monotonic() + 25
+            primary = _workers[1]
+            while primary['state'] == 'starting' and time.monotonic() < deadline and not _closing:
+                time.sleep(.1)
+            if primary['state'] == 'unavailable':
+                raise tuner_access.AccessError(primary['error'])
+            if primary['state'] != 'running':
+                raise ValueError(primary.get('error') or 'The primary PicoTuner receiver did not start')
         data = paths.RECEIVER_DATA / str(number)
         data.mkdir(parents=True, exist_ok=True)
         ffmpeg = paths.RECEIVER / 'bin' / 'ffmpeg.exe'
@@ -106,7 +118,7 @@ def _launch(number, slot, entry, shared):
                 time.sleep(.2)
         raise ValueError('Receiver did not start; check receivers/' + str(number) + '/server.log')
     except (OSError, ValueError) as error:
-        entry.update(state='error', error=str(error))
+        entry.update(state='unavailable' if isinstance(error, tuner_access.AccessError) else 'error', error=str(error))
         proc = entry.get('proc')
         if proc and proc.poll() is None:
             proc.stdin.close()

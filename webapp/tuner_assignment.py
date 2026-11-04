@@ -59,8 +59,9 @@ def _enumerate():
         result.append(dict(tuner="minitiouner", channel=1, serial=serial,
                            label="MiniTiouner" + (f" {serial}" if serial else "")))
     if "picotuner" in found:
-        result += [dict(tuner="picotuner", channel=1, serial=None, label="PicoTuner channel 1"),
-                   dict(tuner="picotuner", channel=2, serial=None, label="PicoTuner channel 2")]
+        pico_ids = next((entry.get('usb_ids', []) for entry in devices if entry['id'] == 'picotuner'), [])
+        result += [dict(tuner="picotuner", channel=1, serial=None, label="PicoTuner channel 1", usb_ids=pico_ids),
+                   dict(tuner="picotuner", channel=2, serial=None, label="PicoTuner channel 2", usb_ids=pico_ids)]
     if "rtlsdr" in found:
         result.append(dict(tuner="rtlsdr", channel=1, serial=None, label="RTL-SDR"))
     return result

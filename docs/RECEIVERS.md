@@ -118,3 +118,24 @@ hardware demodulators. Volume and mute are retained during recovery.
 The replay browser check covers loss/return, the eye state and stalled-player
 recovery alongside normal H.264/H.265/H.266 playback. Physical signal-loss and
 return on each tuner still need a bench check.
+
+## Connected versus available
+
+Before starting a receiver worker, C3CAST briefly checks exclusive USB access.
+MiniTiouner checks both FTDI ports by serial. RTL-SDR and PicoTuner use a
+libusb open/claim/release probe on their control/data interface, without resets,
+configuration changes, tuning or endpoint data transfers. Pico USB identities
+come from the detected Windows devices. Shared Pico channel 2 follows the
+primary worker's access result instead of probing hardware owned by C3CAST.
+See the [libusb interface-claim documentation](https://libusb.sourceforge.io/api-1.0/group__libusb__dev.html).
+
+Refused devices stay assigned and visible as connected but unavailable, rather
+than starting a player. Close the other application and click Retry to recheck.
+Missing/unsupported probe drivers defer to the real backend open; probe success
+is a snapshot, not a reservation. Driver errors are not presented as proof that
+another application owns a device. Running C3CAST workers are not probed again.
+
+The suite now has 60 tests, including native-call cleanup and no worker launch
+on an access refusal. Browser checks verify the unavailable message and Retry
+recovery with mocked device states. Competing real applications on each tuner
+remain a hardware bench check.

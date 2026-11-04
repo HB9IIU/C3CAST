@@ -40,6 +40,7 @@ class Receivers(unittest.TestCase):
         proc.poll.return_value = None
         import tempfile
         with tempfile.TemporaryDirectory() as tmp, patch.object(receivers, '_closing', False), \
+             patch.object(receivers.tuner_access, 'check', return_value=True), \
              patch.object(receivers.paths, 'RECEIVER_DATA', Path(tmp)), \
              patch.object(receivers.paths, 'RECEIVER', Path(tmp)), \
              patch.object(receivers.subprocess, 'Popen', return_value=proc) as popen, \

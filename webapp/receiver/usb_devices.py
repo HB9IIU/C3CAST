@@ -6,6 +6,7 @@ Recognition follows the tuner code of the QOCAST Player / OpenTuner:
   PicoTuner     a USB device whose name contains "PicoTuner" (it has no fixed ID the Player looks for)
 Plugged in is not the same as free: another program may be holding the device.
 """
+import re
 import ctypes as C
 from ctypes import wintypes as W
 
@@ -72,6 +73,7 @@ def detect():
         cfg = _manager()
         found = {'rtlsdr': [], 'minitiouner': [], 'picotuner': []}
         mini_serials = set()
+        pico_ids = set()
         for instance in _instance_ids(cfg):
             top = instance.upper()
             if any(top.startswith('USB\\' + ids + '\\') for ids in RTL_SDR_IDS):
@@ -88,6 +90,9 @@ def detect():
             names = ' '.join(_text(cfg, instance, which) for which in ('bus', 'desc', 'name'))
             if 'picotuner' in names.lower():
                 found['picotuner'].append('PicoTuner')
+                identity = re.search(r'VID_([0-9A-F]{4})&PID_([0-9A-F]{4})', top)
+                if identity:
+                    pico_ids.add(tuple(int(value, 16) for value in identity.groups()))
         labels = {'rtlsdr': 'RTL-SDR', 'minitiouner': 'MiniTiouner', 'picotuner': 'PicoTuner'}
         result = []
         for kind in ('rtlsdr', 'minitiouner', 'picotuner'):
@@ -101,6 +106,8 @@ def detect():
             entry = {'id': kind, 'label': label, 'count': 1 if kind == 'picotuner' else len(devices)}
             if kind == 'minitiouner':
                 entry['serials'] = sorted(mini_serials)
+            if kind == 'picotuner':
+                entry['usb_ids'] = sorted(pico_ids)
             result.append(entry)
         return result
     except (OSError, AttributeError):
