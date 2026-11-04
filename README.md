@@ -4,6 +4,8 @@
 
 **Plug. Flash. Play.** A small web console for DVB-S2 amateur TV from a low-cost ESP32-C3 board. **Windows 10/11.**
 
+**New in 1.0.0: integrated DATV reception with RTL-SDR USB sticks!** Watch up to two signals using RTL-SDR, MiniTiouner or PicoTuner receivers.
+
 The board costs about 5 EUR. To get on the air via QO-100 you also need RF output filtering, an amplifier and a 2.4 GHz dish: see [Please read before transmitting](#please-read-before-transmitting).
 
 <p align="center">
@@ -30,6 +32,11 @@ C3CAST only wraps it for a **Seeed Studio XIAO ESP32-C3** so that a ham can get 
 3. **Play**: pick a picture, the SBB clock card or a USB camera, choose symbol rate and FEC, press **Start**.
 
 by HB9IIU
+
+<p align="center">
+  <img src="docs/screenshot.png" alt="C3CAST 1.0.0 with the live QO-100 spectrum, transmit controls, two received DATV pictures, magic eyes and CPU-load meter" width="1100">
+  <br><em>C3CAST 1.0.0 with two live receivers.</em>
+</p>
 
 ## The board
 
@@ -141,8 +148,10 @@ directly to it.
 
 ## Status
 
-Version **1.0.0** is being prepared as the first stable release. Final packaged-app
-and hardware validation is pending; public distribution also awaits the receiver source/provenance audit.
+Version **1.0.0** is the first stable version. The portable build passed automated
+checks and the user confirmed it working with real receivers. The screenshot above
+shows two MiniTiouners receiving simultaneously. The new download remains in preparation
+while the receiver source/licence audit is completed; the download link above still opens the latest published package.
 The firmware comes from the SP8ESA project, so its limits apply: see his page for compatibility details.
 
 ### What's new in 1.0.0

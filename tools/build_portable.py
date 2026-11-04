@@ -10,6 +10,7 @@ import shutil
 import hashlib
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -35,11 +36,17 @@ if not (ROOT / "webapp" / "firmware" / "manifest.json").is_file():
 receiver_ffmpeg = ROOT / "webapp" / "receiver" / "bin" / "ffmpeg.exe"
 if not receiver_ffmpeg.is_file() or hashlib.sha256(receiver_ffmpeg.read_bytes()).hexdigest() != '3256173f3f8bffd7df12227c68adf68025edb1832273a9530688a7bb1ed8edec':
     sys.exit("run tools/prepare_receiver_ffmpeg.py first (the pinned GPL receive build is required)")
-for p in (BUILD, OUT):
-    expected_parent = ROOT if p == BUILD else DIST
-    if p.resolve().parent != expected_parent.resolve():
-        sys.exit(f"refusing to remove unexpected build path: {p}")
-    shutil.rmtree(p, ignore_errors=True)
+# Never remove a previously tested portable folder or its user settings.
+# Keep it next to the new build as an automatic backup.
+if OUT.exists():
+    backup = DIST / f"{NAME}-backup-{time.strftime('%Y%m%d-%H%M%S')}"
+    if OUT.resolve().parent != DIST.resolve() or backup.resolve().parent != DIST.resolve() or backup.exists():
+        sys.exit("refusing an unexpected or occupied portable backup path")
+    OUT.rename(backup)
+    print(f"preserved previous portable folder: {backup}", flush=True)
+if BUILD.resolve().parent != ROOT.resolve():
+    sys.exit(f"refusing to remove unexpected build path: {BUILD}")
+shutil.rmtree(BUILD, ignore_errors=True)
 
 receiver_assets = BUILD / "receiver-assets"
 shutil.copytree(ROOT / "webapp" / "receiver", receiver_assets,
@@ -87,20 +94,21 @@ for clip in SAMPLE_FILMS:
 SAMPLE_PICTURES = ("C3CAST_ ESP32-C3 DATV for QO-100.png", "C3SCOPE-closing.png", "C3SCOPE-promo.png", "SP8ESA.png", "tescard.png")
 for picture in SAMPLE_PICTURES:
     shutil.copy2(ROOT / "webapp" / "pictures" / picture, OUT / "pictures" / picture)
-for document in (f"docs/releases/v{version.__version__}.md", f"docs/releases/v{version.__version__}-validation.md", f"docs/releases/v{version.__version__}-components.json"):
+for document in ("docs/screenshot.png", f"docs/releases/v{version.__version__}.md", f"docs/releases/v{version.__version__}-validation.md", f"docs/releases/v{version.__version__}-components.json"):
     shutil.copy2(ROOT / document, OUT / Path(document).name)
 shutil.copy2(ROOT / "LICENSE", OUT / "LICENSE")
 shutil.copy2(ROOT / "LICENSE.upstream", OUT / "LICENSE-firmware-SP8ESA.txt")
 (OUT / "README-PORTABLE.txt").write_text(
     f"C3CAST {version.__version__} by HB9IIU: the 5 EUR DATV modulator. Plug, flash, play.\r\n"
     "\r\n"
-    f"Private validation candidate: see v{version.__version__}-validation.md before redistribution.\r\n"
+    f"Download audit in progress: see v{version.__version__}-validation.md before redistribution.\r\n"
     "1. Double-click C3CAST.exe. A window opens (close it to quit) and your browser opens the page.\r\n"
     "2. Plug the Seeed XIAO ESP32-C3 into USB. If the page does not say 'board connected', press Flash.\r\n"
     "3. Pick a picture, clock, USB camera or video, choose frequency, symbol rate and FEC, check the Level, then press Start.\r\n"
     "\r\n"
     "Your own pictures go in the 'pictures' folder (PNG or JPG, 16:9, 1280x720 is ideal).\r\n"
     "Your settings are saved in config.json next to C3CAST.exe.\r\n"
+    "A screenshot of the 1.0.0 interface is included as screenshot.png.\r\n"
     "H266-Player is an optional receiver for H.265 and H.266 (its own program and licence): start it with the Player button in the page.\r\n"
     "Delete that folder if you do not need it; the button then disappears.\r\n"
     "Two integrated receiver panels are below the transmit controls. Connect a MiniTiouner, PicoTuner or RTL-SDR.\r\n"
@@ -115,5 +123,7 @@ shutil.copy2(ROOT / "LICENSE.upstream", OUT / "LICENSE-firmware-SP8ESA.txt")
     encoding="utf-8")
 
 zip_path = shutil.make_archive(str(DIST / NAME), "zip", DIST, NAME)
+checksum = hashlib.sha256(Path(zip_path).read_bytes()).hexdigest()
+(DIST / f"{NAME}.sha256").write_text(f"{checksum}  {Path(zip_path).name}\n", encoding="ascii")
 size = sum(f.stat().st_size for f in OUT.rglob("*") if f.is_file()) / 1e6
 print(f"\nbuilt {OUT}  ({size:.0f} MB)\nzip   {zip_path}  ({Path(zip_path).stat().st_size / 1e6:.0f} MB)")

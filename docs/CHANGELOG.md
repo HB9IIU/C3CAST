@@ -4,7 +4,7 @@ The version lives in `webapp/version.py` (shown on the page, the setup page and 
 Version 1.0.0 is the first stable release. Subsequent features increment the minor
 version; fixes increment the patch version. Versions 0.1 to 0.4 were internal development versions.
 
-## 1.0.0 (release preparation)
+## 1.0.0 (2026-11-04; download in preparation)
 - **DATV reception with RTL-SDR USB sticks!** Up to two integrated receivers, supporting RTL-SDR, MiniTiouner and PicoTuner.
 - **Automatic TX monitoring** - Receiver 1 tunes to your transmitted signal when you go on air.
 - **Stream information and magic eye** - station details, codecs, signal quality and decoding margin.
