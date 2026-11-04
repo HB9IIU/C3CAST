@@ -48,6 +48,7 @@ video{width:100%;height:100%;background:#000;display:block;object-fit:contain}
 const video=document.querySelector('#video'), status=document.querySelector('#status');
 const el=id=>document.querySelector('#'+id);
 let controller=null, objectURL=null, generation=0, tuned=null, busy=false;
+const streamClient=crypto.randomUUID();
 let live=false, t0=0, lockAt=null, pictureAt=null, lastLocked=false;
 let maxSr=1500, reconnect=false, receiver=null;
 let gainSteps=[];
@@ -80,7 +81,7 @@ async function stop(){
  if(controller)controller.abort();controller=null;
  video.pause();video.removeAttribute('src');video.load();
  if(objectURL)URL.revokeObjectURL(objectURL);objectURL=null;
- if(wasActive)await fetch('/stop',{method:'POST',keepalive:true}).catch(()=>{});
+ if(wasActive)await fetch('/stop?client='+streamClient,{method:'POST',keepalive:true}).catch(()=>{});
 }
 function updated(buffer,action){return new Promise((resolve,reject)=>{
  const done=()=>{clear();resolve()},fail=()=>{clear();reject(Error('Media buffer rejected the stream'))};
@@ -98,7 +99,7 @@ async function tune(signal){
  status.textContent='Tuning '+label+' — waiting for lock and first picture…';
  try{
   if(!window.MediaSource)throw Error('This browser does not support Media Source Extensions. Use Edge or Chrome.');
-  const response=await fetch('/stream?freq='+signal.centerMhz.toFixed(4)+'&sr='+signal.sr,{signal:abort});
+  const response=await fetch('/stream?freq='+signal.centerMhz.toFixed(4)+'&sr='+signal.sr+'&client='+streamClient,{signal:abort});
   if(!response.ok)throw Error(await response.text());
   const reader=response.body.getReader();
   // The stream's first bytes say which tracks it has (some stations send no audio): announce exactly those.

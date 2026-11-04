@@ -167,6 +167,7 @@ def serve(args, bin_dir, env):
         return entries, choice
 
     client = [None]                   # the browser connection of the running stream, to cut it on stop
+    client_id = ['']                  # only the document that opened a stream may stop it on pagehide
 
     def cleanup(processes):
         # Only rtl_iq is stopped by closing its input (that makes it release the USB stick). Any other input
@@ -193,14 +194,17 @@ def serve(args, bin_dir, env):
                 process.kill()
                 process.wait()
 
-    def stop_session():
+    def stop_session(expected_client=None):
+        with guard:
+            if expected_client is not None and expected_client != client_id[0]:
+                return
+            connection = client[0]
+            remaining = list(active)
         try:
-            if client[0]:
-                client[0].shutdown(socket.SHUT_RDWR)    # a write to a browser that stopped reading would block forever
+            if connection:
+                connection.shutdown(socket.SHUT_RDWR)    # a write to a browser that stopped reading would block forever
         except OSError:
             pass
-        with guard:
-            remaining = list(active)
         cleanup(remaining)
         if viewer.acquire(timeout=5):     # let the stream handler finish before the next tune
             viewer.release()
@@ -227,8 +231,9 @@ def serve(args, bin_dir, env):
                     return self.reply(200, b'{}', 'application/json')
                 except (ValueError, ConnectionError) as error:
                     return self.reply(502, str(error).encode())
-            if self.path == '/stop':
-                stop_session()
+            if urlparse(self.path).path == '/stop':
+                owner = parse_qs(urlparse(self.path).query).get('client', [''])[0]
+                stop_session(expected_client=owner)
                 self.send_response(204)
                 self.end_headers()
                 return
@@ -335,6 +340,7 @@ def serve(args, bin_dir, env):
                 return self.reply(409, b'Another session is still stopping; try again.')
             processes, files, pumps = [], [], []
             client[0] = self.connection
+            client_id[0] = str(query.get('client', [''])[0])[:128]
             session_id[0] += 1
             status.reset()
             info = stream_info[0] = TsInfo()
@@ -395,6 +401,7 @@ def serve(args, bin_dir, env):
                 for file in files:
                     file.close()
                 client[0] = None
+                client_id[0] = ''
                 viewer.release()
 
         def log_request(self, code='-', size='-'):

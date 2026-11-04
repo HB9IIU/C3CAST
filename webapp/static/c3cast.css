@@ -22,6 +22,10 @@ a:hover { text-decoration: underline; }
 .i { width: 1.154rem; height: 1.154rem; stroke: currentColor; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; flex: none; vertical-align: -0.23rem; }
 
 /* header */
+.window-pending > .wrap { visibility: hidden; }
+.window-blocked { max-width: 35rem; margin: 12vh auto; padding: 1.5rem; color: var(--text); }
+.window-blocked h1 { color: var(--amber); font: 700 1.3rem var(--mono); }
+.window-blocked p { line-height: 1.6; }
 .spectrum-panel { display: flex; flex-direction: column; }
 .spectrum-panel > .pb { display: flex; flex-direction: column; flex: 1; }
 .spectrum-field { display: flex; flex-direction: column; flex: 1; }
@@ -180,11 +184,11 @@ input[type=range]:disabled { opacity: .5; }
 .carousel-arrow:disabled { opacity: .4; cursor: not-allowed; }
 .carousel-arrow.prev { left: .6rem; }
 .carousel-arrow.next { right: .6rem; }
-.wait { position: absolute; inset: 0; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.8rem;
+.screen .wait { position: absolute; inset: 0; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.8rem;
          padding: 1rem; text-align: center; color: var(--dim); font: 0.95rem var(--mono); background: #05070a; }
-.wait .i { width: 3.2rem; height: 3.2rem; animation: pulse 1.6s ease-in-out infinite; }
-.wait.failed { color: var(--amber); }
-.wait.failed .i { animation: none; opacity: .8; }
+.screen .wait .i { width: 3.2rem; height: 3.2rem; animation: pulse 1.6s ease-in-out infinite; }
+.screen .wait.failed { color: var(--amber); }
+.screen .wait.failed .i { animation: none; opacity: .8; }
 .warnbox { display: flex; gap: .7rem; align-items: flex-start; margin: .5rem 0 .8rem; padding: .7rem .9rem; line-height: 1.45;
            color: var(--text); background: var(--amber-bg); border: 1px solid rgba(240, 165, 44, .55); border-radius: .3rem; }
 .warnbox .i { width: 1.7rem; height: 1.7rem; flex: none; color: var(--amber); stroke-width: 1.8; }

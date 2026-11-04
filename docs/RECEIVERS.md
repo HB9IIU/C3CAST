@@ -90,3 +90,19 @@ both stream panels and magic eyes reported approximately +4.1 dB decoding margin
 
 This is not a public release. The additional binary source/licence audit described
 in `webapp/receiver/SOURCE.md` must be completed before distribution.
+
+## One controlling window
+
+The running app admits one controlling browser document. Extra tabs, windows or
+browsers show an already-open message before starting receiver scripts. Closing
+one of those blocked windows cannot stop the active session. Reload and Setup
+navigation transfer ownership normally. A server lease renews every 15 seconds
+and expires after 180 seconds without renewal; normal page close releases it
+immediately. The existing app shutdown behavior remains in effect.
+
+A Windows named mutex also prevents a second app launch from creating competing
+receiver workers. Delayed stop requests from an obsolete receiver iframe cannot
+stop its replacement stream. `tools/check_single_window.py` verifies duplicate
+tabs, separate browser contexts, refresh, Setup navigation, close/reopen, stale
+stream stops and the Windows process lock using replay video without RF.
+The unit/regression suite now contains 54 tests.

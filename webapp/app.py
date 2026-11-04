@@ -27,6 +27,7 @@ import clap_test  # noqa: E402
 import flasher  # noqa: E402
 import version  # noqa: E402
 import receivers  # noqa: E402
+from window_session import WindowLease
 
 PICTURES = Path(os.environ.get("DATV_PICTURES", paths.DATA / "pictures"))
 VIDEOS = paths.DATA / "videos"
@@ -42,6 +43,7 @@ MAX_SECONDS = 3600                                  # safety cap: a forgotten ta
 EXTS = {".png", ".jpg", ".jpeg"}
 
 app = Flask(__name__, template_folder=str(paths.RESOURCE / "templates"), static_folder=str(paths.RESOURCE / "static"))
+WINDOW = WindowLease()
 lock = threading.Lock()
 conn = {"connected": False, "port": "", "serial": "", "info": "", "how": "", "candidates": [], "tried": []}
 tx = {"state": "idle", "proc": None, "t0": 0.0, "log": collections.deque(maxlen=60),
@@ -308,7 +310,8 @@ atexit.register(camera.stop_previews)
 
 @app.context_processor
 def inject_version():
-    return {"app_name": version.APP_NAME, "app_version": version.__version__}
+    return {"app_name": version.APP_NAME, "app_version": version.__version__,
+            "single_window": app.config.get('SINGLE_WINDOW', False)}
 
 
 @app.before_request
@@ -323,16 +326,53 @@ def same_origin_only():
 
 
 @app.before_request
+def controlling_window_only():
+    if not app.config.get('SINGLE_WINDOW'):
+        return
+    if request.path in ('/api/window/claim', '/api/window/state', '/api/bye'):
+        return
+    if request.method == 'POST' or request.path == '/api/receivers':
+        if not WINDOW.owns(request.headers.get('X-C3CAST-Window', '')):
+            return jsonify(error='C3CAST is controlled by another window'), 409
+
+
+@app.before_request
 def page_seen():
     """Any request from a page counts as 'someone is looking' (the page polls /api/status every second)."""
-    if request.path != "/api/bye":
+    if request.path != "/api/bye" and (not app.config.get('SINGLE_WINDOW')
+                                      or WINDOW.owns(request.headers.get('X-C3CAST-Window', ''))):
         WATCH["seen"] = time.time()
+
+
+@app.get('/api/window/state')
+def window_state():
+    return jsonify(occupied=WINDOW.occupied())
+
+
+@app.post('/api/window/claim')
+def window_claim():
+    if not app.config.get('SINGLE_WINDOW'):
+        return jsonify(ok=True, guarded=False)
+    token = (request.get_json(silent=True) or {}).get('token')
+    if not WINDOW.claim(token):
+        return jsonify(error='C3CAST is already open in another window'), 409
+    WATCH.update(seen=time.time(), bye=0.0)
+    return jsonify(ok=True, guarded=True)
+
+
+@app.post('/api/window/ping')
+def window_ping():
+    if not WINDOW.owns(request.headers.get('X-C3CAST-Window', ''), renew=True):
+        return jsonify(error='Window no longer controls C3CAST'), 409
+    return jsonify(ok=True)
 
 
 @app.post("/api/bye")
 def api_bye():
     """The page is closing (pagehide). A reload or the Setup link comes back within seconds and cancels this."""
-    WATCH["bye"] = time.time()
+    token = (request.get_json(silent=True) or {}).get('window_token', '')
+    if not app.config.get('SINGLE_WINDOW') or WINDOW.release(token):
+        WATCH["bye"] = time.time()
     return "", 204
 
 
@@ -824,11 +864,32 @@ WELCOME = """
 
 
 def serve():
+    from single_instance import MainInstance
+    with MainInstance() as instance:
+        if not instance.acquired:
+            url = instance.existing_url()
+            print('C3CAST is already running. Use its existing browser window.' + (f'  {url}' if url else ''), flush=True)
+            if url and not os.environ.get('C3CAST_NO_BROWSER'):
+                import urllib.request
+                try:
+                    with urllib.request.urlopen(url + '/api/window/state', timeout=1) as response:
+                        occupied = json.load(response).get('occupied', True)
+                    if not occupied:
+                        import webbrowser
+                        webbrowser.open(url)
+                except (OSError, ValueError):
+                    pass
+            return
+        _serve(instance)
+
+
+def _serve(instance):
     """Run the web app. It opens the browser (C3CAST_NO_BROWSER=1 stops that; C3CAST_PORT sets the first port).
     The server is started directly (not through app.run), so Flask's and Werkzeug's development-server banner, with its red
     warning, and the line per request stay out of the console: only the welcome note and real errors show."""
     import logging
     from werkzeug.serving import make_server
+    app.config['SINGLE_WINDOW'] = True
     PICTURES.mkdir(parents=True, exist_ok=True)
     threading.Thread(target=qo100_enc.video_encoder, daemon=True).start()     # GPU or software: decided once, silently
     port = free_port(int(os.environ.get("C3CAST_PORT", "5000")))
@@ -836,6 +897,7 @@ def serve():
     logging.getLogger("werkzeug").setLevel(logging.ERROR)
     server = make_server("127.0.0.1", port, app, threaded=True)
     SERVER.append(server)
+    instance.publish(url)
     if not os.environ.get("C3CAST_NO_AUTOQUIT"):
         threading.Thread(target=watch_pages, daemon=True).start()
     print(WELCOME.format(name=version.APP_NAME, version=version.__version__, url=url), flush=True)

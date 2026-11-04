@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" href="/static/favicon.png">
   <link rel="stylesheet" href="/static/c3cast.css?v={{ app_version }}">
 </head>
-<body>
+<body class="window-pending">
 {% include "_icons.html" %}
 <div class="wrap" style="max-width:55rem">
 
@@ -58,7 +58,8 @@
   <footer><span>{{ app_name }} v{{ app_version }} &middot; by HB9IIU</span><span>firmware: SP8ESA ESP32-DATV</span></footer>
 </div>
 
-<script>
+<script id="window-config" type="application/json">{{ {'guarded': single_window, 'before': [], 'after': [], 'version': app_version}|tojson }}</script>
+<script id="console-code" type="text/plain">
 const $ = id => document.getElementById(id);
 async function post(url, body) {
   const r = await fetch(url, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body || {})});
@@ -85,7 +86,7 @@ $('forget').onclick = async () => {
 };
 load();
 
-window.addEventListener('pagehide', () => navigator.sendBeacon('/api/bye', new Blob(['{}'], {type: 'application/json'})));  // closing the tab ends C3CAST
 </script>
+<script src="/static/window-session.js?v={{ app_version }}"></script>
 </body>
 </html>

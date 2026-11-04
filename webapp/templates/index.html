@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" href="/static/favicon.png">
   <link rel="stylesheet" href="/static/c3cast.css?v={{ app_version }}">
 </head>
-<body>
+<body class="window-pending">
 {% include "_icons.html" %}
 <div id="toast" class="toast d-none" role="status"></div>
 <div class="wrap">
@@ -324,11 +324,8 @@
   <footer><span>{{ app_name }} v{{ app_version }} &middot; by HB9IIU</span><span>firmware: SP8ESA ESP32-DATV &middot; PTT on D10</span></footer>
 </div>
 
-<script src="/static/signal-finder.js?v={{ app_version }}"></script>
-<script src="/static/spectrum.js?v={{ app_version }}"></script>
-<script src="/static/magic-eye.js?v={{ app_version }}"></script>
-<script src="/static/receivers.js?v={{ app_version }}" defer></script>
-<script>
+<script id="window-config" type="application/json">{{ {'guarded': single_window, 'before': ['signal-finder.js', 'spectrum.js', 'magic-eye.js'], 'after': ['receivers.js'], 'version': app_version}|tojson }}</script>
+<script id="console-code" type="text/plain">
 const $ = id => document.getElementById(id);
 const val = name => document.querySelector(`input[name=${name}]:checked`).value;
 const CHIP = {idle: ['', 'idle'], starting: ['warn', 'starting'], transmitting: ['air', 'on air'], stopping: ['warn', 'stopping'], error: ['bad', 'error']};
@@ -886,7 +883,7 @@ setInterval(updateHint, 1500);
 
 loadBandplan(); checkBoard(); loadPictures(); loadVideos(); updatePlan(); poll(); setInterval(poll, 1000);
 
-window.addEventListener('pagehide', () => navigator.sendBeacon('/api/bye', new Blob(['{}'], {type: 'application/json'})));  // closing the tab ends C3CAST
 </script>
+<script src="/static/window-session.js?v={{ app_version }}"></script>
 </body>
 </html>
