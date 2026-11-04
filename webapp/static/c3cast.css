@@ -26,6 +26,7 @@ a:hover { text-decoration: underline; }
 .window-blocked { max-width: 35rem; margin: 12vh auto; padding: 1.5rem; color: var(--text); }
 .window-blocked h1 { color: var(--amber); font: 700 1.3rem var(--mono); }
 .window-blocked p { line-height: 1.6; }
+.window-blocked .btn { display: flex; width: fit-content; margin: 1rem auto 0; }
 .spectrum-panel { display: flex; flex-direction: column; }
 .spectrum-panel > .pb { display: flex; flex-direction: column; flex: 1; }
 .spectrum-field { display: flex; flex-direction: column; flex: 1; }
