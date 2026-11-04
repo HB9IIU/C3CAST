@@ -141,18 +141,20 @@ directly to it.
 
 ## Status
 
-Version **1.0.0-beta.4** (beta). Verified on air so far: DVB-S2 QPSK at 500 kS/s with the USB camera source, received on a MiniTioune. The other
-symbol rates, FEC values and sources are checked offline (streams analysed without errors) but not all confirmed on air yet.
+Version **1.0.0** is being prepared as the first stable release. Final packaged-app
+and hardware validation is pending; public distribution also awaits the receiver source/provenance audit.
 The firmware comes from the SP8ESA project, so its limits apply: see his page for compatibility details.
 
-### What's new in 1.0.0-beta.4
+### What's new in 1.0.0
 
-- **H.266 Player included:** the package now carries the HB9IIU Experimental H.266 Player, a receiver for MiniTiouner and PicoTuner that also plays H.265. A **Player** button at the top of the page starts it. It is optional: delete the `H266-Player` folder and the button disappears.
-- **Video files are described and checked:** under the file name C3CAST shows size, frame rate, codec, length and whether it has sound, warns when a file is too big to decode live, and an **i** button explains how to prepare one.
-- **More FEC values:** 1/2, 3/5 and 2/3 next to 3/4 and 4/5, for stations with a small dish (a lower FEC needs less signal and carries less video; 3/4 stays the default). Checked offline, not yet received on air.
-- **Your own output level limits:** a **Limits** button next to the Level slider opens a popup with two handles, for your lowest and your highest level (1 to 480; default 15 to 100). The slider starts at your minimum and stays between your limits.
-
-Earlier in beta.3: video files as a source, a safer level control that starts at zero, and the experimental H.266 mode (with its warning).
+- **DATV reception with RTL-SDR USB sticks!** Up to two integrated receivers, supporting RTL-SDR, MiniTiouner and PicoTuner.
+- **Automatic TX monitoring** - Receiver 1 tunes to your transmitted signal when you go on air.
+- **Stream information and magic eye** - station details, codecs, signal quality and decoding margin.
+- **Enlarged video popup** - enlarge a received picture without interrupting playback.
+- **Single-window protection** - prevents competing browser windows and duplicate app launches.
+- **Improved spectrum display** - automatic beacon scaling, receiver highlights, red TX highlighting and level relative to the beacon.
+- **CPU-load meter** - live system CPU percentage and progress bar.
+- **Simpler TX startup** - defaults to your configured minimum level, with a power reminder before Start.
 
 The full history is in the [changelog](docs/CHANGELOG.md).
 

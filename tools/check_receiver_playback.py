@@ -14,6 +14,7 @@ import tempfile
 import threading
 import time
 import urllib.request
+import uuid
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'webapp'))
@@ -61,7 +62,7 @@ def main():
         deadline = time.monotonic() + 20
         while True:
             try:
-                urllib.request.urlopen(base + '/api/receivers', timeout=.5).close()
+                urllib.request.urlopen(base + '/api/window/state', timeout=.5).close()
                 break
             except OSError:
                 if time.monotonic() > deadline:
@@ -230,8 +231,18 @@ def main():
             server.server_close()
         if app_process:
             try:
+                token = uuid.uuid4().hex
+                for attempt in range(12):
+                    try:
+                        urllib.request.urlopen(urllib.request.Request(base + '/api/window/claim',
+                            data=json.dumps({'token': token}).encode(),
+                            headers={'Content-Type': 'application/json'}), timeout=5).close()
+                        break
+                    except urllib.error.HTTPError as error:
+                        if error.code != 409 or attempt == 11: raise
+                        time.sleep(.25)
                 urllib.request.urlopen(urllib.request.Request(base + '/api/quit', data=b'{}',
-                    headers={'Content-Type': 'application/json'}), timeout=5).close()
+                    headers={'Content-Type': 'application/json', 'X-C3CAST-Window': token}), timeout=5).close()
                 app_process.wait(timeout=20)
             finally:
                 if app_process.poll() is None:

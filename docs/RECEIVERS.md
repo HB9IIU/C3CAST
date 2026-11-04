@@ -1,4 +1,4 @@
-# Integrated receivers (development branch)
+# Integrated receivers
 
 The existing transmit console is retained. RX 1 and RX 2 sit beneath it, before
 Telemetry. They work without an ESP32 connected and independently of TX.
@@ -88,7 +88,7 @@ Follow-up live reception on MiniTiouner DA582LER received A71A (QARS), H.264
 Both DA582LER and DA73APV4 subsequently received that stream simultaneously;
 both stream panels and magic eyes reported approximately +4.1 dB decoding margin.
 
-This is not a public release. The additional binary source/licence audit described
+Public distribution is pending. The additional binary source/licence audit described
 in `webapp/receiver/SOURCE.md` must be completed before distribution.
 
 ## One controlling window

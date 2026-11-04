@@ -83,24 +83,28 @@ shutil.copy2(ROOT / "docs" / "VIDEO-CREDITS.txt", OUT / "videos" / "CREDITS.txt"
 SAMPLE_FILMS = ("Bunny.mp4", "sintel_trailer.mp4")        # only these ship: anything else in webapp/videos is the developer's own test material
 for clip in SAMPLE_FILMS:
     shutil.copy2(ROOT / "webapp" / "videos" / clip, OUT / "videos" / clip)
-for pic in (ROOT / "webapp" / "pictures").iterdir():
-    if pic.is_file():
-        shutil.copy2(pic, OUT / "pictures" / pic.name)
+# Explicit release artwork only: never bundle private test pictures.
+SAMPLE_PICTURES = ("C3CAST_ ESP32-C3 DATV for QO-100.png", "C3SCOPE-closing.png", "C3SCOPE-promo.png", "SP8ESA.png", "tescard.png")
+for picture in SAMPLE_PICTURES:
+    shutil.copy2(ROOT / "webapp" / "pictures" / picture, OUT / "pictures" / picture)
+for document in (f"docs/releases/v{version.__version__}.md", f"docs/releases/v{version.__version__}-validation.md", f"docs/releases/v{version.__version__}-components.json"):
+    shutil.copy2(ROOT / document, OUT / Path(document).name)
 shutil.copy2(ROOT / "LICENSE", OUT / "LICENSE")
 shutil.copy2(ROOT / "LICENSE.upstream", OUT / "LICENSE-firmware-SP8ESA.txt")
 (OUT / "README-PORTABLE.txt").write_text(
     f"C3CAST {version.__version__} by HB9IIU: the 5 EUR DATV modulator. Plug, flash, play.\r\n"
     "\r\n"
+    f"Private validation candidate: see v{version.__version__}-validation.md before redistribution.\r\n"
     "1. Double-click C3CAST.exe. A window opens (close it to quit) and your browser opens the page.\r\n"
     "2. Plug the Seeed XIAO ESP32-C3 into USB. If the page does not say 'board connected', press Flash.\r\n"
-    "3. Pick a picture, the SBB clock or a USB camera, choose symbol rate and FEC, press Start.\r\n"
+    "3. Pick a picture, clock, USB camera or video, choose frequency, symbol rate and FEC, check the Level, then press Start.\r\n"
     "\r\n"
     "Your own pictures go in the 'pictures' folder (PNG or JPG, 16:9, 1280x720 is ideal).\r\n"
     "Your settings are saved in config.json next to C3CAST.exe.\r\n"
     "H266-Player is an optional receiver for H.265 and H.266 (its own program and licence): start it with the Player button in the page.\r\n"
     "Delete that folder if you do not need it; the button then disappears.\r\n"
     "Two integrated receiver panels are below the transmit controls. Connect a MiniTiouner, PicoTuner or RTL-SDR.\r\n"
-    "Choose downlink frequency and symbol rate, then Receive. Settings controls the LNB/input or RTL gain.\r\n"
+    "Select a receiver pill, then click a signal in the spectrum to receive it. Settings controls the LNB/input or RTL gain.\r\n"
     "Receiver settings/logs live in receivers/. Its separate FFmpeg and GPL receiver sources are in _internal/receiver/.\r\n"
     "\r\n"
     "Licensed radio amateurs only. Use a filter before any amplifier and check the spectrum first.\r\n"

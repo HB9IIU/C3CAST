@@ -1,15 +1,18 @@
 # C3CAST changelog
 
 The version lives in `webapp/version.py` (shown on the page, the setup page and in the camera marquee).
-Rules: the first public release is a beta: 1.0.0-beta.1, beta.2, ... then 1.0.0 once it has proved itself. After that a new
-feature raises the middle number and a fix the last one. 0.1 to 0.4 below are the internal development versions.
+Version 1.0.0 is the first stable release. Subsequent features increment the minor
+version; fixes increment the patch version. Versions 0.1 to 0.4 were internal development versions.
 
-## 1.0.0-beta.5-dev (unreleased)
-- Two integrated browser receiver panels below the existing transmit controls,
-  before Telemetry. Automatic assignment for MiniTiouner, PicoTuner and RTL-SDR;
-  manual frequency/SR, spectrum RX target, LNB/input or gain settings, sound and fullscreen.
-- Separate receive-only GPL FFmpeg for H.264/H.265/H.266 decoding and browser playback;
-  the transmit FFmpeg is unchanged. See `docs/RECEIVERS.md` for tests and remaining bench work.
+## 1.0.0 (release preparation)
+- **DATV reception with RTL-SDR USB sticks!** Up to two integrated receivers, supporting RTL-SDR, MiniTiouner and PicoTuner.
+- **Automatic TX monitoring** - Receiver 1 tunes to your transmitted signal when you go on air.
+- **Stream information and magic eye** - station details, codecs, signal quality and decoding margin.
+- **Enlarged video popup** - enlarge a received picture without interrupting playback.
+- **Single-window protection** - prevents competing browser windows and duplicate app launches.
+- **Improved spectrum display** - automatic beacon scaling, receiver highlights, red TX highlighting and level relative to the beacon.
+- **CPU-load meter** - live system CPU percentage and progress bar.
+- **Simpler TX startup** - defaults to your configured minimum level, with a power reminder before Start.
 
 ## 1.0.0-beta.4
 - The package includes the HB9IIU Experimental H.266 Player (folder H266-Player, GPL v3, with its source and licences). A **Player**

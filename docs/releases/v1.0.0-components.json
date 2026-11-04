@@ -1,0 +1,166 @@
+{
+  "version": "1.0.0",
+  "distribution_audit_complete": false,
+  "components": [
+    {
+      "path": "_internal/receiver/bin/datvrx.exe",
+      "bytes": 6992889,
+      "sha256": "eb3d25f1ee86103b60af40c6c9cfaeb4dd06ca00aace0d91012a4a092ff8baf0"
+    },
+    {
+      "path": "_internal/receiver/bin/ffmpeg.exe",
+      "bytes": 105423872,
+      "sha256": "3256173f3f8bffd7df12227c68adf68025edb1832273a9530688a7bb1ed8edec"
+    },
+    {
+      "path": "_internal/receiver/bin/librtlsdr.dll",
+      "bytes": 107954,
+      "sha256": "ce770e44df6d58345a617e7601c64d72d0b77a0586de81c30fdacffaff6f98fb"
+    },
+    {
+      "path": "_internal/receiver/bin/libusb-1.0.dll",
+      "bytes": 228396,
+      "sha256": "39a8be2a8c628c2a6146a3a1a85758a5f7fe44045fe425c9bf5897a11ea1b46c"
+    },
+    {
+      "path": "_internal/receiver/bin/libwinpthread-1.dll",
+      "bytes": 63675,
+      "sha256": "6661cfc5ca7dd8a6ae74687e4812d324e4be0ff8e0a83f92a9bfae04e6231d32"
+    },
+    {
+      "path": "_internal/receiver/bin/rtl_iq.exe",
+      "bytes": 2917348,
+      "sha256": "4db0269769803f6f6477464c6e35cff58814b1823642d5685defb5834060ea02"
+    },
+    {
+      "path": "_internal/receiver/tuner-service/bin/FTD2XX_NET.dll",
+      "bytes": 74520,
+      "sha256": "7e5be9e5f90dd280609b6ad0f130fbc40d9c414cb853cdb33627e84324c51c9a"
+    },
+    {
+      "path": "_internal/receiver/tuner-service/bin/libusb-1.0.dll",
+      "bytes": 157184,
+      "sha256": "d4e5db4fad8bef7201dc5a4a71ca997e6dccc9da25e8a988d4be63b13a02208d"
+    },
+    {
+      "path": "_internal/receiver/tuner-service/bin/LibUsbDotNet.LibUsbDotNet.dll",
+      "bytes": 156672,
+      "sha256": "b6de87ff6fdde6d0a245ef37fe81fac49523c35115c61bc002e4935d99875508"
+    },
+    {
+      "path": "_internal/receiver/tuner-service/bin/Newtonsoft.Json.dll",
+      "bytes": 711952,
+      "sha256": "e1e27af7b07eeedf5ce71a9255f0422816a6fc5849a483c6714e1b472044fa9d"
+    },
+    {
+      "path": "_internal/receiver/tuner-service/bin/Serilog.dll",
+      "bytes": 142848,
+      "sha256": "5755736f579a63e23e0ea42890061dce8a7834887745896eabbd73a5f392c5e8"
+    },
+    {
+      "path": "_internal/receiver/tuner-service/bin/Serilog.Sinks.File.dll",
+      "bytes": 33280,
+      "sha256": "5b70dc2eeceb1963f9c3690c1cc8ffa793b280e903fa9a31780e6a7bb0bdfcf9"
+    },
+    {
+      "path": "_internal/receiver/tuner-service/bin/System.Buffers.dll",
+      "bytes": 20856,
+      "sha256": "accccfbe45d9f08ffeed9916e37b33e98c65be012cfff6e7fa7b67210ce1fefb"
+    },
+    {
+      "path": "_internal/receiver/tuner-service/bin/System.Diagnostics.DiagnosticSource.dll",
+      "bytes": 173232,
+      "sha256": "5b8ccdda36486950de37484c25e1334376431e52176c32f87dd730690b273e3b"
+    },
+    {
+      "path": "_internal/receiver/tuner-service/bin/System.Memory.dll",
+      "bytes": 142240,
+      "sha256": "bf3fb84664f4097f1a8a9bc71a51dcf8cf1a905d4080a4d290da1730866e856f"
+    },
+    {
+      "path": "_internal/receiver/tuner-service/bin/System.Numerics.Vectors.dll",
+      "bytes": 115856,
+      "sha256": "1d3ef8698281e7cf7371d1554afef5872b39f96c26da772210a33da041ba1183"
+    },
+    {
+      "path": "_internal/receiver/tuner-service/bin/System.Runtime.CompilerServices.Unsafe.dll",
+      "bytes": 18024,
+      "sha256": "37768488e8ef45729bc7d9a2677633c6450042975bb96516e186da6cb9cd0dcf"
+    },
+    {
+      "path": "_internal/receiver/tuner-service/bin/tuner-service.exe",
+      "bytes": 260608,
+      "sha256": "01317e01e005c41134036ff6f3b2ee000eb1d48bc59c00c2bbc421caccd3820a"
+    },
+    {
+      "path": "tools/ffmpeg/bin/ffmpeg.exe",
+      "bytes": 64547840,
+      "sha256": "4de08d5637af26ba123979ce492cb05b2828ad5e050340cc5479d8d2e25c86e3"
+    },
+    {
+      "path": "H266-Player/ffplay.exe",
+      "bytes": 33584640,
+      "sha256": "8c3052fd03b8d3db7a00e8240b7ddb9492c2baad75bfc5b84dc1618620a15b3b"
+    },
+    {
+      "path": "H266-Player/FTD2XX_NET.dll",
+      "bytes": 74520,
+      "sha256": "7e5be9e5f90dd280609b6ad0f130fbc40d9c414cb853cdb33627e84324c51c9a"
+    },
+    {
+      "path": "H266-Player/HB9IIU-Experimental-H266-Player.exe",
+      "bytes": 350720,
+      "sha256": "10e6e76e9b6e0fe5321bb764855271f93cc8cffd99a765cb26dd5c50e24d3f30"
+    },
+    {
+      "path": "H266-Player/libusb-1.0.dll",
+      "bytes": 157184,
+      "sha256": "d4e5db4fad8bef7201dc5a4a71ca997e6dccc9da25e8a988d4be63b13a02208d"
+    },
+    {
+      "path": "H266-Player/LibUsbDotNet.LibUsbDotNet.dll",
+      "bytes": 156672,
+      "sha256": "b6de87ff6fdde6d0a245ef37fe81fac49523c35115c61bc002e4935d99875508"
+    },
+    {
+      "path": "H266-Player/Newtonsoft.Json.dll",
+      "bytes": 711952,
+      "sha256": "e1e27af7b07eeedf5ce71a9255f0422816a6fc5849a483c6714e1b472044fa9d"
+    },
+    {
+      "path": "H266-Player/Serilog.dll",
+      "bytes": 142848,
+      "sha256": "5755736f579a63e23e0ea42890061dce8a7834887745896eabbd73a5f392c5e8"
+    },
+    {
+      "path": "H266-Player/Serilog.Sinks.File.dll",
+      "bytes": 33280,
+      "sha256": "5b70dc2eeceb1963f9c3690c1cc8ffa793b280e903fa9a31780e6a7bb0bdfcf9"
+    },
+    {
+      "path": "H266-Player/System.Buffers.dll",
+      "bytes": 20856,
+      "sha256": "accccfbe45d9f08ffeed9916e37b33e98c65be012cfff6e7fa7b67210ce1fefb"
+    },
+    {
+      "path": "H266-Player/System.Diagnostics.DiagnosticSource.dll",
+      "bytes": 173232,
+      "sha256": "5b8ccdda36486950de37484c25e1334376431e52176c32f87dd730690b273e3b"
+    },
+    {
+      "path": "H266-Player/System.Memory.dll",
+      "bytes": 142240,
+      "sha256": "bf3fb84664f4097f1a8a9bc71a51dcf8cf1a905d4080a4d290da1730866e856f"
+    },
+    {
+      "path": "H266-Player/System.Numerics.Vectors.dll",
+      "bytes": 115856,
+      "sha256": "1d3ef8698281e7cf7371d1554afef5872b39f96c26da772210a33da041ba1183"
+    },
+    {
+      "path": "H266-Player/System.Runtime.CompilerServices.Unsafe.dll",
+      "bytes": 18024,
+      "sha256": "37768488e8ef45729bc7d9a2677633c6450042975bb96516e186da6cb9cd0dcf"
+    }
+  ]
+}
