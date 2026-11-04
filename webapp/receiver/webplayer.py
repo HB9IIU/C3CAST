@@ -372,7 +372,10 @@ def serve(args, bin_dir, env):
             except ValueError as error:           # the receiver could not be used: say why, before any video
                 print('Not tuned:', error, flush=True)
                 if not started:
-                    self.reply(502, str(error).encode())
+                    try:
+                        self.reply(502, str(error).encode())
+                    except OSError:
+                        pass  # The browser may already have cancelled this tuning attempt.
             except (OSError, RuntimeError) as error:
                 print('Session ended:', error, flush=True)
             finally:

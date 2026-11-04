@@ -73,6 +73,20 @@ class Receivers(unittest.TestCase):
         self.assertEqual(request.get_header('Origin'), 'http://127.0.0.1:19000')
         self.assertIsNone(backend.service)
 
+    def test_busy_tuner_reports_ownership_conflict_without_waiting_for_timeout(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            exe = Path(tmp) / 'service.exe'
+            exe.touch()
+            backend = QocastBackend('minitiouner', exe, 19001, 19002, 9750, 0, 'off', 'A', Path(tmp))
+            process = MagicMock(returncode=2)
+            process.poll.return_value = 2
+            with patch.object(backend, 'api', side_effect=ConnectionError('not started')), \
+                 patch('tuners.subprocess.Popen', return_value=process), patch('tuners.time.sleep') as sleep:
+                with self.assertRaisesRegex(ValueError, 'Another player or tuner service'):
+                    backend.ensure_service()
+                sleep.assert_not_called()
+
     def test_actual_page_places_both_receivers_before_telemetry(self):
         with patch.object(web, 'load_config', return_value={}):
             page = web.app.test_client().get('/').text

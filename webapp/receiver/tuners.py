@@ -229,6 +229,10 @@ class QocastBackend:
                                            creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))   # no console window
             deadline = time.monotonic() + 20
         while time.monotonic() < deadline:
+            if self.service and self.service.poll() is not None:
+                if self.service.returncode == 2:
+                    raise ValueError('Another player or tuner service is using the receiver. Close it, then press Receive again.')
+                raise ValueError('The tuner service exited (code %s). Check server.log and the tuner-service log.' % self.service.returncode)
             try:
                 if self.api('GET', 'health').get('ok'):
                     return
