@@ -93,7 +93,8 @@ class Receivers(unittest.TestCase):
         self.assertIn('data-receiver="1"', page)
         self.assertIn('data-receiver="2"', page)
         self.assertLess(page.index('id="receivers"'), page.index('>Telemetry<'))
-        self.assertIn('id="spectrumTarget"', page)
+        self.assertIn('id="rxTargetLabel"', page)
+        self.assertEqual(page.count('class="rx-pill"'), 2)
 
 
 if __name__ == '__main__':

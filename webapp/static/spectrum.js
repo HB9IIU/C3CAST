@@ -2,7 +2,8 @@
  * Read-only BATC QO-100 wideband FFT display, ported from HB9IIU's QOCAST (static/js/batc-spectrum.js).
  * Data format follows BATC's official web client: binary Uint16 FFT frames.
  *
- * Changes from QOCAST: no receiver tuning and no simulated signal (C3CAST has no receiver); amber instrument colours.
+ * Amber instrument colours, receiver pills and carrier measurement from QOCAST experimental.
+ * Signal clicks tune the selected receiver; the lower slot bar selects TX independently.
  *
  * Page hooks (same names as QOCAST):
  *   window.QO_ALLOWED_MHZ   - slot centres legal for the current SR (set by the page)
@@ -59,6 +60,7 @@
   let intentionallyClosed = false;
   let slotStates = new Map();
   let selectedCenter = null;
+  const receivers = new Map();
 
   const CHIP = { success: 'ok', danger: 'bad', secondary: '' };
   function setStatus(label, style) {
@@ -212,6 +214,30 @@
     context.strokeStyle = AMBER;
     context.lineWidth = 1.5;
     context.stroke();
+
+    // Same receiver identity colours as the pills; faded while searching, red after loss.
+    for (const [number, rx] of receivers) {
+      const half = rx.tuned.sr * 1.35 / 2000;
+      const left = Math.max(0, frequencyX(rx.tuned.centerMhz - half));
+      const right = Math.min(width, frequencyX(rx.tuned.centerMhz + half));
+      if (right <= left) continue;
+      const color = rx.state === 'lost' ? '#ef5350' : number === 1 ? '#25c26e' : '#b07cff';
+      context.save();
+      context.beginPath(); context.rect(left, top, right-left, plotHeight); context.clip();
+      context.globalAlpha = rx.state === 'searching' ? .12 : .27;
+      context.fillStyle = color;
+      context.beginPath(); context.moveTo(points[0][0], bottom);
+      points.forEach(point => context.lineTo(point[0], point[1]));
+      context.lineTo(points[points.length-1][0], bottom); context.closePath(); context.fill();
+      context.globalAlpha = rx.state === 'searching' ? .55 : 1;
+      context.strokeStyle = color; context.beginPath();
+      points.forEach((point, index) => index ? context.lineTo(...point) : context.moveTo(...point));
+      context.stroke(); context.restore();
+      context.font = `11px ${FONT}`; context.textAlign = 'left'; context.fillStyle = color;
+      const label = `RX ${number}${rx.callsign ? ' · '+rx.callsign : ''} · ${rx.state}`;
+      const x = Math.max(4, Math.min(left+4, width-context.measureText(label).width-4));
+      context.fillText(label, x, top+14+(number-1)*15);
+    }
   }
 
   function scheduleDraw(frame) {
@@ -270,17 +296,18 @@
   }
 
   canvas.addEventListener('click', (event) => {
-    const target = document.getElementById('spectrumTarget')?.value;
-    if (target && target !== 'tx') {
-      const bounds = canvas.getBoundingClientRect();
-      const frequency = START_MHZ + (event.clientX - bounds.left) * (END_MHZ - START_MHZ) / canvas.clientWidth;
-      if (window.c3TuneReceiver) window.c3TuneReceiver(Number(target), frequency);
-      return;
-    }
-    if (window.QO_LOCKED) return;   // no frequency change while on air
     const rectangle = canvas.getBoundingClientRect();
     const x = event.clientX - rectangle.left;
     const y = event.clientY - rectangle.top;
+    if (y < canvas.clientHeight - 44) {
+      const frequency = START_MHZ + x * (END_MHZ - START_MHZ) / canvas.clientWidth;
+      const signal = window.DatvSignalFinder.findSignal(latestFrame, frequency);
+      const message = document.getElementById('rxSpectrumMessage');
+      message.textContent = signal ? '' : latestFrame ? `No signal at ${frequency.toFixed(3)} MHz` : 'Waiting for spectrum data';
+      if (signal && window.c3TuneReceiver) window.c3TuneReceiver(signal);
+      return;
+    }
+    if (window.QO_LOCKED) return;   // TX slots stay locked on air; receiving remains available.
     const slotY = canvas.clientHeight - 32;
     if (Math.abs(y - slotY) > 10) return;
 
@@ -300,9 +327,15 @@
   canvas.addEventListener('mousemove', (event) => {
     const y = event.clientY - canvas.getBoundingClientRect().top;
     const overSlots = Math.abs(y - (canvas.clientHeight - 32)) <= 10;
-    canvas.style.cursor = overSlots && !window.QO_LOCKED ? 'pointer' : 'default';
+    canvas.style.cursor = y < canvas.clientHeight-44 || overSlots && !window.QO_LOCKED ? 'pointer' : 'default';
   });
-  canvas.title = 'Click a green slot to choose your TX frequency (green: free, red: occupied, grey: not allowed at this symbol rate)';
+  canvas.title = 'Click a signal to tune the selected receiver · click a green slot below to choose TX frequency';
+
+  window.c3ReceiverState = (number, tuned, state, callsign) => {
+    if (tuned) receivers.set(number, {tuned, state: state || 'searching', callsign: callsign || ''});
+    else receivers.delete(number);
+    draw(latestFrame);
+  };
 
   window.batcSetSelected = (center) => { selectedCenter = center; draw(latestFrame); };
   window.batcRedraw = () => draw(latestFrame);

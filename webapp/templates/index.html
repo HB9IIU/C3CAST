@@ -223,11 +223,8 @@
         <div class="field spectrum-field">
           <div class="lab">QO-100 wideband<span id="specChip" class="chip"><i class="led"></i><span id="specChipText">connecting</span></span></div>
           <div class="spectrum-plot"><canvas id="spectrum" class="spectrum"></canvas></div>
-            <div class="row" style="margin-top:.4rem">
-              <label for="spectrumTarget" class="hint">Spectrum click</label>
-              <select id="spectrumTarget" style="width:auto"><option value="tx">TX slots</option><option value="1">RX 1</option><option value="2">RX 2</option></select>
-              <span class="hint">RX uses the symbol rate set below</span>
-            </div>
+            <div class="hint" style="margin-top:.4rem">Click a signal to tune <b id="rxTargetLabel">Receiver 1</b> · green slots below select TX</div>
+            <div id="rxSpectrumMessage" class="hint" role="status" aria-live="polite"></div>
         </div>
         <div class="field">
           <div class="lab"><label for="freq">Frequency</label><span>MHz uplink</span></div>
@@ -289,7 +286,7 @@
   <div id="receivers" class="grid rx-grid" aria-label="DATV receivers">
     {% for n in (1, 2) %}
     <section class="panel rx-panel" data-receiver="{{ n }}">
-      <div class="ph">RX {{ n }} <span class="rx-device grow">No receiver connected</span>
+      <div class="ph"><button class="rx-pill" type="button" aria-pressed="{{ 'true' if n == 1 else 'false' }}">Receiver {{ n }}</button><span class="rx-device grow">No receiver connected</span>
         <button class="btn rx-settings" type="button" title="Receiver settings">Settings</button>
         <button class="btn rx-full" type="button" title="Fullscreen receiver">⛶</button>
       </div>
@@ -320,6 +317,7 @@
   <footer><span>{{ app_name }} v{{ app_version }} &middot; by HB9IIU</span><span>firmware: SP8ESA ESP32-DATV &middot; PTT on D10</span></footer>
 </div>
 
+<script src="/static/signal-finder.js?v={{ app_version }}"></script>
 <script src="/static/spectrum.js?v={{ app_version }}"></script>
 <script src="/static/receivers.js?v={{ app_version }}" defer></script>
 <script>

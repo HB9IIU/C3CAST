@@ -53,6 +53,11 @@ a:hover { text-decoration: underline; }
 }
 
 .rx-grid { margin-top: .6rem; }
+.rx-panel { --rx-color: #25c26e; }
+.rx-panel[data-receiver="2"] { --rx-color: #b07cff; }
+.rx-panel.rx-selected { border-color: var(--rx-color); box-shadow: 0 0 0 1px var(--rx-color); }
+.rx-pill { border: 1px solid var(--rx-color); border-radius: 2rem; padding: .28rem .75rem; font: 600 .85rem var(--mono); color: var(--text); background: var(--panel); cursor: pointer; }
+.rx-pill[aria-pressed="true"] { color: #090c0f; background: var(--rx-color); }
 .rx-device { text-transform: none; letter-spacing: 0; font-weight: 400; overflow-wrap: anywhere; }
 .rx-panel .ph { flex-wrap: wrap; }
 .rx-picture { position: relative; aspect-ratio: 16/9; background: #090c0f; }
