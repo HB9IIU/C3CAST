@@ -52,8 +52,8 @@ source, or `receivers/` beside the portable EXE. MiniTiouners are pinned by seri
 Two PicoTuner channels share RX 1's service, with separate UDP destinations.
 
 MiniTiouner/PicoTuner -> headless C# tuner service -> loopback UDP MPEG-TS.
-RTL-SDR -> rtl_iq -> datvrx -> MPEG-TS. Both feed a separate receive-only FFmpeg
-which decodes H.264/H.265/H.266 and transcodes to H.264/AAC fragmented MP4 for MSE.
+RTL-SDR -> rtl_iq -> datvrx -> MPEG-TS. Both feed C3CAST's own ffmpeg (tools/ffmpeg,
+the one that also transmits) which decodes H.264/H.265/H.266 and transcodes to H.264/AAC fragmented MP4 for MSE.
 Closing C3CAST closes the workers' parent pipes; servers clean up their children.
 The original optional external H.266 Player remains available as before.
 

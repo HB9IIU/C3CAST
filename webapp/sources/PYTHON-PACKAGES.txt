@@ -1,0 +1,33 @@
+Python packages inside C3CAST.exe
+================================
+
+C3CAST.exe is a Python program packed with PyInstaller. These are the packages it is built from, with the licence each one declares.
+Where a package keeps a licence file, it is in the folder _internal\<package>.dist-info\ of the package folder.
+
+  blinker                        1.9.0          MIT License
+  cffi                           2.1.1          MIT-0
+  click                          8.5.0          BSD-3-Clause
+  cryptography                   50.0.2         Apache-2.0 OR BSD-3-Clause
+  esptool                        5.6.0          GPL-2.0-or-later
+  Flask                          3.1.3          BSD-3-Clause
+  intelhex                       2.3.0          BSD
+  itsdangerous                   2.2.0          BSD License
+  Jinja2                         3.1.6          BSD License
+  MarkupSafe                     3.0.4          BSD-3-Clause
+  numpy                          2.4.6          BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0
+  pillow                         13.0.0         MIT-CMU
+  pycparser                      3.12           BSD-3-Clause
+  pyserial                       3.5            BSD
+  PyYAML                         6.0.3          MIT
+  reedsolo                       1.7.0          Public Domain
+  rich                           15.0.0         MIT
+  rich-click                     1.9.9          MIT License
+  websockets                     17.3           BSD-3-Clause
+  Werkzeug                       3.1.9          BSD-3-Clause
+
+The only package with a source obligation is esptool (flashing the board), GPL v2 or later:
+  esptool-5.6.0.tar.gz   its exact source, in this folder (the official sdist from PyPI).
+C3CAST starts esptool as a separate helper process (C3CAST.exe --worker esptool) and does not modify it.
+
+Python itself (PSF licence): Python-PSF-LICENSE.txt in this folder.
+The PyInstaller bootloader (GPL v2 with an exception for the programs it packs) is used under that exception.

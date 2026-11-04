@@ -32,7 +32,7 @@ def main():
     logging.getLogger('werkzeug').setLevel(logging.ERROR)
     output = ROOT/'output'
     output.mkdir(exist_ok=True)
-    ffmpeg = ROOT/'webapp/receiver/bin/ffmpeg.exe'
+    ffmpeg = ROOT/'tools/ffmpeg/bin/ffmpeg.exe'
     sample = output/'window-replay.ts'
     subprocess.run([str(ffmpeg), '-hide_banner', '-loglevel', 'error', '-y', '-f', 'lavfi', '-i',
                     'testsrc2=size=320x180:rate=10', '-t', '2', '-c:v', 'libx264', '-g', '10',

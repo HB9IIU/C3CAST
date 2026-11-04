@@ -33,8 +33,8 @@ def main():
     logging.getLogger('werkzeug').setLevel(logging.ERROR)
     output = ROOT / 'output'
     output.mkdir(exist_ok=True)
-    rx_ff = ROOT / 'webapp/receiver/bin/ffmpeg.exe'
     tx_ff = ROOT / 'tools/ffmpeg/bin/ffmpeg.exe'
+    rx_ff = tx_ff                                  # one ffmpeg for transmitting and receiving
     encoders = [('h264', rx_ff, 'libx264'), ('h265', tx_ff, 'libx265'), ('h266', tx_ff, 'libvvenc')]
     # A known pattern and tone exercise video AND audio through the complete receive pipeline.
     for name, exe, encoder in encoders:
@@ -58,7 +58,7 @@ def main():
         app_log = (output / 'portable-app.log').open('wb')
         app_process = subprocess.Popen([str(portable)], cwd=portable.parent, env=env, stdout=app_log, stderr=app_log,
                                        creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
-        rx_ff = portable.parent / '_internal/receiver/bin/ffmpeg.exe'
+        rx_ff = portable.parent / 'tools/ffmpeg/bin/ffmpeg.exe'
         deadline = time.monotonic() + 20
         while True:
             try:

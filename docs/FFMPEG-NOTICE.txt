@@ -2,32 +2,38 @@ FFmpeg in the C3CAST portable package
 =====================================
 
 ffmpeg.exe (tools/ffmpeg/bin) is a separate command-line program that C3CAST starts as a helper. It is NOT part of C3CAST's
-own code and is not covered by C3CAST's licence.
+own code and is not covered by C3CAST's licence. It is the only ffmpeg C3CAST uses: it encodes what you transmit, and it
+re-encodes the pictures of the receivers to H.264 so that a web browser can play them.
 
 Licence
   GNU General Public License, version 2 or later (full text: COPYING.GPLv2 in this folder).
-  Built with --enable-gpl (libx265) and without --enable-nonfree, --enable-version3, FDK AAC or x264.
-  Licences of the other parts: x265-COPYING.txt, VVenC-BSD-3-Clause-Clear.txt, FFmpeg-LGPL-2.1.txt and
+  Built with --enable-gpl (libx264 and libx265) and without --enable-nonfree, --enable-version3 or FDK AAC.
+  Licences of the other parts: x264-COPYING.txt, x265-COPYING.txt, VVenC-BSD-3-Clause-Clear.txt, FFmpeg-LGPL-2.1.txt and
   THIRD-PARTY-LICENSES.txt (all in this folder).
 
 What is in this build
-  FFmpeg N-128191-g2602f39f5   commit 2602f39f55468b3c5ca9a2bf40f86ef8bcefad98   (unmodified)   https://ffmpeg.org
-  x265   4.3-83-g83ce412       commit 83ce412fd71cf2eec56bbf07ba1de1aa74228953   (unmodified)   https://www.x265.org
-  VVenC  v1.14.0-314-g1817b1e  commit 1817b1eb8a3d01a952922cb78bfa398ad3a6b087   (unmodified)   https://github.com/fraunhoferhhi/vvenc
-  Encoders used by C3CAST: libx265 and hevc_nvenc (H.265), libvvenc (H.266, experimental) and the native aac (AAC-LC).
+  FFmpeg N-128416-g5048d707a   commit 5048d707a3d57aaf91579116dbe64585a9715cd8   (unmodified)   https://ffmpeg.org
+  x264   0.165-g0480cb0        commit 0480cb05fa188d37ae87e8f4fd8f1aea3711f7ee   (unmodified)   https://www.videolan.org/developers/x264.html
+  x265   4.3-96-g1836f70       commit 1836f70c17cde142ac023da71a96ba9cc49c9213   (one build patch)   https://www.x265.org
+  VVenC  v1.14.0-380-ge089128  commit e0891287edc0d64de2d3977c4dbebff63fe367f9   (unmodified)   https://github.com/fraunhoferhhi/vvenc
+  Encoders used by C3CAST: libx264 (H.264, only for the browser receivers), libx265 and hevc_nvenc (H.265), libvvenc (H.266,
+  experimental) and the native aac (AAC-LC).
   Also built in: FreeType, HarfBuzz and Fontconfig (callsign text on the picture), zlib, bzip2, liblzma, libiconv and the
   NVIDIA ffnvcodec headers. Nothing else: no SRT, no Intel oneVPL, no SDL2, no hardware decoders.
-  Compiled with GCC 16.2.0 (MSYS2 / media-autobuild_suite) on 29 October 2026. The exact configure line is in buildconf.txt.
+  Compiled with GCC 16.2.0 (MSYS2 / media-autobuild_suite) on 4 November 2026. The exact configure line is in buildconf.txt.
 
 Corresponding source (GPL)
   The exact source of this build is in the folder "source", next to this file, so you do not depend on a web address:
-    ffmpeg-2602f39f...-source.zip     FFmpeg source at the commit above
-    x265-83ce412f...-source.zip       x265 source at the commit above
-    vvenc-1817b1eb...-source.zip      VVenC source at the commit above
+    ffmpeg-5048d707...-source.zip     FFmpeg source at the commit above
+    x264-0480cb05...-source.zip       x264 source at the commit above
+    x265-1836f70c...-source.zip       x265 source at the commit above
+    x265-local-build.patch            the one change the build suite makes to x265 while building (13 lines, one build file)
+    vvenc-e0891287...-source.zip      VVenC source at the commit above
     build_c3cast_ffmpeg_vvc.bat       the build script;  media-autobuild_suite.ini and ffmpeg_options.txt are its settings
     ffmpeg-buildconf.txt              the configure options actually used
     SHA256SUMS.txt                    checksums of the files above
-  Upstream: https://code.ffmpeg.org/FFmpeg/FFmpeg, https://bitbucket.org/multicoreware/x265_git, https://github.com/fraunhoferhhi/vvenc
+  Upstream: https://code.ffmpeg.org/FFmpeg/FFmpeg, https://code.videolan.org/videolan/x264, https://bitbucket.org/multicoreware/x265_git,
+  https://github.com/fraunhoferhhi/vvenc
 
 C3CAST (HB9IIU) and the ESP32-DATV firmware (SP8ESA) are under PolyForm Noncommercial 1.0.0; see LICENSE and
 LICENSE-firmware-SP8ESA.txt in the package folder.

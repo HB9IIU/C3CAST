@@ -1,0 +1,90 @@
+Receiver files: what they are, their licence, and where their source is
+=======================================================================
+
+Everything below is inside this package. Nothing has to be downloaded to get the source.
+"source/" is the folder next to this file. The receivers are separate programs under their own licences;
+C3CAST itself and the ESP32-DATV firmware are under PolyForm Noncommercial 1.0.0 (see LICENSE in the package folder).
+
+bin/datvrx.exe
+    what    : DATVision DVB-S/S2 demodulator (Rust), HB9IIU, release 1.0.0
+    licence : GPL v3
+    source  : source/DATVision-1.0.0-source.zip  (rust/datvrx_rust)
+    sha-256 : eb3d25f1ee86103b60af40c6c9cfaeb4dd06ca00aace0d91012a4a092ff8baf0
+
+bin/rtl_iq.exe
+    what    : DATVision RTL-SDR reader (C++), release 1.0.0
+    licence : GPL v3
+    source  : source/DATVision-1.0.0-source.zip  (tools/rtl_iq.cpp)
+    sha-256 : 4db0269769803f6f6477464c6e35cff58814b1823642d5685defb5834060ea02
+
+bin/librtlsdr.dll
+    what    : rtl-sdr 2.0.2, the MSYS2 build
+    licence : GPL v2 or later
+    source  : source/mingw-w64-rtl-sdr-2.0.2-1.src.tar.zst  (the upstream tarball and the build recipe)
+    sha-256 : ce770e44df6d58345a617e7601c64d72d0b77a0586de81c30fdacffaff6f98fb
+
+bin/libusb-1.0.dll
+    what    : libusb 1.0.28, the MSYS2 build
+    licence : LGPL v2.1 or later
+    source  : source/mingw-w64-libusb-1.0.28-1.src.tar.zst  (the upstream tarball and the build recipe)
+    sha-256 : 39a8be2a8c628c2a6146a3a1a85758a5f7fe44045fe425c9bf5897a11ea1b46c
+
+bin/libwinpthread-1.dll
+    what    : winpthreads from mingw-w64 (MSYS2)
+    licence : MIT and BSD-3-Clause-Clear
+    source  : licence text only: licenses/libwinpthread-MIT.txt (permissive: no source obligation)
+    sha-256 : 6661cfc5ca7dd8a6ae74687e4812d324e4be0ff8e0a83f92a9bfae04e6231d32
+
+tuner-service/bin/tuner-service.exe
+    what    : tuner service for MiniTiouner and PicoTuner (C#), derived from Open Tuner
+    licence : GPL v3
+    source  : tuner-service/src  (all C# sources, with Build-TunerService.cmd)
+    sha-256 : 01317e01e005c41134036ff6f3b2ee000eb1d48bc59c00c2bbc421caccd3820a
+
+tuner-service/bin/libusb-1.0.dll
+    what    : libusb 1.0.27 from libusb.info
+    licence : LGPL v2.1 or later
+    source  : source/libusb-1.0.27.tar.bz2
+    sha-256 : d4e5db4fad8bef7201dc5a4a71ca997e6dccc9da25e8a988d4be63b13a02208d
+
+tuner-service/bin/LibUsbDotNet.LibUsbDotNet.dll
+    what    : LibUsbDotNet 2.2.29 (git commit 5dd91a2fda39)
+    licence : LGPL v3
+    source  : source/LibUsbDotNet-2.2.29-source.zip
+    sha-256 : b6de87ff6fdde6d0a245ef37fe81fac49523c35115c61bc002e4935d99875508
+
+tuner-service/bin/FTD2XX_NET.dll
+    what    : FTDI's .NET wrapper for its D2XX driver (the FTDI driver itself is NOT included)
+    licence : FTDI licence
+    source  : closed source; FTDI allows distribution in any form with its licence text unmodified: tuner-service/licenses/FTD2XX_NET-FTDI-licence.txt
+    sha-256 : 7e5be9e5f90dd280609b6ad0f130fbc40d9c414cb853cdb33627e84324c51c9a
+
+tuner-service/bin/Newtonsoft.Json.dll
+    what    : Json.NET 13.0.3
+    licence : MIT
+    source  : licence text: tuner-service/licenses/Newtonsoft.Json-MIT.txt
+    sha-256 : e1e27af7b07eeedf5ce71a9255f0422816a6fc5849a483c6714e1b472044fa9d
+
+tuner-service/bin/Serilog.dll
+    what    : Serilog 3.1.2
+    licence : Apache 2.0
+    source  : licence text: tuner-service/licenses/Apache-2.0.txt
+    sha-256 : 5755736f579a63e23e0ea42890061dce8a7834887745896eabbd73a5f392c5e8
+
+tuner-service/bin/Serilog.Sinks.File.dll
+    what    : Serilog.Sinks.File 5.0.0
+    licence : Apache 2.0
+    source  : licence text: tuner-service/licenses/Apache-2.0.txt
+    sha-256 : 5b70dc2eeceb1963f9c3690c1cc8ffa793b280e903fa9a31780e6a7bb0bdfcf9
+
+Microsoft's .NET support libraries in tuner-service/bin (System.Buffers, System.Memory, System.Numerics.Vectors, System.Runtime.CompilerServices.Unsafe, System.Diagnostics.DiagnosticSource):
+    MIT licence, part of .NET; pulled in by the packages above. No source obligation.
+
+The same libusb, LibUsbDotNet, FTDI wrapper, Json.NET and Serilog files are in the H266-Player folder; their sources and licence
+texts are in H266-Player/source and H266-Player/licenses.
+
+The receive-side ffmpeg is the one in tools/ffmpeg (the same file that transmits): see tools/ffmpeg/README.txt and tools/ffmpeg/source.
+
+Origin of datvrx.exe, rtl_iq.exe and the three native libraries: they are byte-for-byte the files of DATVision 1.0.0
+(https://github.com/HB9IIU/DATVision, tag v1.0.0), whose source is the zip named above. The web address is only for
+information; the source you are entitled to is in this folder.

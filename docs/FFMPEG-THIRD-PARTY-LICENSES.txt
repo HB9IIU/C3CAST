@@ -2,7 +2,7 @@ Third-party libraries inside ffmpeg.exe
 =======================================
 ffmpeg.exe is a single program that contains these libraries. Each keeps its own licence; the texts that require
 reproducing are below. None of them is used by C3CAST's own code, and none needs the source to be supplied beyond what is in
-the "source" folder (FFmpeg, x265, VVenC). Full list of what is built in: buildconf.txt.
+the "source" folder (FFmpeg, x264, x265, VVenC). Full list of what is built in: buildconf.txt.
 
 FreeType  (text drawing)          FreeType Licence (FTL) or GPLv2; used under the FTL        https://freetype.org
 HarfBuzz  (text shaping)          "Old MIT" licence                                          https://harfbuzz.github.io
@@ -12,6 +12,7 @@ bzip2                             BSD-style licence                             
 liblzma (XZ Utils)                public domain                                              https://tukaani.org/xz
 libiconv                          LGPL 2.1 or later (text: FFmpeg-LGPL-2.1.txt)              https://www.gnu.org/software/libiconv
 NVIDIA nv-codec-headers (NVENC)   MIT licence                                                https://github.com/FFmpeg/nv-codec-headers
+x264 / x265 (H.264 / H.265)         GPL v2 or later (texts: x264-COPYING.txt, x265-COPYING.txt)  https://www.videolan.org/developers/x264.html
 VVenC                             The Clear BSD licence (text: VVenC-BSD-3-Clause-Clear.txt) https://github.com/fraunhoferhhi/vvenc
 
 

@@ -24,7 +24,7 @@ OUT = DIST / NAME
 sep = ";"                                                       # --add-data separator on Windows
 
 data = [("webapp/templates", "templates"), ("webapp/static", "static"), ("webapp/fonts", "fonts"),
-        ("webapp/firmware", "firmware"), ("webapp/testcards", "testcards"),
+        ("webapp/firmware", "firmware"), ("webapp/testcards", "testcards"), ("webapp/sources", "sources"),
         ("host/dvbs2_ldpc.json", "."), ("host/cal.json", ".")]
 hidden = ["runner", "stream_tx", "clock_card", "camera", "qo100_enc", "flasher", "paths", "version",
           "receivers", "tuner_assignment", "webplayer", "tuners", "rx_status", "ts_info", "usb_devices",
@@ -33,9 +33,6 @@ hidden = ["runner", "stream_tx", "clock_card", "camera", "qo100_enc", "flasher",
 
 if not (ROOT / "webapp" / "firmware" / "manifest.json").is_file():
     sys.exit("run tools/export_firmware.py first")
-receiver_ffmpeg = ROOT / "webapp" / "receiver" / "bin" / "ffmpeg.exe"
-if not receiver_ffmpeg.is_file() or hashlib.sha256(receiver_ffmpeg.read_bytes()).hexdigest() != '3256173f3f8bffd7df12227c68adf68025edb1832273a9530688a7bb1ed8edec':
-    sys.exit("run tools/prepare_receiver_ffmpeg.py first (the pinned GPL receive build is required)")
 # Never remove a previously tested portable folder or its user settings.
 # Keep it next to the new build as an automatic backup.
 if OUT.exists():
@@ -51,8 +48,6 @@ shutil.rmtree(BUILD, ignore_errors=True)
 receiver_assets = BUILD / "receiver-assets"
 shutil.copytree(ROOT / "webapp" / "receiver", receiver_assets,
                 ignore=shutil.ignore_patterns("__pycache__", "obj", "*.log", "*.pdb"))
-if not (receiver_assets / "bin" / "ffmpeg.exe").is_file():
-    sys.exit("run tools/prepare_receiver_ffmpeg.py first")
 data.append((str(receiver_assets), "receiver"))
 
 cmd = [sys.executable, "-m", "PyInstaller", "--noconfirm", "--clean", "--onedir", "--console", "--name", "C3CAST", "--icon", str(ROOT / "webapp" / "static" / "c3cast.ico"),
@@ -68,6 +63,11 @@ print("running PyInstaller ...", flush=True)
 subprocess.run(cmd, check=True)
 
 shutil.copytree(BUILD / "pyi-dist" / "C3CAST", OUT)
+# .NET build leftovers (obj/) hold paths of the build PC and are not needed to run: never ship them
+for leftover in list((OUT / "_internal" / "receiver").rglob("obj")):
+    if leftover.is_dir():
+        shutil.rmtree(leftover)
+        print(f"removed build leftover from the package: {leftover.relative_to(OUT)}", flush=True)
 ff = ROOT / "tools" / "ffmpeg"
 if not (ff / "bin" / "ffmpeg.exe").is_file():
     sys.exit("tools/ffmpeg/bin/ffmpeg.exe is missing")
@@ -101,7 +101,7 @@ shutil.copy2(ROOT / "LICENSE.upstream", OUT / "LICENSE-firmware-SP8ESA.txt")
 (OUT / "README-PORTABLE.txt").write_text(
     f"C3CAST {version.__version__} by HB9IIU: the 5 EUR DATV modulator. Plug, flash, play.\r\n"
     "\r\n"
-    f"Download audit in progress: see v{version.__version__}-validation.md before redistribution.\r\n"
+    "Sources and licences of everything in this package: _internal/receiver/source/SOURCES.txt, tools/ffmpeg/README.txt and H266-Player/source.\r\n"
     "1. Double-click C3CAST.exe. A window opens (close it to quit) and your browser opens the page.\r\n"
     "2. Plug the Seeed XIAO ESP32-C3 into USB. If the page does not say 'board connected', press Flash.\r\n"
     "3. Pick a picture, clock, USB camera or video, choose frequency, symbol rate and FEC, check the Level, then press Start.\r\n"
@@ -113,7 +113,7 @@ shutil.copy2(ROOT / "LICENSE.upstream", OUT / "LICENSE-firmware-SP8ESA.txt")
     "Delete that folder if you do not need it; the button then disappears.\r\n"
     "Two integrated receiver panels are below the transmit controls. Connect a MiniTiouner, PicoTuner or RTL-SDR.\r\n"
     "Select a receiver pill, then click a signal in the spectrum to receive it. Settings controls the LNB/input or RTL gain.\r\n"
-    "Receiver settings/logs live in receivers/. Its separate FFmpeg and GPL receiver sources are in _internal/receiver/.\r\n"
+    "Receiver settings/logs live in receivers/. The receivers use the same ffmpeg as the transmitter (tools/ffmpeg).\r\n"
     "\r\n"
     "Licensed radio amateurs only. Use a filter before any amplifier and check the spectrum first.\r\n"
     "\r\n"

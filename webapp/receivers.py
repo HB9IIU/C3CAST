@@ -80,9 +80,9 @@ def _launch(number, slot, entry, shared):
                 raise ValueError(primary.get('error') or 'The primary PicoTuner receiver did not start')
         data = paths.RECEIVER_DATA / str(number)
         data.mkdir(parents=True, exist_ok=True)
-        ffmpeg = paths.RECEIVER / 'bin' / 'ffmpeg.exe'
+        ffmpeg = paths.TOOLS / 'ffmpeg' / 'bin' / 'ffmpeg.exe'      # the one ffmpeg C3CAST ships: it transmits and it re-encodes the received picture for the browser
         if not ffmpeg.is_file():
-            raise ValueError('Receiver FFmpeg is missing; see docs/RECEIVERS.md')
+            raise ValueError('ffmpeg is missing (tools/ffmpeg/bin); see docs/RECEIVERS.md')
         command = paths.worker_cmd('receiver') + [
             '--no-browser', '--watch-stdin', '--port', str(entry['port']),
             '--service-port', str(entry['service_port']), '--ts-port', str(entry['ts_port']),

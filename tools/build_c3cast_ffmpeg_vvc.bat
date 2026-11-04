@@ -1,11 +1,11 @@
 @echo off
 rem ===========================================================================
-rem  build_c3cast_ffmpeg_vvc.bat - the SIMPLE shareable FFmpeg for C3CAST: H.265 (x265, NVENC), H.266 (VVenC), native AAC.
+rem  build_c3cast_ffmpeg_vvc.bat - the SIMPLE shareable FFmpeg for C3CAST: H.265 (x265, NVENC), H.266 (VVenC), H.264 (x264), native AAC.
 rem
-rem  GPL, no non-free parts, no fdk-aac, no x264. Deliberately small: no SRT, no Intel oneVPL, no SDL2/ffplay, no AMD AMF,
+rem  GPL, no non-free parts, no fdk-aac. x264 is in because the browser receivers re-encode the received picture to H.264. Deliberately small: no SRT, no Intel oneVPL, no SDL2/ffplay, no AMD AMF,
 rem  no CUDA decoding, no MediaFoundation, no Schannel (C3CAST needs none of them), so the list of libraries that must be
-rem  documented stays short: x265, VVenC, FreeType, HarfBuzz, Fontconfig, zlib, bzip2, liblzma, libiconv and the NVIDIA
-rem  ffnvcodec headers. Giving it to others also means giving the source of FFmpeg, x265 and VVenC with it.
+rem  documented stays short: x264, x265, VVenC, FreeType, HarfBuzz, Fontconfig, zlib, bzip2, liblzma, libiconv and the NVIDIA
+rem  ffnvcodec headers. Giving it to others also means giving the source of FFmpeg, x264, x265 and VVenC with it.
 rem
 rem  Put this file NEXT TO media-autobuild_suite.bat (C:\mabs) and run it. The suite builds in its own
 rem  window; when that window says it is finished, run STEP 2: finish_datv_ffmpeg_free_H266.bat.
@@ -46,7 +46,7 @@ rem --- FFmpeg source: latest development version -----------------------------
 set FFMPEG_PATH=https://code.ffmpeg.org/FFmpeg/FFmpeg.git
 
 rem --- Answers to all suite questions (1 = Yes, 2 = No unless noted) -------
-rem     license2=3 is GPL. x2653=1 libx265, vvenc=1 libvvenc. fdkaac=2 and x2643=2: not wanted.
+rem     license2=3 is GPL. x2653=1 libx265, vvenc=1 libvvenc. x2643=1 libx264 (browser receivers). fdkaac=2: not wanted.
 (
 echo [compiler list]
 echo license2=3
@@ -59,7 +59,7 @@ echo dav1d=2
 echo libavif=2
 echo libheif=2
 echo jpegxl=2
-echo x2643=2
+echo x2643=1
 echo x2653=1
 echo other265=2
 echo svthevc=2
@@ -111,7 +111,7 @@ echo pkgUpdateTime=86400
 
 rem --- FFmpeg configure options (the suite uses this as the COMPLETE list) ---
 (
-echo # C3CAST - simple shareable FFmpeg, GPL, with libx265 and libvvenc
+echo # C3CAST - simple shareable FFmpeg, GPL, with libx264, libx265 and libvvenc
 echo # Lines starting with # are ignored
 echo.
 echo # Built-ins - Windows / hardware
@@ -129,6 +129,7 @@ echo # External libraries
 echo --disable-debug
 echo --enable-gpl
 echo --enable-libx265
+echo --enable-libx264
 echo --enable-libvvenc
 echo.
 echo # Text overlays - drawtext filter, e.g. callsign on camera pictures
@@ -138,9 +139,10 @@ echo --enable-fontconfig
 ) > build\ffmpeg_options.txt
 
 rem --- Safety check: nothing non-free in the list, and what we need is in it -
-findstr /i /c:"nonfree" /c:"fdk" /c:"x264" /c:"sdl2" /c:"libsrt" /c:"libvpl" /c:"schannel" build\ffmpeg_options.txt >nul && goto :optfail
+findstr /i /c:"nonfree" /c:"fdk" /c:"sdl2" /c:"libsrt" /c:"libvpl" /c:"schannel" build\ffmpeg_options.txt >nul && goto :optfail
 findstr /x /c:"--enable-libvvenc" build\ffmpeg_options.txt >nul || goto :optfail
 findstr /x /c:"--enable-libx265" build\ffmpeg_options.txt >nul || goto :optfail
+findstr /x /c:"--enable-libx264" build\ffmpeg_options.txt >nul || goto :optfail
 findstr /x /c:"--enable-gpl" build\ffmpeg_options.txt >nul || goto :optfail
 
 rem --- Empty mpv options file, so the suite does not stop to ask about it ---

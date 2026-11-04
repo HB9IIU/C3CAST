@@ -9,18 +9,32 @@ tuner-service\ runs the MiniTiouner / PicoTuner for the web page. Everything it 
               Added for this project: src\Program.cs (no window, no video) and src\Receiver\UdpTsSender.cs;
               small changes in src\Control\ControlServer.cs, src\Receiver\ReceiverService.cs, src\Receiver\RxInfo.cs
               and src\OpenTuner\QocastRxInfo.cs (stream by UDP, constellation in the status).
-  lib\        FTD2XX_NET.dll (FTDI D2XX wrapper) and libusb-1.0.dll (libusb, LGPL-2.1, https://libusb.info),
-              binaries taken from the QOCAST Player.
+  lib\        FTD2XX_NET.dll and libusb-1.0.dll, taken from the QOCAST Player (see the table below).
   bin\        the built program (tuner-service.exe and its libraries). It runs on Windows 10/11 with the
               built-in .NET Framework 4.7.2; no SDK is needed to run it. Rebuild: Build-TunerService.cmd.
+  licenses\   the licence texts of the libraries below.
 
-Packages restored from NuGet when building (their DLLs are copied into bin\):
-  Newtonsoft.Json 13.0.3           MIT          https://www.newtonsoft.com/json
-  Serilog 3.1.2-dev-02097          Apache-2.0   https://serilog.net/
-  Serilog.Sinks.File 5.0.0         Apache-2.0   https://serilog.net/
-  LibUsbDotNet 2.2.29              licence as stated by the project: https://github.com/LibUsbDotNet/LibUsbDotNet/blob/master/LICENSE
-  (System.Buffers, System.Memory, System.Numerics.Vectors, System.Runtime.CompilerServices.Unsafe and
-   System.Diagnostics.DiagnosticSource are Microsoft's .NET support libraries, pulled in by the packages above.)
+The libraries in bin\ (and lib\), their licences, and where the source is. The "source" folder is receiver\source, one level
+up from here; receiver\source\SOURCES.txt lists every receiver file with its SHA-256.
+
+  libusb-1.0.dll                 libusb 1.0.27 from libusb.info    LGPL 2.1 or later   source: source\libusb-1.0.27.tar.bz2
+  LibUsbDotNet.LibUsbDotNet.dll  LibUsbDotNet 2.2.29               LGPL 3              source: source\LibUsbDotNet-2.2.29-source.zip
+                                 (git commit 5dd91a2fda393cf11db2072f2b45c3aee2750388, as recorded in its NuGet package)
+  FTD2XX_NET.dll                 FTDI's .NET wrapper, (c) FTDI     FTDI licence        closed source; its licence text, which FTDI
+                                 2007-2013                                             requires to stay unmodified, is in
+                                                                                       licenses\FTD2XX_NET-FTDI-licence.txt
+  Newtonsoft.Json.dll            Json.NET 13.0.3                   MIT                 licenses\Newtonsoft.Json-MIT.txt
+  Serilog.dll                    Serilog 3.1.2                     Apache 2.0          licenses\Apache-2.0.txt
+  Serilog.Sinks.File.dll         Serilog.Sinks.File 5.0.0          Apache 2.0          licenses\Apache-2.0.txt
+  System.Buffers, System.Memory, System.Numerics.Vectors, System.Runtime.CompilerServices.Unsafe and
+  System.Diagnostics.DiagnosticSource are Microsoft's .NET support libraries, pulled in by the packages above (MIT).
+
+The LGPL libraries (libusb, LibUsbDotNet) are separate DLL files that sit next to the program: you can replace them with your own
+build of the same libraries from the sources above, and the licence texts are in licenses\ (libusb: ..\licenses\libusb-LGPL-2.1.txt,
+LibUsbDotNet: licenses\LibUsbDotNet-LICENSE.txt).
+
+FTDI's licence says the wrapper may only be used with products based on FTDI parts: the MiniTiouner uses an FTDI FT2232H, so that
+is what it is for. The FTDI driver (D2XX) itself is not part of this package; it is FTDI's own, installed on the PC.
 
 Windows drivers (not part of this folder, installed on the PC like the RTL-SDR's WinUSB driver):
   MiniTiouner  the FTDI D2XX driver
