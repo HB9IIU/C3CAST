@@ -148,6 +148,31 @@ def main():
                     expect(first.locator('#video')).to_have_js_property('paused', False)
                     expect(second.locator('#video')).to_have_js_property('muted', True)
                     print('Header volume/mute control, independent RX 2 mute, and hidden video overlays passed.', flush=True)
+                    loss_url = entries[0]['url'] + '/status'
+                    reception = {'locked': True}
+                    def lost_status(route):
+                        response = route.fetch()
+                        report = response.json()
+                        report['locked'] = reception['locked']
+                        route.fulfill(json=report)
+                    page.route(loss_url, lost_status)
+                    expect(page.locator('[data-receiver="1"] .rx-lock')).to_have_text('LOCKED')
+                    reception['locked'] = False
+                    expect(first.locator('#wait')).to_contain_text('Signal lost', timeout=5000)
+                    expect(page.locator('[data-receiver="1"] .rx-lock')).to_have_text('SIGNAL LOST')
+                    expect(page.locator('[data-receiver="1"] .rx-eye-display canvas')).to_have_attribute('title', 'No signal quality')
+                    reception['locked'] = True
+                    expect(first.locator('#wait')).to_be_hidden(timeout=5000)
+                    stalled_generation = first.locator('#video').evaluate('v=>{v.pause();progressAt=performance.now()-6000;return generation}')
+                    expect(first.locator('#wait')).to_contain_text('Signal lost', timeout=3000)
+                    expect(page.locator('[data-receiver="1"] .rx-lock')).to_have_text('SIGNAL LOST')
+                    first.locator('#video').evaluate('v=>{progressAt=performance.now()-11000}')
+                    first.locator('#video').evaluate("(v,old)=>new Promise((resolve,reject)=>{const deadline=Date.now()+20000;const check=()=>{if(generation>old&&v.videoWidth&&v.currentTime>.3&&!v.paused)resolve();else if(Date.now()>deadline)reject(Error('Stall did not recover'));else setTimeout(check,100)};check()})", stalled_generation)
+                    expect(first.locator('#wait')).to_be_hidden(timeout=5000)
+                    expect(first.locator('#video')).to_have_js_property('volume', .35)
+                    expect(second.locator('#video')).to_have_js_property('muted', True)
+                    print('Signal-loss overlay, dark eye, lock return, and automatic stalled-player recovery passed.', flush=True)
+
                 page.screenshot(path=str(output / f'c3cast-receiver-{name}.png'), full_page=True)
                 page.goto('about:blank')
                 for process, worker_log in pair:

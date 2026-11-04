@@ -121,7 +121,7 @@
       badge.textContent = locked ? 'LOCKED' : data.state === 'lost' ? 'SIGNAL LOST' : data.tuned ? 'SEARCHING' : 'IDLE';
       badge.classList.toggle('locked', locked);
       const margin = locked && Number.isFinite(info.margin) ? info.margin : null;
-      eyes.get(panel).update(margin, Boolean(data.tuned));
+      eyes.get(panel).update(margin, locked);
       panel.querySelector('.rx-margin').textContent = margin === null ? 'Margin —' : `Δ ${margin >= 0 ? '+' : ''}${margin.toFixed(1)} dB`;
       window.c3ReceiverState?.(Number(panel.dataset.receiver), data.tuned, data.state, data.callsign);
       panel.querySelector('.rx-message').textContent = '';

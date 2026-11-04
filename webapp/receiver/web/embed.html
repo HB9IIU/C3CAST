@@ -21,6 +21,8 @@ video{width:100%;height:100%;background:#000;display:block;object-fit:contain}
 #call b{display:inline-grid;place-items:center;min-width:1.15em;height:1.15em;padding:0 .15em;border-radius:50%;font-size:.6em;color:#06210f;background:var(--rx,#25c26e);text-shadow:none}
 #wait{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:0 16px 30px;text-align:center;color:#c9d6df;font-size:15px;pointer-events:none}
 #wait[hidden]{display:none}
+#wait.lost{background:rgba(0,0,0,.72);color:#ffbd66}
+video.signal-lost{filter:brightness(.4)}
 #wait.none{color:#ff5a5a;font-size:22px;font-weight:400;line-height:1.4;white-space:pre-line}
 #spin{width:34px;height:34px;border:4px solid #243746;border-top-color:#50d7a0;border-radius:50%;animation:turn 1s linear infinite}
 @keyframes turn{to{transform:rotate(360deg)}}
@@ -50,8 +52,16 @@ const el=id=>document.querySelector('#'+id);
 let controller=null, objectURL=null, generation=0, tuned=null, busy=false;
 const streamClient=crypto.randomUUID();
 let live=false, t0=0, lockAt=null, pictureAt=null, lastLocked=false;
-let maxSr=1500, reconnect=false, receiver=null;
+let maxSr=1500, receiver=null;
 let gainSteps=[];
+let progressAt=performance.now(), progressTime=0, playbackStalled=false;
+if(video.requestVideoFrameCallback){
+ const presented=()=>{
+  if(live&&!video.paused)progressAt=performance.now();
+  video.requestVideoFrameCallback(presented);
+ };
+ video.requestVideoFrameCallback(presented);
+}
 const rxNumber=new URLSearchParams(location.search).get('n')==='2'?2:1;
 if(new URLSearchParams(location.search).get('details')==='external'){
  el('status').style.display='none';el('sound').style.display='none';
@@ -95,6 +105,7 @@ async function tune(signal){
  const id=generation;controller=new AbortController();const abort=controller.signal;
  tuned=signal;window.spectrumSetTuned(signal);
  t0=performance.now();lockAt=pictureAt=null;lastLocked=false;live=true;
+ progressAt=t0;progressTime=0;playbackStalled=false;
  const label=signal.centerMhz.toFixed(3)+' MHz · '+signal.sr+' kS/s';
  status.textContent='Tuning '+label+' — waiting for lock and first picture…';
  try{
@@ -129,7 +140,7 @@ async function tune(signal){
    }
   }
   if(id===generation){
-   if(reconnect){      // a hardware tuner drops and regains lock: search again by itself
+   if(receiver){      // Retry the same carrier for hardware tuners and RTL-SDR alike.
     status.textContent='No signal on '+label+' — searching again…';
     setTimeout(()=>{if(id===generation&&tuned===signal)tune(signal);},1000);
    }else{live=false;status.textContent='Stream ended ('+label+'). Click a signal to retry.';}
@@ -171,7 +182,7 @@ async function loadDevices(){
    for(const entry of d.devices)add(entry.id,entry.label);
    picker.value=d.selected||'';picker.disabled=d.devices.length<=1;   // one tuner (assigned by QOCAST): only says which
    if(receiver!==d.selected&&live){await stop();tuned=null;window.spectrumSetTuned(null);status.textContent='Receiver changed. Click a signal to tune.';}
-   receiver=d.selected;maxSr=d.max_symbol_rate||1500;reconnect=!!d.reconnect;
+   receiver=d.selected;maxSr=d.max_symbol_rate||1500;
    // LNB power and RF input exist only on a MiniTiouner / PicoTuner
    el('lnbBox').hidden=!d.controls;
    if(d.controls){el('lnb').value=d.controls.lnb_power;el('rfin').value=d.controls.rf_input;}
@@ -223,14 +234,23 @@ loadDevices();setInterval(loadDevices,4000);
 // Receiver lock from the server, for the status line
 // Until the first picture is on screen, the middle of the box says what is happening.
 setInterval(()=>{
- const showing=live&&pictureAt!==null&&!video.paused;
+ const now=performance.now();
+ if(!video.requestVideoFrameCallback&&live&&!video.paused&&video.currentTime>progressTime+.01){progressTime=video.currentTime;progressAt=now;}
+ playbackStalled=live&&pictureAt!==null&&now-progressAt>5000;
+ const lost=live&&((lockAt!==null&&!lastLocked)||playbackStalled);
+ const showing=live&&pictureAt!==null&&!video.paused&&!lost;
+ video.classList.toggle('signal-lost',lost);
+ el('wait').classList.toggle('lost',lost);
  el('wait').hidden=showing;
  if(!showing){
-  const text=noDevices?'No receiver found\nPlug in an RTL-SDR, MiniTiouner or PicoTuner (USB)':status.textContent;
+  const text=lost?'Signal lost � waiting for reception to return�':noDevices?'No receiver found\nPlug in an RTL-SDR, MiniTiouner or PicoTuner (USB)':status.textContent;
   el('waittext').textContent=text;
   el('wait').classList.toggle('none',noDevices);
   el('spin').style.display=/^(Tuning|Tuned|Locked|Starting|Waiting|Playing|No signal)/.test(text)||text==='Starting…'?'':'none';
  }
+ // A stalled browser/decoder may never end its HTTP stream (notably RTL-SDR).
+ // Restart the same tuning after ten seconds, preserving the chosen volume/mute.
+ if(live&&tuned&&!busy&&((pictureAt!==null&&now-progressAt>10000)||(pictureAt===null&&now-t0>30000)))tune(tuned);
 },200);
 let polling=false;
 setInterval(async()=>{
@@ -242,8 +262,9 @@ setInterval(async()=>{
   const station=s.locked?String(s.service||'').trim():'';
   el('calltext').textContent=station;el('call').hidden=!station||!live;
   // QOCAST paints the tuned signal in the spectrum: blue searching, green locked, red lost (a lock that was lost, or none in ten seconds).
-  const state=!live||!tuned?null:s.locked?'locked':(lockAt!==null||performance.now()-t0>10000)?'lost':'searching';
+  const state=!live||!tuned?null:s.locked&&!playbackStalled?'locked':(lockAt!==null||performance.now()-t0>10000)?'lost':'searching';
   const streamDetails=Object.fromEntries(['running','locked','mode','esn0','esn0_label','margin','rf_level','bad','lost','service','provider','video','audio','width','height'].map(key=>[key,s[key]]));
+  if(playbackStalled)streamDetails.locked=false;
   parent.postMessage({type:'rx',tuned:live&&tuned?{centerMhz:tuned.centerMhz,sr:tuned.sr}:null,state,info:streamDetails,message:status.textContent,callsign:s.locked?String(s.service||'').trim():''},'*');
  }catch(e){}finally{polling=false;}
 },500);

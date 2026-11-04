@@ -106,3 +106,15 @@ stop its replacement stream. `tools/check_single_window.py` verifies duplicate
 tabs, separate browser contexts, refresh, Setup navigation, close/reopen, stale
 stream stops and the Windows process lock using replay video without RF.
 The unit/regression suite now contains 54 tests.
+
+## Lost signals
+
+A lost receiver lock dims the last picture and overlays a signal-loss message.
+Five seconds without a newly displayed video frame also marks playback as lost,
+even if the tuner still reports lock. The magic eye goes dark without a valid
+lock. A ten-second playback stall restarts the same tuning; waiting for an initial
+picture is retried after 30 seconds. Ended streams retry for RTL-SDR as well as
+hardware demodulators. Volume and mute are retained during recovery.
+The replay browser check covers loss/return, the eye state and stalled-player
+recovery alongside normal H.264/H.265/H.266 playback. Physical signal-loss and
+return on each tuner still need a bench check.
