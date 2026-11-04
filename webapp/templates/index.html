@@ -149,28 +149,24 @@
     </div>
   </section>
 
-  <div class="grid">
+  <div class="grid overview-grid">
 
     <section class="panel">
       <div class="ph"><svg class="i"><use href="#i-image"/></svg>Source</div>
       <div class="pb">
         <div class="field">
-          <div class="seg">
+          <div class="seg source-seg">
             <input type="radio" name="source" id="srcPicture" value="picture" checked>
             <label for="srcPicture"><svg class="i"><use href="#i-image"/></svg>Picture</label>
             <input type="radio" name="source" id="srcClock" value="clock">
             <label for="srcClock"><svg class="i"><use href="#i-clock"/></svg>SBB clock</label>
             <input type="radio" name="source" id="srcCamera" value="camera">
             <label for="srcCamera"><svg class="i"><use href="#i-camera"/></svg>USB camera</label>
-          </div>
-        </div>
-        <select id="picture" class="d-none" aria-hidden="true"></select>      <!-- holds the chosen picture; the arrows below pick it -->
-        <div class="field">
-          <div class="seg">
             <input type="radio" name="source" id="srcVideo" value="video">
             <label for="srcVideo"><svg class="i"><use href="#i-play"/></svg>Video</label>
           </div>
         </div>
+        <select id="picture" class="d-none" aria-hidden="true"></select>      <!-- holds the chosen picture; the arrows below pick it -->
         <div class="field d-none" id="videoBox">
           <div class="lab"><label for="video">Video file</label><button id="videoHelp" class="btn" type="button" title="How to prepare a video" aria-label="How to prepare a video"><svg class="i"><use href="#i-info"/></svg></button></div>
           <select id="video" aria-label="Video file"></select>
@@ -220,13 +216,13 @@
       </div>
     </section>
 
-    <section class="panel">
+    <section class="panel spectrum-panel">
       <div class="ph"><svg class="i"><use href="#i-wave"/></svg>Link<span class="grow"></span>
         <span style="letter-spacing:.06em;text-transform:none;font-weight:400"><span id="hdrFreq">{{ freq }}</span> MHz &middot; DVB-S2 QPSK</span></div>
       <div class="pb">
-        <div class="field">
+        <div class="field spectrum-field">
           <div class="lab">QO-100 wideband<span id="specChip" class="chip"><i class="led"></i><span id="specChipText">connecting</span></span></div>
-          <canvas id="spectrum" class="spectrum"></canvas>
+          <div class="spectrum-plot"><canvas id="spectrum" class="spectrum"></canvas></div>
             <div class="row" style="margin-top:.4rem">
               <label for="spectrumTarget" class="hint">Spectrum click</label>
               <select id="spectrumTarget" style="width:auto"><option value="tx">TX slots</option><option value="1">RX 1</option><option value="2">RX 2</option></select>
@@ -237,7 +233,14 @@
           <div class="lab"><label for="freq">Frequency</label><span>MHz uplink</span></div>
           <div class="freqrow"><input id="freq" class="inp" inputmode="decimal" autocomplete="off" spellcheck="false" value="{{ freq }}"><span id="freqDn" class="dn">DN -</span></div>
         </div>
-        <div class="field srfec">
+      </div>
+    </section>
+  </div>
+
+  <section class="panel tx-panel">
+    <div class="ph"><svg class="i"><use href="#i-wave"/></svg>Transmit<span class="grow"></span><span class="tx-format">DVB-S2 QPSK</span></div>
+    <div class="pb tx-body">
+        <div class="field srfec tx-radio">
           <div>
             <div class="lab">Symbol rate<span>kS/s</span></div>
             <div class="seg">
@@ -257,12 +260,12 @@
             </div>
           </div>
         </div>
-        <div class="field">
+        <div class="field tx-level">
           <div class="lab"><span>Level <button id="limitsBtn" class="btn" type="button" title="Set your lowest and highest level">Limits</button></span><b id="levelVal"></b></div>
           <input type="range" id="level" min="{{ lmin }}" max="{{ lmax }}" value="{{ ldef }}" autocomplete="off">
-          <div id="levelZero" class="hint d-none"></div>
         </div>
-        <div class="field">
+        <div id="levelZero" class="hint d-none"></div>
+        <div class="field tx-codec">
           <div class="row">
             <label class="vvc-switch"><input id="vvc" type="checkbox" autocomplete="off"> H.266 / VVC <small>experimental</small></label>
             <button id="vvcInfo" class="btn" type="button" aria-label="Explain H.266" title="H.266 in plain language"><svg class="i"><use href="#i-info"/></svg></button>
@@ -271,7 +274,7 @@
           <div id="vvcWarn" class="warnbox d-none" role="alert"><svg class="i"><use href="#i-warn"/></svg><div><b>Most DATV viewers cannot decode H.266.</b> They will see no picture. Use this mode only for tests with stations that have agreed to take part, and switch back to H.265 for normal operation.</div></div>
           <div id="vvcNote" class="hint d-none">CPU encoding · slower startup</div>
         </div>
-        <dl class="kv field">
+        <dl class="kv field tx-summary">
           <div><dt>Channel</dt><dd id="pCap">-</dd></div>
           <div><dt>Stream</dt><dd id="pMux">-</dd></div>
           <div><dt>Codec</dt><dd id="pCodec">-</dd></div>
@@ -282,8 +285,6 @@
         <button id="toggle" class="go" type="button"><svg class="i"><use id="toggleUse" href="#i-play"/></svg><span id="toggleText">Start</span></button>
       </div>
     </section>
-
-  </div>
 
   <div id="receivers" class="grid rx-grid" aria-label="DATV receivers">
     {% for n in (1, 2) %}
