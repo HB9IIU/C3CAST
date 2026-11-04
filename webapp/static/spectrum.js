@@ -270,6 +270,13 @@
   }
 
   canvas.addEventListener('click', (event) => {
+    const target = document.getElementById('spectrumTarget')?.value;
+    if (target && target !== 'tx') {
+      const bounds = canvas.getBoundingClientRect();
+      const frequency = START_MHZ + (event.clientX - bounds.left) * (END_MHZ - START_MHZ) / canvas.clientWidth;
+      if (window.c3TuneReceiver) window.c3TuneReceiver(Number(target), frequency);
+      return;
+    }
     if (window.QO_LOCKED) return;   // no frequency change while on air
     const rectangle = canvas.getBoundingClientRect();
     const x = event.clientX - rectangle.left;

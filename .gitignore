@@ -33,6 +33,14 @@ projecBrief.txt
 build/
 dist/
 
+# Receiver runtime and local layout studies
+/output/
+/webapp/receivers/
+/webapp/receiver/**/*.log
+/webapp/receiver/bin/ffmpeg.exe
+/webapp/receiver/tuner-service/obj/
+/webapp/receiver/tuner-service/bin/*.pdb
+
 # Upstream (SP8ESA) dev tools and internal notes: kept locally, not published
 /host/tx_gui.py
 /host/tx_gui_model.py

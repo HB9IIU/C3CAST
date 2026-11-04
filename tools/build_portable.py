@@ -7,6 +7,7 @@ Needs pyinstaller in the venv. tools/ffmpeg/bin/ffmpeg.exe (GPL build: x265, NVE
 the package is given to anyone, ffmpeg's matching source and notices must be added (see docs/RELEASE_CHECKLIST.md).
 """
 import shutil
+import hashlib
 import subprocess
 import sys
 from pathlib import Path
@@ -23,18 +24,33 @@ sep = ";"                                                       # --add-data sep
 
 data = [("webapp/templates", "templates"), ("webapp/static", "static"), ("webapp/fonts", "fonts"),
         ("webapp/firmware", "firmware"), ("webapp/testcards", "testcards"),
-        ("host/dvbs2_ldpc.json", "."), ("host/cal.json", ".")]          # read next to their module by upstream's host code
+        ("host/dvbs2_ldpc.json", "."), ("host/cal.json", ".")]
 hidden = ["runner", "stream_tx", "clock_card", "camera", "qo100_enc", "flasher", "paths", "version",
+          "receivers", "tuner_assignment", "webplayer", "tuners", "rx_status", "ts_info", "usb_devices",
           "tx_dvbs", "tx_media", "dvbs", "dvbs2", "esp_link", "serial.tools.list_ports_windows"]
 
 if not (ROOT / "webapp" / "firmware" / "manifest.json").is_file():
     sys.exit("run tools/export_firmware.py first")
+receiver_ffmpeg = ROOT / "webapp" / "receiver" / "bin" / "ffmpeg.exe"
+if not receiver_ffmpeg.is_file() or hashlib.sha256(receiver_ffmpeg.read_bytes()).hexdigest() != '3256173f3f8bffd7df12227c68adf68025edb1832273a9530688a7bb1ed8edec':
+    sys.exit("run tools/prepare_receiver_ffmpeg.py first (the pinned GPL receive build is required)")
 for p in (BUILD, OUT):
+    expected_parent = ROOT if p == BUILD else DIST
+    if p.resolve().parent != expected_parent.resolve():
+        sys.exit(f"refusing to remove unexpected build path: {p}")
     shutil.rmtree(p, ignore_errors=True)
+
+receiver_assets = BUILD / "receiver-assets"
+shutil.copytree(ROOT / "webapp" / "receiver", receiver_assets,
+                ignore=shutil.ignore_patterns("__pycache__", "obj", "*.log", "*.pdb"))
+if not (receiver_assets / "bin" / "ffmpeg.exe").is_file():
+    sys.exit("run tools/prepare_receiver_ffmpeg.py first")
+data.append((str(receiver_assets), "receiver"))
 
 cmd = [sys.executable, "-m", "PyInstaller", "--noconfirm", "--clean", "--onedir", "--console", "--name", "C3CAST", "--icon", str(ROOT / "webapp" / "static" / "c3cast.ico"),
        "--distpath", str(BUILD / "pyi-dist"), "--workpath", str(BUILD / "pyi-work"), "--specpath", str(BUILD),
-       "--paths", str(ROOT / "webapp"), "--paths", str(ROOT / "host"), "--collect-all", "esptool"]
+       "--paths", str(ROOT / "webapp"), "--paths", str(ROOT / "webapp" / "receiver"),
+       "--paths", str(ROOT / "host"), "--collect-all", "esptool"]
 for src, dest in data:
     cmd += ["--add-data", f"{ROOT / src}{sep}{dest}"]
 for h in hidden:
@@ -82,6 +98,9 @@ shutil.copy2(ROOT / "LICENSE.upstream", OUT / "LICENSE-firmware-SP8ESA.txt")
     "Your settings are saved in config.json next to C3CAST.exe.\r\n"
     "H266-Player is an optional receiver for H.265 and H.266 (its own program and licence): start it with the Player button in the page.\r\n"
     "Delete that folder if you do not need it; the button then disappears.\r\n"
+    "Two integrated receiver panels are below the transmit controls. Connect a MiniTiouner, PicoTuner or RTL-SDR.\r\n"
+    "Choose downlink frequency and symbol rate, then Receive. Settings controls the LNB/input or RTL gain.\r\n"
+    "Receiver settings/logs live in receivers/. Its separate FFmpeg and GPL receiver sources are in _internal/receiver/.\r\n"
     "\r\n"
     "Licensed radio amateurs only. Use a filter before any amplifier and check the spectrum first.\r\n"
     "\r\n"

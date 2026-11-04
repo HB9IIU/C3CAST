@@ -22,6 +22,9 @@ else:
     TOOLS = RESOURCE.parent / "tools"
     PLAYER = TOOLS / "h266-player"
 
+RECEIVER = RESOURCE / "receiver"
+RECEIVER_DATA = DATA / "receivers"
+
 
 def worker_cmd(name):
     """Command prefix that runs a helper: 'stream_tx', 'runner' or 'esptool'."""
@@ -29,4 +32,6 @@ def worker_cmd(name):
         return [sys.executable, "--worker", name]
     if name == "esptool":
         return [sys.executable, "-u", "-m", "esptool"]
+    if name == "receiver":
+        return [sys.executable, "-u", str(RECEIVER / "webplayer.py")]
     return [sys.executable, "-u", str(RESOURCE / f"{name}.py")]

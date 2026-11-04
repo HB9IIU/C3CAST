@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QOCAST receiver</title>
+<style>
+html,body{margin:0;height:100%;background:#000;color:#e1e9ee;font:13px system-ui;overflow:hidden}
+#top{position:absolute;top:42px;left:0;right:0;z-index:2;display:flex;align-items:center;gap:6px;padding:4px 8px;background:rgba(10,20,28,.82);color:#91a7ba;flex-wrap:wrap;transition:opacity .2s}
+#top label{display:none}
+#gainBox label{display:inline}
+#top{display:none}
+#top.open{display:flex}
+#top select{background:#15232e;color:#e1e9ee;border:1px solid #2b4558;border-radius:8px;padding:3px 8px;font:inherit;cursor:pointer}
+#tuner:disabled{opacity:1;color:#e1e9ee;background:transparent;border-color:transparent;-webkit-appearance:none;appearance:none;cursor:default;font-weight:600}
+#lnbBox,#gainBox,#rfBox{display:flex;align-items:center;gap:6px}
+#lnbBox[hidden],#gainBox[hidden],#rfBox[hidden]{display:none}
+#gain{width:90px}
+#gainVal{min-width:4.2em;color:#e1e9ee}
+video{width:100%;height:100%;background:#000;display:block;object-fit:contain}
+#status{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:6px 10px;background:rgba(10,20,28,.78);color:#8ed8c0;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#call{position:absolute;top:34px;left:0;right:0;z-index:1;display:none;align-items:center;justify-content:center;gap:12px;pointer-events:none;font-weight:800;font-size:clamp(26px,4.2vw,56px);letter-spacing:.02em;color:#fff;text-shadow:0 2px 10px #000,0 0 3px #000}
+#call[hidden]{display:none!important}
+#call b{display:inline-grid;place-items:center;min-width:1.15em;height:1.15em;padding:0 .15em;border-radius:50%;font-size:.6em;color:#06210f;background:var(--rx,#25c26e);text-shadow:none}
+#wait{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:0 16px 30px;text-align:center;color:#c9d6df;font-size:15px;pointer-events:none}
+#wait[hidden]{display:none}
+#wait.none{color:#ff5a5a;font-size:22px;font-weight:400;line-height:1.4;white-space:pre-line}
+#spin{width:34px;height:34px;border:4px solid #243746;border-top-color:#50d7a0;border-radius:50%;animation:turn 1s linear infinite}
+@keyframes turn{to{transform:rotate(360deg)}}
+#sound{position:absolute;right:6px;top:6px;z-index:3;display:flex;align-items:center;gap:8px;padding:1px 3px 1px 10px;border-radius:18px;background:rgba(10,20,28,.78);border:1px solid rgba(255,255,255,.2)}
+#volume{-webkit-appearance:none;appearance:none;background:transparent;width:72px;height:22px;margin:0;cursor:pointer;--fill:100%;--accent:#50d7a0}
+#volume.muted{--accent:#5d7488}
+#volume::-webkit-slider-runnable-track{height:5px;border-radius:3px;background:linear-gradient(to right,var(--accent) var(--fill),#243746 var(--fill))}
+#volume::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:16px;height:16px;margin-top:-5.5px;border-radius:50%;background:#eafff6;border:3px solid var(--accent);box-sizing:border-box}
+#mute{width:26px;height:26px;flex:none;border-radius:50%;border:0;background:transparent;color:#fff;display:grid;place-items:center;cursor:pointer}
+#mute svg{width:17px;height:17px}
+#mute.off .waves,#mute:not(.off) .cross{display:none}
+</style>
+<div id="top"><label for="tuner">Receiver</label><select id="tuner" aria-label="Receiver"></select>
+<span id="lnbBox" hidden><label for="lnb">LNB power</label><select id="lnb" title="Voltage sent up the coax to the LNB"><option value="off">LNB off</option><option value="vertical">LNB vertical</option><option value="horizontal">LNB horizontal</option></select>
+<span id="rfBox"><label for="rfin">Input</label><select id="rfin" title="Which RF input of the receiver is used"><option value="A">Input A</option><option value="B">Input B</option></select></span></span>
+<span id="gainBox" hidden><label for="gain">RF gain</label><input id="gain" type="range" min="0" max="28" step="1" value="22" aria-label="RF gain"><span id="gainVal"></span></span></div>
+<video id="video" playsinline></video>
+<div id="sound"><input id="volume" type="range" min="0" max="1" step="0.05" value="1" title="Volume" aria-label="Volume"><button id="mute" title="Mute / unmute" aria-label="Mute / unmute"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z" fill="currentColor"/><g class="waves"><path d="M15.5 9a4 4 0 0 1 0 6"/><path d="M18 6.5a7.5 7.5 0 0 1 0 11"/></g><g class="cross"><path d="M16 9.5l5 5M21 9.5l-5 5" stroke="#ff6b6b"/></g></svg></button></div>
+<div id="call" hidden><b id="callnum"></b><span id="calltext"></span></div>
+<div id="wait"><div id="spin"></div><div id="waittext"></div></div>
+<div id="status">Starting…</div>
+<script src="/mse-init.js"></script>
+<script>
+// The receiver card of the QOCAST page: only the picture. QOCAST tells it what to tune (postMessage).
+const video=document.querySelector('#video'), status=document.querySelector('#status');
+const el=id=>document.querySelector('#'+id);
+let controller=null, objectURL=null, generation=0, tuned=null, busy=false;
+let live=false, t0=0, lockAt=null, pictureAt=null, lastLocked=false;
+let maxSr=1500, reconnect=false, receiver=null;
+let gainSteps=[];
+const rxNumber=new URLSearchParams(location.search).get('n')==='2'?2:1;
+document.documentElement.style.setProperty('--rx',rxNumber===2?'#b07cff':'#25c26e');
+el('callnum').textContent=rxNumber;
+let info=null;            // the latest /status: mode, video, audio, quality
+let pendingSignal=null;   // a carrier QOCAST sent before the receiver was known
+window.spectrumSetTuned=window.spectrumSetState=window.spectrumMessage=()=>{};
+function renderStatus(){
+ if(!live||!tuned)return;
+ const label=tuned.centerMhz.toFixed(3)+' MHz · '+tuned.sr+' kS/s', secs=t=>((t-t0)/1000).toFixed(1)+' s';
+ if(pictureAt!==null){
+  const i=info||{}, part=[label];
+  if(i.mode)part.push(i.mode);
+  if(i.video)part.push(i.video+(i.width?' '+i.width+'×'+i.height:''));
+  if(i.audio)part.push(i.audio);
+  if(i.esn0!=null)part.push((i.esn0_label||'Es/N0')+' '+i.esn0.toFixed(1)+' dB');
+  if(i.margin!=null)part.push('D '+i.margin.toFixed(1));
+  status.textContent=part.join(' · ');
+ }
+ else if(lastLocked)status.textContent='Locked on '+label+' after '+secs(lockAt)+' — waiting for the first picture (the video needs a keyframe)…';
+ else status.textContent='Tuned '+label+' — waiting for lock…';
+}
+async function stop(){
+ generation++;live=false;const wasActive=!!controller;
+ if(controller)controller.abort();controller=null;
+ video.pause();video.removeAttribute('src');video.load();
+ if(objectURL)URL.revokeObjectURL(objectURL);objectURL=null;
+ if(wasActive)await fetch('/stop',{method:'POST',keepalive:true}).catch(()=>{});
+}
+function updated(buffer,action){return new Promise((resolve,reject)=>{
+ const done=()=>{clear();resolve()},fail=()=>{clear();reject(Error('Media buffer rejected the stream'))};
+ const clear=()=>{buffer.removeEventListener('updateend',done);buffer.removeEventListener('error',fail)};
+ buffer.addEventListener('updateend',done,{once:true});buffer.addEventListener('error',fail,{once:true});
+ try{action()}catch(e){clear();reject(e)}
+});}
+async function tune(signal){
+ if(busy)return;busy=true;
+ try{await stop();}finally{busy=false;}
+ const id=generation;controller=new AbortController();const abort=controller.signal;
+ tuned=signal;window.spectrumSetTuned(signal);
+ t0=performance.now();lockAt=pictureAt=null;lastLocked=false;live=true;
+ const label=signal.centerMhz.toFixed(3)+' MHz · '+signal.sr+' kS/s';
+ status.textContent='Tuning '+label+' — waiting for lock and first picture…';
+ try{
+  if(!window.MediaSource)throw Error('This browser does not support Media Source Extensions. Use Edge or Chrome.');
+  const response=await fetch('/stream?freq='+signal.centerMhz.toFixed(4)+'&sr='+signal.sr,{signal:abort});
+  if(!response.ok)throw Error(await response.text());
+  const reader=response.body.getReader();
+  // The stream's first bytes say which tracks it has (some stations send no audio): announce exactly those.
+  let head=new Uint8Array(0), mime=null;
+  while(mime===null){
+   const {done,value}=await reader.read();if(done)throw Error('The stream ended before any media arrived');
+   if(id!==generation)return;
+   const joined=new Uint8Array(head.length+value.length);joined.set(head);joined.set(value,head.length);head=joined;
+   mime=MseInit.mimeFor(head);
+  }
+  if(!MediaSource.isTypeSupported(mime))throw Error('This browser cannot play '+mime);
+  const media=new MediaSource();objectURL=URL.createObjectURL(media);video.src=objectURL;
+  await new Promise(resolve=>media.addEventListener('sourceopen',resolve,{once:true}));
+  if(id!==generation)return;
+  const buffer=media.addSourceBuffer(mime);
+  // A click started this tune, so sound is normally allowed; if the browser refuses, play muted.
+  video.play().catch(()=>{video.muted=true;syncAudio();video.play().catch(()=>{});});
+  let pending=head;
+  while(id===generation){
+   if(pending===null){const {done,value}=await reader.read();if(done)break;pending=value;}
+   const chunk=pending;pending=null;
+   await updated(buffer,()=>buffer.appendBuffer(chunk));
+   if(buffer.buffered.length){
+    const end=buffer.buffered.end(buffer.buffered.length-1);
+    if(end-video.currentTime>3)video.currentTime=Math.max(buffer.buffered.start(0),end-0.7);
+    if(video.currentTime>20&&buffer.buffered.start(0)<video.currentTime-15)await updated(buffer,()=>buffer.remove(0,video.currentTime-10));
+   }
+  }
+  if(id===generation){
+   if(reconnect){      // a hardware tuner drops and regains lock: search again by itself
+    status.textContent='No signal on '+label+' — searching again…';
+    setTimeout(()=>{if(id===generation&&tuned===signal)tune(signal);},1000);
+   }else{live=false;status.textContent='Stream ended ('+label+'). Click a signal to retry.';}
+  }
+ }catch(error){if(id===generation&&error.name!=='AbortError'){await stop();status.textContent='Not tuned: '+error.message;}}
+}
+video.addEventListener('playing',()=>{if(live&&pictureAt===null){pictureAt=performance.now();renderStatus();}});
+// QOCAST chooses the carrier (a click in its spectrum): {type:'tune', centerMhz, sr}; {type:'stop'} releases the receiver.
+window.addEventListener('message',e=>{
+ if(e.source!==parent||!e.data)return;
+ if(e.data.type==='settings'){el('top').classList.toggle('open');return;}
+ if(e.data.type==='stop'){stop();tuned=null;status.textContent='Stopped.';return;}
+ if(e.data.type!=='tune')return;
+ const signal={centerMhz:Number(e.data.centerMhz),sr:Number(e.data.sr)};
+ if(!receiver){pendingSignal=signal;status.textContent='Waiting for the receiver…';return;}
+ if(!(signal.sr>0)||signal.sr>maxSr){status.textContent='Symbol rate '+signal.sr+' kS/s is not supported by this receiver (max '+maxSr+')';return;}
+ tune(signal);
+});
+// Receivers that are plugged in: the user chooses (a single one is chosen automatically).
+const picker=document.querySelector('#tuner');
+let shownDevices='',noDevices=false;
+async function loadDevices(){
+ try{
+  const d=await (await fetch('/devices',{cache:'no-store'})).json();
+  const key=JSON.stringify(d);
+  if(key!==shownDevices){
+   shownDevices=key;
+   picker.replaceChildren();
+   const add=(value,text,disabled)=>{const o=document.createElement('option');o.value=value;o.textContent=text;o.disabled=!!disabled;picker.append(o);};
+   noDevices=!d.devices.length;
+   if(!d.devices.length)add('','No receiver found',true);
+   else if(!d.selected)add('','Choose a receiver…',true);
+   for(const entry of d.devices)add(entry.id,entry.label);
+   picker.value=d.selected||'';picker.disabled=d.devices.length<=1;   // one tuner (assigned by QOCAST): only says which
+   if(receiver!==d.selected&&live){await stop();tuned=null;window.spectrumSetTuned(null);status.textContent='Receiver changed. Click a signal to tune.';}
+   receiver=d.selected;maxSr=d.max_symbol_rate||1500;reconnect=!!d.reconnect;
+   // LNB power and RF input exist only on a MiniTiouner / PicoTuner
+   el('lnbBox').hidden=!d.controls;
+   if(d.controls){el('lnb').value=d.controls.lnb_power;el('rfin').value=d.controls.rf_input;}
+   // A PicoTuner's two connectors are its two receivers: no input to choose
+   el('rfBox').hidden=d.selected==='picotuner';
+   // RF gain exists only on the RTL-SDR (a MiniTiouner / PicoTuner has its own AGC)
+   el('gainBox').hidden=!d.gain;
+   if(d.gain){gainSteps=d.gain.steps;el('gain').max=gainSteps.length-1;el('gain').value=gainSteps.indexOf(d.gain.value);showGain();}
+   // Nothing tuned yet and a receiver is chosen (at the start, or after choosing another): the QO-100 beacon
+   if(d.selected&&pendingSignal){const p=pendingSignal;pendingSignal=null;tune(p);}
+   else if(d.autotune&&d.selected&&!tuned&&!live&&!busy)tune({centerMhz:10491.5,sr:1500});
+  }
+ }catch(e){}
+}
+picker.onchange=async()=>{
+ if(!picker.value)return;
+ await stop();tuned=null;window.spectrumSetTuned(null);
+ const answer=await fetch('/select',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:picker.value})});
+ status.textContent=answer.ok?'Click a signal in the spectrum to tune.':'Not selected: '+await answer.text();
+ shownDevices='';await loadDevices();
+};
+// LNB voltage and RF input: saved by the server; a running receiver retunes by itself.
+async function sendInput(){
+ const answer=await fetch('/input',{method:'POST',headers:{'Content-Type':'application/json'},
+  body:JSON.stringify({lnb_power:el('lnb').value,rf_input:el('rfin').value})});
+ if(!answer.ok)status.textContent='Not changed: '+await answer.text();
+ else if(live)status.textContent='LNB power / input changed — the receiver tunes again…';
+ shownDevices='';await loadDevices();
+}
+el('lnb').onchange=el('rfin').onchange=sendInput;
+// RF gain (RTL-SDR): a slider over the tuner's real steps. It applies from the next tuning, so a change retunes.
+function showGain(){
+ const i=Number(el('gain').value);
+ el('gainVal').textContent=gainSteps.length?gainSteps[i].toFixed(1)+' dB':'';
+ el('gain').style.setProperty('--fill',i/Math.max(1,gainSteps.length-1)*100+'%');
+}
+async function postGain(index){
+ const answer=await fetch('/gain',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({gain:gainSteps[index]})});
+ if(!answer.ok)throw Error(await answer.text());
+ el('gain').value=index;showGain();
+}
+el('gain').oninput=showGain;
+el('gain').onchange=async()=>{
+ try{await postGain(Number(el('gain').value));}catch(e){status.textContent='Gain not changed: '+e.message;return;}
+ if(live&&tuned)tune(tuned);
+};
+loadDevices();setInterval(loadDevices,4000);
+// Receiver lock from the server, for the status line
+// Until the first picture is on screen, the middle of the box says what is happening.
+setInterval(()=>{
+ const showing=live&&pictureAt!==null&&!video.paused;
+ el('wait').hidden=showing;
+ if(!showing){
+  const text=noDevices?'No receiver found\nPlug in an RTL-SDR, MiniTiouner or PicoTuner (USB)':status.textContent;
+  el('waittext').textContent=text;
+  el('wait').classList.toggle('none',noDevices);
+  el('spin').style.display=/^(Tuning|Tuned|Locked|Starting|Waiting|Playing|No signal)/.test(text)||text==='Starting…'?'':'none';
+ }
+},200);
+let polling=false;
+setInterval(async()=>{
+ if(polling)return;polling=true;
+ try{
+  const s=await (await fetch('/status',{cache:'no-store'})).json();
+  info=s;lastLocked=s.locked;if(s.locked&&lockAt===null&&live)lockAt=performance.now();renderStatus();
+  // The station's name, big on top of the picture (only in the large view: the small one hides it by its width).
+  const station=s.locked?String(s.service||'').trim():'';
+  el('calltext').textContent=station;el('call').hidden=!station||!live;
+  // QOCAST paints the tuned signal in the spectrum: blue searching, green locked, red lost (a lock that was lost, or none in ten seconds).
+  const state=!live||!tuned?null:s.locked?'locked':(lockAt!==null||performance.now()-t0>10000)?'lost':'searching';
+  parent.postMessage({type:'rx',tuned:live&&tuned?{centerMhz:tuned.centerMhz,sr:tuned.sr}:null,state,callsign:s.locked?String(s.service||'').trim():''},'*');
+ }catch(e){}finally{polling=false;}
+},500);
+video.style.cursor='zoom-in';video.addEventListener('click',()=>parent.postMessage({type:'enlarge'},'*'));
+const muteButton=document.querySelector('#mute');
+const volume=document.querySelector('#volume');
+function syncAudio(){
+ const off=video.muted||video.volume===0;
+ muteButton.classList.toggle('off',off);volume.classList.toggle('muted',off);
+ volume.style.setProperty('--fill',(off?0:Number(volume.value)*100)+'%');
+}
+muteButton.onclick=()=>{video.muted=!video.muted;if(!video.muted&&video.volume===0)video.volume=volume.value=0.5;syncAudio();save();};
+volume.oninput=()=>{video.volume=Number(volume.value);video.muted=video.volume===0;syncAudio();save();};
+// The volume is remembered (this browser only).
+function save(){try{localStorage.setItem('c3cast-rx-volume-'+rxNumber,JSON.stringify({v:Number(volume.value),m:video.muted}));}catch(e){}}
+try{const v=JSON.parse(localStorage.getItem('c3cast-rx-volume-'+rxNumber)||'null');if(v){volume.value=video.volume=v.v;video.muted=!!v.m;}}catch(e){}
+if(rxNumber===2)video.muted=true;
+syncAudio();
+window.addEventListener('pagehide',stop);
+</script></html>

@@ -17,6 +17,13 @@ def main():
             sys.argv = ["esptool"] + rest
             import esptool
             esptool._main()
+        elif name == "receiver":
+            import paths
+            sys.path.insert(0, str(paths.RECEIVER))
+            import webplayer
+            webplayer.ROOT = paths.RECEIVER
+            sys.argv = ["receiver"] + rest
+            sys.exit(webplayer.main())
         else:
             sys.exit(f"unknown worker: {name}")
         return

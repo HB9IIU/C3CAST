@@ -26,6 +26,7 @@ import qo100_enc  # noqa: E402
 import clap_test  # noqa: E402
 import flasher  # noqa: E402
 import version  # noqa: E402
+import receivers  # noqa: E402
 
 PICTURES = Path(os.environ.get("DATV_PICTURES", paths.DATA / "pictures"))
 VIDEOS = paths.DATA / "videos"
@@ -578,6 +579,20 @@ PLAYER_EXE = paths.PLAYER / "HB9IIU-Experimental-H266-Player.exe"
 player = {"proc": None}
 
 
+@app.get('/api/receivers')
+def api_receivers():
+    return jsonify(receivers=receivers.status())
+
+
+@app.post('/api/receivers/<int:number>/start')
+def api_receiver_start(number):
+    try:
+        receivers.start(number)
+        return jsonify(ok=True)
+    except ValueError as exc:
+        return jsonify(error=str(exc)), 400
+
+
 @app.get("/api/player")
 def api_player():
     """Is the optional H.266 Player present (folder H266-Player next to C3CAST.exe)? The page shows its button only then."""
@@ -831,6 +846,10 @@ def serve():
         server.serve_forever()
     except KeyboardInterrupt:
         stop_tx()
+    finally:
+        stop_tx()
+        receivers.stop()
+        server.server_close()
     print(flush=True)
     print("  73 de HB9IIU", flush=True)
     print(flush=True)

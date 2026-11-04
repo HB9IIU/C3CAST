@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QO-100 WebPlayer</title>
+<style>
+body{background:#101820;color:#e1e9ee;font:15px system-ui;max-width:1100px;margin:16px auto;padding:0 20px}
+#top{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:13px;color:#91a7ba;flex-wrap:wrap}
+#top select{background:#15232e;color:#e1e9ee;border:1px solid #2b4558;border-radius:8px;padding:5px 10px;font:inherit;cursor:pointer}
+#top select:hover{border-color:#50d7a0}
+#top select:focus-visible{outline:2px solid #50d7a0;outline-offset:2px}
+#lnbBox{display:flex;align-items:center;gap:10px;margin-left:14px}
+#lnbBox[hidden],#gainBox[hidden]{display:none}
+#gainBox{display:flex;align-items:center;gap:10px;margin-left:14px}
+#gain{width:120px}
+#gainVal{min-width:4.6em;color:#e1e9ee;font-variant-numeric:tabular-nums}
+#auto{padding:4px 12px;border-radius:8px;border:1px solid #2b4558;background:#15232e;color:#e1e9ee;font-size:13px}
+#auto:hover{border-color:#50d7a0}
+#auto.running{border-color:#ffbd45;color:#ffbd45}
+#gainNote{color:#8ed8c0;font-size:12px}
+#stage{position:relative}
+video{width:100%;background:#000;height:52vh;display:block}
+#vbtns{position:absolute;top:10px;right:10px;display:flex;gap:8px;opacity:0;transition:opacity .2s}
+#stage:hover #vbtns,#vbtns:focus-within{opacity:1}
+@media (hover:none){#vbtns{opacity:1}}
+#vbtns button{width:36px;height:36px;padding:0;display:grid;place-items:center;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:rgba(10,20,28,.72);color:#fff;transition:background .15s,border-color .15s}
+#vbtns button:hover{background:rgba(28,49,64,.9);border-color:#50d7a0}
+#vbtns button[hidden]{display:none}
+#vbtns svg{width:20px;height:20px}
+#bar{display:flex;gap:12px;align-items:center;margin:8px 0}
+button{font:inherit;padding:6px 14px;cursor:pointer}
+#sound{display:flex;align-items:center;gap:12px;flex:none}
+#mute{width:40px;height:40px;padding:0;border-radius:50%;border:1px solid #2b4558;background:#15232e;color:#dde8f1;display:grid;place-items:center;transition:background .15s,border-color .15s}
+#mute:hover{background:#1c3140;border-color:#50d7a0}
+#mute svg{width:22px;height:22px}
+#mute.off .waves,#mute:not(.off) .cross{display:none}
+#mute.off{color:#91a7ba}
+.slider{-webkit-appearance:none;appearance:none;background:transparent;width:140px;height:24px;margin:0;cursor:pointer;--fill:100%;--accent:#50d7a0}
+.slider.muted{--accent:#5d7488}
+.slider:focus-visible{outline:2px solid #50d7a0;outline-offset:4px;border-radius:12px}
+.slider::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:linear-gradient(to right,var(--accent) var(--fill),#243746 var(--fill))}
+.slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:18px;height:18px;margin-top:-6px;border-radius:50%;box-sizing:border-box;background:#eafff6;border:3px solid var(--accent);box-shadow:0 0 0 3px rgba(80,215,160,.0),0 1px 5px rgba(0,0,0,.6);transition:box-shadow .15s}
+.slider:hover::-webkit-slider-thumb,.slider:active::-webkit-slider-thumb{box-shadow:0 0 0 5px rgba(80,215,160,.22),0 1px 5px rgba(0,0,0,.6)}
+.slider::-moz-range-track{height:6px;border-radius:3px;background:#243746}
+.slider::-moz-range-progress{height:6px;border-radius:3px;background:var(--accent)}
+.slider::-moz-range-thumb{width:18px;height:18px;border-radius:50%;box-sizing:border-box;background:#eafff6;border:3px solid var(--accent)}
+#pct{width:3.6em;color:#91a7ba;font-size:13px;font-variant-numeric:tabular-nums}
+#info{flex:1;min-width:0;font-size:14px;line-height:1.35}
+#info>div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:1.35em}
+#lock{font-weight:700;font-size:17px}
+#service{font-weight:700;font-size:17px;margin-left:8px}
+#status{color:#8ed8c0;font-size:13px}
+.cap{color:#91a7ba;font-size:12px}
+.big{font-size:18px;font-weight:700}
+.green{color:#50d7a0}.amber{color:#ffbd45}.red{color:#ff6b6b}
+#eye,#constellation{flex:none}
+#spectrum{width:100%;height:30vh;min-height:180px;background:#0b1218;display:block}
+#spectrum-status{font-size:12px;color:#acb9c6}
+small{color:#acb9c6}
+</style>
+<div id="top"><label for="tuner">Receiver</label><select id="tuner" aria-label="Receiver"></select>
+<span id="lnbBox" hidden><label for="lnb">LNB power</label><select id="lnb" title="Voltage sent up the coax to the LNB"><option value="off">Off</option><option value="vertical">Vertical</option><option value="horizontal">Horizontal</option></select>
+<label for="rfin">Input</label><select id="rfin" title="Which RF input of the receiver is used"><option value="A">A</option><option value="B">B</option></select></span>
+<span id="gainBox" hidden><label for="gain">RF gain</label><input id="gain" class="slider" type="range" min="0" max="28" step="1" value="22" aria-label="RF gain"><span id="gainVal"></span>
+<button id="auto" title="Try the gain steps while locked and keep the one with the best Es/N0">Auto</button><span id="gainNote"></span></span></div>
+<div id="stage"><video id="video" playsinline></video>
+<div id="vbtns"><button id="pip" title="Pop out: a small floating video window, always on top" aria-label="Pop out the video"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><rect x="12" y="11" width="7" height="5" rx="1" fill="currentColor"/></svg></button>
+<button id="fs" title="Fullscreen (double-click the video, Esc to leave)" aria-label="Fullscreen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg></button></div></div>
+<div id="bar"><div id="info">
+<div><span id="lock"></span><span id="service"></span></div>
+<div id="provider" class="cap"></div>
+<div id="tuned"></div>
+<div id="quality"></div>
+<div id="vid"></div>
+<div id="aud"></div>
+<div id="status">Click a signal in the spectrum below to tune.</div>
+</div>
+<div id="eye" title="Signal quality"></div><div id="constellation"></div>
+<div id="sound">
+<button id="mute" title="Mute / unmute" aria-label="Mute / unmute"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z" fill="currentColor"/><g class="waves"><path d="M15.5 9a4 4 0 0 1 0 6"/><path d="M18 6.5a7.5 7.5 0 0 1 0 11"/></g><g class="cross"><path d="M16 9.5l5 5M21 9.5l-5 5" stroke="#ff6b6b"/></g></svg></button>
+<input id="volume" class="slider" type="range" min="0" max="1" step="0.05" value="1" title="Volume" aria-label="Volume">
+<span id="pct">100 %</span>
+</div></div>
+<canvas id="spectrum"></canvas>
+<div><span id="spectrum-status">CONNECTING</span> · <small>BATC wideband spectrum (needs internet). Click a signal to receive it. Each click restarts reception.</small></div>
+<script src="/mse-init.js"></script>
+<script src="/magic-eye.js"></script>
+<script src="/constellation.js"></script>
+<script src="/signal-finder.js"></script>
+<script src="/spectrum.js"></script>
+<script>
+const video=document.querySelector('#video'), status=document.querySelector('#status');
+const el=id=>document.querySelector('#'+id);
+let controller=null, objectURL=null, generation=0, tuned=null, busy=false;
+let live=false, t0=0, lockAt=null, pictureAt=null, lastLocked=false;   // start-up timing of the current tune
+let maxSr=1500, reconnect=false, receiver=null;                          // of the selected receiver (see /devices)
+let gainSteps=[], autoRunning=false, lastStatus=null;                    // RTL-SDR gain steps; the Auto search; latest /status
+const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+function renderStatus(){
+ if(!live||!tuned)return;
+ const label=tuned.centerMhz.toFixed(3)+' MHz · '+tuned.sr+' kS/s', secs=t=>((t-t0)/1000).toFixed(1)+' s';
+ if(pictureAt!==null)status.textContent='Playing '+label+' · lock '+(lockAt!==null?secs(lockAt):'—')+' · first picture '+secs(pictureAt);
+ else if(lastLocked)status.textContent='Locked on '+label+' after '+secs(lockAt)+' — waiting for the first picture (the video needs a keyframe)…';
+ else status.textContent='Tuned '+label+' — waiting for lock…';
+}
+async function stop(){
+ generation++;live=false;const wasActive=!!controller;
+ if(controller)controller.abort();controller=null;
+ video.pause();video.removeAttribute('src');video.load();
+ if(objectURL)URL.revokeObjectURL(objectURL);objectURL=null;
+ if(wasActive)await fetch('/stop',{method:'POST',keepalive:true}).catch(()=>{});
+}
+function updated(buffer,action){return new Promise((resolve,reject)=>{
+ const done=()=>{clear();resolve()},fail=()=>{clear();reject(Error('Media buffer rejected the stream'))};
+ const clear=()=>{buffer.removeEventListener('updateend',done);buffer.removeEventListener('error',fail)};
+ buffer.addEventListener('updateend',done,{once:true});buffer.addEventListener('error',fail,{once:true});
+ try{action()}catch(e){clear();reject(e)}
+});}
+async function tune(signal){
+ if(busy)return;busy=true;
+ try{await stop();}finally{busy=false;}
+ const id=generation;controller=new AbortController();const abort=controller.signal;
+ tuned=signal;window.spectrumSetTuned(signal);
+ t0=performance.now();lockAt=pictureAt=null;lastLocked=false;live=true;
+ const label=signal.centerMhz.toFixed(3)+' MHz · '+signal.sr+' kS/s';
+ status.textContent='Tuning '+label+' — waiting for lock and first picture…';
+ try{
+  if(!window.MediaSource)throw Error('This browser does not support Media Source Extensions. Use Edge or Chrome.');
+  const response=await fetch('/stream?freq='+signal.centerMhz.toFixed(4)+'&sr='+signal.sr,{signal:abort});
+  if(!response.ok)throw Error(await response.text());
+  const reader=response.body.getReader();
+  // The stream's first bytes say which tracks it has (some stations send no audio): announce exactly those.
+  let head=new Uint8Array(0), mime=null;
+  while(mime===null){
+   const {done,value}=await reader.read();if(done)throw Error('The stream ended before any media arrived');
+   if(id!==generation)return;
+   const joined=new Uint8Array(head.length+value.length);joined.set(head);joined.set(value,head.length);head=joined;
+   mime=MseInit.mimeFor(head);
+  }
+  if(!MediaSource.isTypeSupported(mime))throw Error('This browser cannot play '+mime);
+  const media=new MediaSource();objectURL=URL.createObjectURL(media);video.src=objectURL;
+  await new Promise(resolve=>media.addEventListener('sourceopen',resolve,{once:true}));
+  if(id!==generation)return;
+  const buffer=media.addSourceBuffer(mime);
+  // A click started this tune, so sound is normally allowed; if the browser refuses, play muted.
+  video.play().catch(()=>{video.muted=true;syncAudio();video.play().catch(()=>{});});
+  let pending=head;
+  while(id===generation){
+   if(pending===null){const {done,value}=await reader.read();if(done)break;pending=value;}
+   const chunk=pending;pending=null;
+   await updated(buffer,()=>buffer.appendBuffer(chunk));
+   if(buffer.buffered.length){
+    const end=buffer.buffered.end(buffer.buffered.length-1);
+    if(end-video.currentTime>3)video.currentTime=Math.max(buffer.buffered.start(0),end-0.7);
+    if(video.currentTime>20&&buffer.buffered.start(0)<video.currentTime-15)await updated(buffer,()=>buffer.remove(0,video.currentTime-10));
+   }
+  }
+  if(id===generation){
+   if(reconnect){      // a hardware tuner drops and regains lock: search again by itself
+    status.textContent='No signal on '+label+' — searching again…';
+    setTimeout(()=>{if(id===generation&&tuned===signal)tune(signal);},1000);
+   }else{live=false;status.textContent='Stream ended ('+label+'). Click a signal to retry.';}
+  }
+ }catch(error){if(id===generation&&error.name!=='AbortError'){await stop();status.textContent='Not tuned: '+error.message;}}
+}
+video.addEventListener('playing',()=>{if(live&&pictureAt===null){pictureAt=performance.now();renderStatus();}});
+// Spectrum click -> chosen carrier. The finder can see 2000 kS/s; each receiver has its own limit.
+window.onSignalChosen=signal=>{
+ if(!receiver){window.spectrumMessage('Choose a receiver first');return;}
+ if(signal.sr>maxSr){window.spectrumMessage('Symbol rate '+signal.sr+' kS/s is not supported by this receiver (max '+maxSr+')');return;}
+ tune(signal);
+};
+// Receivers that are plugged in: the user chooses (a single one is chosen automatically).
+const picker=document.querySelector('#tuner');
+let shownDevices='';
+async function loadDevices(){
+ try{
+  const d=await (await fetch('/devices',{cache:'no-store'})).json();
+  const key=JSON.stringify(d);
+  if(key!==shownDevices){
+   shownDevices=key;
+   picker.replaceChildren();
+   const add=(value,text,disabled)=>{const o=document.createElement('option');o.value=value;o.textContent=text;o.disabled=!!disabled;picker.append(o);};
+   if(!d.devices.length)add('','No receiver found',true);
+   else if(!d.selected)add('','Choose a receiver…',true);
+   for(const entry of d.devices)add(entry.id,entry.label);
+   picker.value=d.selected||'';
+   if(receiver!==d.selected&&live){await stop();tuned=null;window.spectrumSetTuned(null);status.textContent='Receiver changed. Click a signal to tune.';}
+   receiver=d.selected;maxSr=d.max_symbol_rate||1500;reconnect=!!d.reconnect;
+   // LNB power and RF input exist only on a MiniTiouner / PicoTuner
+   el('lnbBox').hidden=!d.controls;
+   if(d.controls){el('lnb').value=d.controls.lnb_power;el('rfin').value=d.controls.rf_input;}
+   // RF gain exists only on the RTL-SDR (a MiniTiouner / PicoTuner has its own AGC)
+   el('gainBox').hidden=!d.gain;
+   if(d.gain){gainSteps=d.gain.steps;el('gain').max=gainSteps.length-1;el('gain').value=gainSteps.indexOf(d.gain.value);showGain();}
+   // Nothing tuned yet and a receiver is chosen (at the start, or after choosing another): the QO-100 beacon
+   if(d.autotune&&d.selected&&!tuned&&!live&&!busy)tune({centerMhz:10491.5,sr:1500});
+  }
+ }catch(e){}
+}
+picker.onchange=async()=>{
+ if(!picker.value)return;
+ await stop();tuned=null;window.spectrumSetTuned(null);
+ const answer=await fetch('/select',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:picker.value})});
+ status.textContent=answer.ok?'Click a signal in the spectrum below to tune.':'Not selected: '+await answer.text();
+ shownDevices='';await loadDevices();
+};
+// LNB voltage and RF input: saved by the server; a running receiver retunes by itself.
+async function sendInput(){
+ const answer=await fetch('/input',{method:'POST',headers:{'Content-Type':'application/json'},
+  body:JSON.stringify({lnb_power:el('lnb').value,rf_input:el('rfin').value})});
+ if(!answer.ok)status.textContent='Not changed: '+await answer.text();
+ else if(live)status.textContent='LNB power / input changed — the receiver tunes again…';
+ shownDevices='';await loadDevices();
+}
+el('lnb').onchange=el('rfin').onchange=sendInput;
+// RF gain (RTL-SDR): a slider over the tuner's real steps. It applies from the next tuning, so a change retunes.
+function showGain(){
+ const i=Number(el('gain').value);
+ el('gainVal').textContent=gainSteps.length?gainSteps[i].toFixed(1)+' dB':'';
+ el('gain').style.setProperty('--fill',i/Math.max(1,gainSteps.length-1)*100+'%');
+}
+async function postGain(index){
+ const answer=await fetch('/gain',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({gain:gainSteps[index]})});
+ if(!answer.ok)throw Error(await answer.text());
+ el('gain').value=index;showGain();
+}
+el('gain').oninput=showGain;
+el('gain').onchange=async()=>{
+ if(autoRunning)return;
+ try{await postGain(Number(el('gain').value));}catch(e){status.textContent='Gain not changed: '+e.message;return;}
+ if(live&&tuned)tune(tuned);
+};
+// Auto: try gain steps while locked and keep the one with the best Es/N0 (a hill climb from the current step).
+const autoNote=text=>{el('gainNote').textContent=text;};
+async function measureGain(index,signal){
+ const before=lastStatus?lastStatus.session:0;     // readings of the old session must not count for the new gain
+ await postGain(index);
+ tune(signal);                                  // not awaited: it runs as long as the stream does
+ const started=performance.now();let lockedSince=null;const samples=[];
+ while(autoRunning&&tuned===signal&&performance.now()-started<14000){   // (live is briefly false while a retune stops the old session)
+  await sleep(250);
+  const s=lastStatus;
+  if(s&&s.session>before&&s.running&&s.locked&&s.esn0!==null){
+   if(lockedSince===null)lockedSince=performance.now();
+   else if(performance.now()-lockedSince>1500){samples.push(s.esn0);if(samples.length>=14)break;}   // ~3.5 s of readings
+  }else if(lockedSince!==null){lockedSince=null;samples.length=0;}
+ }
+ return samples.length>=4?samples.reduce((a,b)=>a+b)/samples.length:-Infinity;
+}
+async function autoGain(){
+ if(autoRunning){autoRunning=false;return;}      // the button cancels while it runs
+ if(!live||!tuned){autoNote('Tune a signal first.');return;}
+ autoRunning=true;el('auto').textContent='Cancel';el('auto').classList.add('running');
+ const signal=tuned,start=Number(el('gain').value),scores=new Map();let evaluations=0;
+ const score=async index=>{
+  autoNote('Trying '+gainSteps[index].toFixed(1)+' dB…');
+  const value=await measureGain(index,signal);
+  scores.set(index,value);evaluations++;
+  if(tuned!==signal)autoRunning=false;          // another signal was chosen meanwhile: stop
+  autoNote(gainSteps[index].toFixed(1)+' dB → '+(value===-Infinity?'no lock':value.toFixed(1)+' dB Es/N0'));
+  return value;
+ };
+ try{
+  let best=start;await score(start);
+  for(const direction of [1,-1]){
+   let index=best+direction;
+   while(autoRunning&&index>=0&&index<gainSteps.length&&evaluations<8){
+    const value=await score(index);
+    if(value>scores.get(best)+0.15){best=index;index+=direction;}else break;
+   }
+   if(best!==start||!autoRunning)break;         // better upwards: no need to look downwards
+  }
+  if(!autoRunning){await postGain(start);if(tuned===signal)tune(signal);autoNote('Auto stopped: back to '+gainSteps[start].toFixed(1)+' dB.');return;}
+  if(scores.get(best)===-Infinity){await postGain(start);tune(signal);autoNote('No lock at the gains tried: back to '+gainSteps[start].toFixed(1)+' dB.');return;}
+  await postGain(best);tune(signal);
+  autoNote('Best: '+gainSteps[best].toFixed(1)+' dB ('+scores.get(best).toFixed(1)+' dB Es/N0)');
+ }catch(e){autoNote('Auto stopped: '+e.message);}
+ finally{autoRunning=false;el('auto').textContent='Auto';el('auto').classList.remove('running');}
+}
+el('auto').onclick=autoGain;
+// Fullscreen (also by double-click) and pop-out (the browser's floating, always-on-top video window).
+function toggleFullscreen(){
+ if(document.fullscreenElement)document.exitFullscreen();
+ else if(video.requestFullscreen)video.requestFullscreen().catch(()=>{});
+}
+el('fs').onclick=toggleFullscreen;
+video.addEventListener('dblclick',toggleFullscreen);
+if(!document.pictureInPictureEnabled)el('pip').hidden=true;
+el('pip').onclick=async()=>{
+ try{
+  if(document.pictureInPictureElement)await document.exitPictureInPicture();
+  else await video.requestPictureInPicture();
+ }catch(e){status.textContent='Pop-out is not possible yet: '+(e.message||e.name);}
+};
+loadDevices();setInterval(loadDevices,4000);
+// Receiver lock, signal quality and constellation, from datvrx's own status lines.
+const eye=new MagicEye(document.querySelector('#eye')), constellation=new Constellation(document.querySelector('#constellation'));
+// Station names come over the air: they are only ever shown as text, never as HTML.
+function showInfo(s){
+ const lock=el('lock');
+ lock.textContent=!s.running?'':s.locked?'LOCKED':'SEARCHING';lock.className=s.locked?'green':'amber';
+ el('service').textContent=s.service;
+ el('provider').textContent=s.provider;
+ el('tuned').textContent=tuned&&s.running?tuned.centerMhz.toFixed(3)+' MHz · '+tuned.sr+' kS/s'+(s.mode?' · '+s.mode:''):'';
+ const q=el('quality');q.replaceChildren();
+ if(s.running&&s.esn0!==null){
+  const add=(text,cls)=>{const span=document.createElement('span');span.textContent=text;if(cls)span.className=cls;q.append(span);};
+  add((s.esn0_label||'Es/N0')+' ','cap');add(s.esn0.toFixed(1)+' dB','big');
+  if(s.margin!==null)add('   D '+s.margin.toFixed(1),'big '+(s.margin>=2?'green':s.margin>=0?'amber':'red'));
+  add('   bad '+s.bad+' · lost '+s.lost+(s.rf_level!==null?' · RF '+s.rf_level+' dB':''),'cap');
+ }
+ el('vid').textContent=s.video?s.video+(s.width?' · '+s.width+'×'+s.height:''):(s.locked?'waiting for video':'');
+ el('aud').textContent=s.audio?s.audio+(video.muted||video.volume===0?' · muted':''):'';
+}
+let polling=false;
+setInterval(async()=>{
+ if(polling)return;polling=true;
+ try{
+  const s=await (await fetch('/status',{cache:'no-store'})).json();
+  lastStatus=s;
+  lastLocked=s.locked;if(s.locked&&lockAt===null&&live)lockAt=performance.now();renderStatus();
+  // Signal colour in the spectrum, as in the DATVision player: blue searching, green locked, red lost
+  // (a lock that was lost, or no lock within ten seconds).
+  if(live)window.spectrumSetState(s.locked?'locked':(lockAt!==null||performance.now()-t0>10000)?'lost':'searching');
+  // Without a known threshold for this mode, the eye follows Es/N0 / 3 (as the DATVision player does).
+  eye.update(s.locked&&s.esn0!==null?(s.margin!==null?s.margin:s.esn0/3):null,s.running);
+  constellation.update(s.cells,s.modulation);
+  showInfo(s);
+ }catch(e){}finally{polling=false;}
+},250);
+const muteButton=document.querySelector('#mute'), volume=document.querySelector('#volume'), pct=document.querySelector('#pct');
+function syncAudio(){
+ const off=video.muted||video.volume===0;
+ muteButton.classList.toggle('off',off);volume.classList.toggle('muted',off);
+ volume.style.setProperty('--fill',Number(volume.value)*100+'%');
+ pct.textContent=off?'muted':Math.round(Number(volume.value)*100)+' %';
+}
+muteButton.onclick=()=>{video.muted=!video.muted;if(!video.muted&&video.volume===0)video.volume=volume.value=0.5;syncAudio();};
+volume.oninput=()=>{video.volume=Number(volume.value);video.muted=video.volume===0;syncAudio();};
+syncAudio();
+window.addEventListener('pagehide',stop);
+</script></html>

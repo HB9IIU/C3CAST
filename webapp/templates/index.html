@@ -227,6 +227,11 @@
         <div class="field">
           <div class="lab">QO-100 wideband<span id="specChip" class="chip"><i class="led"></i><span id="specChipText">connecting</span></span></div>
           <canvas id="spectrum" class="spectrum"></canvas>
+            <div class="row" style="margin-top:.4rem">
+              <label for="spectrumTarget" class="hint">Spectrum click</label>
+              <select id="spectrumTarget" style="width:auto"><option value="tx">TX slots</option><option value="1">RX 1</option><option value="2">RX 2</option></select>
+              <span class="hint">RX uses the symbol rate set below</span>
+            </div>
         </div>
         <div class="field">
           <div class="lab"><label for="freq">Frequency</label><span>MHz uplink</span></div>
@@ -280,6 +285,25 @@
 
   </div>
 
+  <div id="receivers" class="grid rx-grid" aria-label="DATV receivers">
+    {% for n in (1, 2) %}
+    <section class="panel rx-panel" data-receiver="{{ n }}">
+      <div class="ph">RX {{ n }} <span class="rx-device grow">No receiver connected</span>
+        <button class="btn rx-settings" type="button" title="Receiver settings">Settings</button>
+        <button class="btn rx-full" type="button" title="Fullscreen receiver">⛶</button>
+      </div>
+      <div class="rx-picture"><div class="rx-placeholder">No receiver connected</div></div>
+      <form class="pb rx-tuning">
+        <label class="lab">Downlink MHz<input class="inp rx-frequency" type="number" min="10490" max="10500" step="0.001" value="{{ '10491.500' if n == 1 else '10494.750' }}" required></label>
+        <label class="lab">kS/s<input class="inp rx-rate" type="number" min="1" max="10000" value="{{ 1500 if n == 1 else 500 }}" required></label>
+        <button class="btn" type="submit">Receive</button>
+        <button class="btn rx-stop" type="button">Stop</button>
+      </form>
+      <div class="hint rx-message" role="status" aria-live="polite"></div>
+    </section>
+    {% endfor %}
+  </div>
+
   <section class="panel" style="margin-top:.6rem">
     <div class="ph"><svg class="i"><use href="#i-term"/></svg>Telemetry</div>
     <dl class="tele">
@@ -296,6 +320,7 @@
 </div>
 
 <script src="/static/spectrum.js?v={{ app_version }}"></script>
+<script src="/static/receivers.js?v={{ app_version }}" defer></script>
 <script>
 const $ = id => document.getElementById(id);
 const val = name => document.querySelector(`input[name=${name}]:checked`).value;
