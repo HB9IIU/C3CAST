@@ -298,3 +298,9 @@ footer { margin-top: 0.923rem; padding-top: 0.615rem; color: var(--faint); font:
 .cpu-meter.medium > span { background: var(--amber); }
 .cpu-meter.high > span { background: var(--bad); }
 @media (max-width: 600px) { .tele { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+.rx-backdrop { position: fixed; inset: 0; z-index: 100; background: rgba(0, 0, 0, .8); backdrop-filter: blur(4px); }
+.rx-panel.rx-popup { position: fixed; z-index: 101; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(94vw, calc((92dvh - 10rem) * 16 / 9), 1400px); max-height: 92dvh; display: flex; flex-direction: column; background: var(--panel); box-shadow: 0 1rem 4rem #000; overflow: auto; }
+.rx-popup .rx-picture { flex: none; }
+.rx-popup .ph { flex-shrink: 0; }
+.rx-popup:fullscreen { inset: 0; transform: none; width: 100%; max-height: none; }

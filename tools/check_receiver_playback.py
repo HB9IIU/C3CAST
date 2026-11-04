@@ -5,6 +5,7 @@ Uses Playwright/Edge for development only. Does not open receiver hardware or tr
 import json
 import logging
 import os
+import re
 from pathlib import Path
 import socket
 import subprocess
@@ -148,6 +149,36 @@ def main():
                     expect(first.locator('#video')).to_have_js_property('paused', False)
                     expect(second.locator('#video')).to_have_js_property('muted', True)
                     print('Header volume/mute control, independent RX 2 mute, and hidden video overlays passed.', flush=True)
+                    panel = page.locator('[data-receiver="1"]')
+                    frame_identity = first.locator('#video').evaluate('v=>window.popupIdentity=crypto.randomUUID()')
+                    before_popup = first.locator('#video').evaluate('v=>v.currentTime')
+                    first.locator('#video').click()
+                    expect(panel).to_have_class(re.compile(r'rx-popup'))
+                    assert page.evaluate('document.fullscreenElement===null')
+                    assert first.locator('#video').evaluate('v=>window.popupIdentity') == frame_identity
+                    first.locator('#video').evaluate('(v,before)=>new Promise(r=>{const check=()=>v.currentTime>before+.2?r():setTimeout(check,50);check()})', before_popup)
+                    page.screenshot(path=str(output/'receiver-popup-desktop.png'))
+                    first.locator('#video').press('Escape')
+                    expect(panel).not_to_have_class(re.compile(r'rx-popup'))
+                    expect(page.locator('.rx-backdrop')).to_have_count(0)
+                    first.locator('#video').click()
+                    panel.locator('.rx-popup-close').click()
+                    expect(panel).not_to_have_class(re.compile(r'rx-popup'))
+                    first.locator('#video').click()
+                    page.locator('.rx-backdrop').click(position={'x':4,'y':4})
+                    expect(panel).not_to_have_class(re.compile(r'rx-popup'))
+                    page.set_viewport_size({'width':390,'height':844})
+                    first.locator('#video').click()
+                    expect(panel).to_have_class(re.compile(r'rx-popup'))
+                    box = panel.bounding_box()
+                    assert box['x'] >= 0 and box['x']+box['width'] <= 390.5, box
+                    assert box['y'] >= 0 and box['y']+box['height'] <= 844.5, box
+                    page.screenshot(path=str(output/'receiver-popup-mobile.png'))
+                    panel.locator('.rx-popup-close').click()
+                    page.set_viewport_size({'width':1500,'height':1100})
+                    assert first.locator('#video').evaluate('v=>window.popupIdentity') == frame_identity
+                    print('Enlarged popup, uninterrupted stream, Escape/Close/backdrop, desktop/mobile passed.', flush=True)
+
                     loss_url = entries[0]['url'] + '/status'
                     reception = {'locked': True}
                     def lost_status(route):

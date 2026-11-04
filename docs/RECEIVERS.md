@@ -17,7 +17,7 @@ Each available receiver starts its local browser service automatically. Both
 receivers tune the QO-100 beacon at 10491.500 MHz / 1500 kS/s at startup.
 For another signal, select a receiver pill, then click the carrier in the spectrum.
 Settings exposes LNB power/input or RTL gain. RX 2 starts
-muted. Click the picture or fullscreen button to enlarge a receiver.
+muted. Click the picture for an enlarged in-page popup; the fullscreen button still opens fullscreen. Close the popup with Close, Escape, or a click outside. The existing iframe stays in place, preserving playback and audio.
 Each player's volume slider and mute button sit in its header before Settings;
 the received picture has no volume-control overlay.
 

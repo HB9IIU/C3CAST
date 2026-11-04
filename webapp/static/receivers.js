@@ -8,6 +8,44 @@
   const eyes = new Map(panels.map(panel => [panel, new MagicEye(panel.querySelector('.rx-eye-display'), 76)]));
   let activeReceiver = 1;
   let closing = false;
+  let popup = null;
+  function closePopup() {
+    if (!popup) return;
+    const saved = popup; popup = null;
+    saved.panel.classList.remove('rx-popup');
+    saved.panel.removeAttribute('role'); saved.panel.removeAttribute('aria-modal'); saved.panel.removeAttribute('aria-label');
+    saved.panel.querySelector('.rx-popup-close').classList.add('d-none');
+    saved.panel.querySelector('.rx-full').classList.remove('d-none');
+    saved.inert.forEach(([node, value]) => { node.inert = value; });
+    saved.backdrop.remove(); saved.placeholder.remove();
+    document.body.style.overflow = saved.overflow;
+    saved.focus?.focus();
+  }
+  function openPopup(panel) {
+    if (popup?.panel === panel) { closePopup(); return; }
+    closePopup();
+    const backdrop = document.createElement('div'); backdrop.className = 'rx-backdrop';
+    backdrop.onclick = closePopup; document.body.append(backdrop);
+    const placeholder = document.createElement('div');
+    placeholder.style.height = `${panel.getBoundingClientRect().height}px`;
+    panel.before(placeholder);
+    const inert = [];
+    for (let node = panel; node.parentElement && node !== document.body; node = node.parentElement) {
+      for (const sibling of node.parentElement.children) {
+        if (sibling === node || sibling === backdrop) continue;
+        inert.push([sibling, sibling.inert]); sibling.inert = true;
+      }
+    }
+    popup = {panel, backdrop, placeholder, inert, focus: document.activeElement, overflow: document.body.style.overflow};
+    document.body.style.overflow = 'hidden';
+    panel.classList.add('rx-popup'); panel.setAttribute('role', 'dialog'); panel.setAttribute('aria-modal', 'true');
+    panel.setAttribute('aria-label', `Enlarged receiver ${panel.dataset.receiver}`);
+    panel.querySelector('.rx-full').classList.add('d-none');
+    const close = panel.querySelector('.rx-popup-close'); close.classList.remove('d-none'); close.focus();
+  }
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && popup) { event.preventDefault(); closePopup(); }
+  });
   const second = panels[1];
   const hideSecond = second.querySelector('.rx-hide');
   const restoreSecond = document.querySelector('.rx-restore');
@@ -79,6 +117,7 @@
     };
     panel.querySelector('.rx-retry').onclick = () => start(panel);
     panel.querySelector('.rx-settings').onclick = () => send(panel, {type: 'settings'});
+    panel.querySelector('.rx-popup-close').onclick = closePopup;
     panel.querySelector('.rx-full').onclick = () => panel.requestFullscreen().catch(() => {});
   }
   window.c3MonitorTransmit = signal => {
@@ -110,7 +149,8 @@
       button.querySelector('use').setAttribute('href', muted ? '#i-sound-off' : '#i-sound');
       panel.querySelector('.rx-audio').classList.toggle('muted', muted);
     }
-    if (event.data?.type === 'enlarge') panel.requestFullscreen().catch(() => {});
+    if (event.data?.type === 'enlarge') openPopup(panel);
+    if (event.data?.type === 'close-enlarged' && popup?.panel === panel) closePopup();
     if (event.data?.type === 'rx') {
       const data = event.data;
       const info = data.info || {};

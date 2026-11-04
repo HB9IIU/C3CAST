@@ -243,7 +243,7 @@ setInterval(()=>{
  el('wait').classList.toggle('lost',lost);
  el('wait').hidden=showing;
  if(!showing){
-  const text=lost?'Signal lost — waiting for reception to return…':noDevices?'No receiver found\nPlug in an RTL-SDR, MiniTiouner or PicoTuner (USB)':status.textContent;
+  const text=lost?'Signal lost â€” waiting for reception to returnâ€¦':noDevices?'No receiver found\nPlug in an RTL-SDR, MiniTiouner or PicoTuner (USB)':status.textContent;
   el('waittext').textContent=text;
   el('wait').classList.toggle('none',noDevices);
   el('spin').style.display=/^(Tuning|Tuned|Locked|Starting|Waiting|Playing|No signal)/.test(text)||text==='Startingâ€¦'?'':'none';
@@ -268,6 +268,7 @@ setInterval(async()=>{
   parent.postMessage({type:'rx',tuned:live&&tuned?{centerMhz:tuned.centerMhz,sr:tuned.sr}:null,state,info:streamDetails,message:status.textContent,callsign:s.locked?String(s.service||'').trim():''},'*');
  }catch(e){}finally{polling=false;}
 },500);
+window.addEventListener('keydown',event=>{if(event.key==='Escape')parent.postMessage({type:'close-enlarged'},'*');});
 video.style.cursor='zoom-in';video.addEventListener('click',()=>parent.postMessage({type:'enlarge'},'*'));
 const muteButton=document.querySelector('#mute');
 const volume=document.querySelector('#volume');
