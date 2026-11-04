@@ -80,10 +80,10 @@ class OutputLevel(unittest.TestCase):
 
     def test_slider_bounds(self):
         page = web.app.test_client().get("/").data
-        self.assertIn(b'id="level" min="0" max="100" value="0"', page)
+        self.assertIn(b'id="level" min="15" max="100" value="15"', page)
 
     @unittest.skipUnless(shutil.which('node'), 'Node.js required for browser state logic')
-    def test_slider_jumps_over_the_levels_below_the_users_lowest(self):
+    def test_slider_stays_between_configured_limits(self):
         page = web.app.test_client().get('/').data.decode()
         start = page.index('let levelMin = ')
         end = page.index('updatePlan();', start) + len('updatePlan();\n};')
@@ -96,13 +96,13 @@ const updatePlan = () => {};
 """
         checks = """
 const move = v => { level.value = String(v); level.oninput(); return Number(level.value); };
-assert.equal(move(1), levelMin);       // up from Off: the first step is the lowest level
-assert.equal(move(levelMin - 1), 0);   // down from the lowest level: back to Off
+assert.equal(move(1), levelMin);       // below the range clamps to the minimum
+assert.equal(move(levelMin - 1), levelMin);   // below the minimum remains at the minimum
 assert.equal(move(7), levelMin);       // a fast drag up lands on the lowest level
 assert.equal(move(40), 40);
 assert.equal(move(levelMin + 1), levelMin + 1);
-assert.equal(move(3), 0);              // a fast drag down lands on Off
-assert.equal(move(0), 0);
+assert.equal(move(3), levelMin);              // a fast drag down lands on the minimum
+assert.equal(move(0), levelMin);
 assert.equal(move(100), 100);
 """
         subprocess.run(['node', '-e', harness + logic + checks], check=True, capture_output=True, text=True)
@@ -119,6 +119,7 @@ const $ = id => {
     classList: {remove() {}}, setAttribute() {}});
   return elements.get(id);
 };
+let levelMin = 15;
 let busy = false, lastState = 'idle', board = true, flashing = false, freqOk = true, setupReady = true;
 let videoMode = false;
 const isClock = () => !videoMode, isCamera = () => false, isVideo = () => videoMode;
@@ -133,9 +134,9 @@ for (const ending of ['idle', 'error']) {
     $('level').value = '75';
     updateButtons(active);
     updateButtons(ending);
-    assert.equal(Number($('level').value), 0);
-    assert.equal($('levelVal').textContent, '0');
-    assert.equal($('toggle').disabled, true);
+    assert.equal(Number($('level').value), levelMin);
+    assert.equal($('levelVal').textContent, String(levelMin));
+    assert.equal($('toggle').disabled, false);
   }
 }
 videoMode = true;

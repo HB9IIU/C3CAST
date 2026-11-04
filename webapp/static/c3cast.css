@@ -38,7 +38,6 @@ a:hover { text-decoration: underline; }
 .tx-body .field { margin: 0; min-width: 0; }
 .tx-radio { grid-column: 1 / 3; }
 .tx-level { grid-column: 3; }
-.tx-body #levelZero { grid-column: 1 / -1; order: 1; margin: 0; }
 .tx-codec { align-self: center; order: 2; }
 .tx-summary { order: 2; }
 .tx-body .go { align-self: stretch; order: 2; }

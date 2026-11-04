@@ -26,7 +26,7 @@
     <div class="panel box" style="width:min(92vw,34rem);text-align:left">
       <div class="ph"><svg class="i"><use href="#i-sliders"/></svg>Output level limits</div>
       <div class="pb">
-        <p style="margin:0 0 .9rem">Drag the left handle for your <b>lowest</b> level and the right handle for your <b>highest</b>. The Level slider on the main page then runs between them, after its first step, <b>Off</b>.</p>
+        <p style="margin:0 0 .9rem">Drag the left handle for your <b>lowest</b> level and the right handle for your <b>highest</b>. The Level slider on the main page then runs between them.</p>
         <div class="dual">
           <div class="dual-track" id="dualTrack"></div>
           <div class="dual-fill" id="dualFill"></div>
@@ -261,7 +261,6 @@
           <div class="lab"><span>Level <button id="limitsBtn" class="btn" type="button" title="Set your lowest and highest level">Limits</button></span><b id="levelVal"></b></div>
           <input type="range" id="level" min="{{ lmin }}" max="{{ lmax }}" value="{{ ldef }}" autocomplete="off">
         </div>
-        <div id="levelZero" class="hint d-none"></div>
         <div class="field tx-codec">
           <div class="row">
             <label class="vvc-switch"><input id="vvc" type="checkbox" autocomplete="off"> H.266 / VVC <small>experimental</small></label>
@@ -335,7 +334,7 @@ const val = name => document.querySelector(`input[name=${name}]:checked`).value;
 const CHIP = {idle: ['', 'idle'], starting: ['warn', 'starting'], transmitting: ['air', 'on air'], stopping: ['warn', 'stopping'], error: ['bad', 'error']};
 let busy = false, board = false, flashing = false, freqOk = true;
 const selectedCodec = () => $('vvc').checked ? 'h266' : 'h265';
-$('level').value = 0; // Do not restore a previous power setting on page load.
+$('level').value = {{ level_min }}; // Start at the configured minimum, never a previous high setting.
 $('vvc').checked = false;
 $('vvcInfo').onclick = () => $('infoVvc').showModal();
 $('vvc').onchange = () => {
@@ -594,7 +593,6 @@ function showPreview() {
 
 async function updatePlan() {
   $('levelVal').textContent = $('level').value;
-  $('levelZero').classList.toggle('d-none', +$('level').value !== 0);
   updateButtons();
   const codec = selectedCodec();
   $('vvcNote').textContent = isVideo() ? 'Movie test profile: 640×360 · 24 fps · video up to 300 kb/s'
@@ -639,9 +637,8 @@ function updateButtons(state) {
 }
 
 function resetLevel() {
-  $('level').value = 0;
-  $('levelVal').textContent = '0';
-  $('levelZero').classList.remove('d-none');
+  $('level').value = levelMin;
+  $('levelVal').textContent = String(levelMin);
 }
 
 async function poll() {
@@ -714,16 +711,10 @@ document.addEventListener('keydown', e => {
 $('pictureInfoBtn').onclick = () => $('infoPictures').classList.remove('d-none');
 $('picInfoClose').onclick = () => $('infoPictures').classList.add('d-none');
 $('infoPictures').onclick = e => { if (e.target === $('infoPictures')) $('infoPictures').classList.add('d-none'); };
-// The slider's first step is Off (0); the next step is the user's lowest level, so levels below it (spike in the middle) cannot be picked.
+// The level starts at the configured minimum; Start/Stop controls transmission.
 let levelMin = {{ level_min }}, levelMax = {{ lmax }};
-let levelPrev = 0;
-const levelHint = () => { $('levelZero').textContent = 'Level 0: transmission disabled. Choose ' + levelMin + '\u2013' + levelMax + ' to start (change the limits with the Limits button).'; };
-levelHint();
 $('level').oninput = () => {
-  let v = +$('level').value;
-  if (v > 0 && v < levelMin) v = levelPrev >= levelMin ? 0 : levelMin;
-  $('level').value = v;
-  levelPrev = v;
+  $('level').value = Math.max(levelMin, Math.min(levelMax, +$('level').value));
   updatePlan();
 };
 
@@ -759,8 +750,8 @@ $('limSave').onclick = async () => {
   if (!r.ok) { $('limError').textContent = r.data.error || 'could not save'; return; }
   levelMin = r.data.level_min; levelMax = r.data.level_max;
   $('level').max = levelMax;
-  $('level').value = 0; levelPrev = 0;                                     // a new range: back to Off, then choose a level again
-  levelHint(); updatePlan();
+  $('level').min = levelMin;
+  resetLevel(); updatePlan();
   $('limitsDlg').classList.add('d-none');
   toast('Output level limits saved: ' + levelMin + ' to ' + levelMax, 'ok');
   setTimeout(() => $('toast').classList.add('d-none'), 2500);

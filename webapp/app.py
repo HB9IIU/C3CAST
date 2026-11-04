@@ -381,7 +381,7 @@ def api_bye():
 @app.get("/")
 def index():
     return render_template("index.html", rates=SYMBOL_RATES, fecs=FECS, freq=get_freq(),
-                           lmin=0, lmax=level_limits()[1], ldef=0, level_min=level_limits()[0], max_seconds=MAX_SECONDS,
+                           lmin=level_limits()[0], lmax=level_limits()[1], ldef=level_limits()[0], level_min=level_limits()[0], max_seconds=MAX_SECONDS,
                            setup_ready=setup_ready())
 
 
