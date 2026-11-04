@@ -28,6 +28,7 @@ import flasher  # noqa: E402
 import version  # noqa: E402
 import receivers  # noqa: E402
 from window_session import WindowLease
+from cpu_load import CpuLoad
 
 PICTURES = Path(os.environ.get("DATV_PICTURES", paths.DATA / "pictures"))
 VIDEOS = paths.DATA / "videos"
@@ -44,6 +45,7 @@ EXTS = {".png", ".jpg", ".jpeg"}
 
 app = Flask(__name__, template_folder=str(paths.RESOURCE / "templates"), static_folder=str(paths.RESOURCE / "static"))
 WINDOW = WindowLease()
+CPU = CpuLoad()
 lock = threading.Lock()
 conn = {"connected": False, "port": "", "serial": "", "info": "", "how": "", "candidates": [], "tried": []}
 tx = {"state": "idle", "proc": None, "t0": 0.0, "log": collections.deque(maxlen=60),
@@ -679,7 +681,7 @@ def api_plan():
 def api_status():
     with lock:
         running = tx["state"] == "transmitting"
-        return jsonify(state=tx["state"], error=tx["error"], buffer=tx["buffer"], packets=tx["packets"],
+        return jsonify(state=tx["state"], error=tx["error"], buffer=tx["buffer"], packets=tx["packets"], cpu_percent=CPU.percent(),
                        elapsed=round(time.time() - tx["t0"]) if running else 0,
                        settings=tx["settings"], log=list(tx["log"])[-25:], flashing=flash["state"] == "flashing")
 

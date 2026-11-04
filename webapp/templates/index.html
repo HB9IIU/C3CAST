@@ -317,6 +317,7 @@
       <div><dt>Elapsed</dt><dd id="elapsed">00:00:00</dd></div>
       <div><dt>ESP buffer</dt><dd id="buffer">-</dd></div>
       <div><dt>TS packets</dt><dd id="packets">-</dd></div>
+      <div class="cpu-tele" title="Total system CPU usage across all processors, including C3CAST and the browser"><dt>CPU load</dt><dd><span id="cpuValue">—</span><span id="cpuMeter" class="cpu-meter" role="progressbar" aria-label="Total system CPU load" aria-valuemin="0" aria-valuemax="100"><span id="cpuFill"></span></span></dd></div>
     </dl>
     <div id="setupWarn" class="err{% if setup_ready %} d-none{% endif %}">No callsign yet: set your callsign and locator on the <a href="/setup">Setup page</a> before you can transmit.</div>
     <div id="error" class="err d-none"></div>
@@ -651,6 +652,18 @@ async function poll() {
     $('elapsed').textContent = hms(s.elapsed);
     $('buffer').textContent = s.buffer || '-';
     $('packets').textContent = s.packets || '-';
+    const cpu = Number.isFinite(s.cpu_percent) ? Math.max(0, Math.min(100, s.cpu_percent)) : null;
+    $('cpuValue').textContent = cpu === null ? '—' : `${cpu}%`;
+    $('cpuFill').style.width = `${cpu ?? 0}%`;
+    $('cpuMeter').classList.toggle('high', cpu !== null && cpu >= 85);
+    $('cpuMeter').classList.toggle('medium', cpu !== null && cpu >= 65 && cpu < 85);
+    if (cpu === null) {
+      $('cpuMeter').removeAttribute('aria-valuenow');
+      $('cpuMeter').setAttribute('aria-valuetext', 'CPU load unavailable');
+    } else {
+      $('cpuMeter').setAttribute('aria-valuenow', String(cpu));
+      $('cpuMeter').setAttribute('aria-valuetext', `${cpu}%`);
+    }
     const log = $('log'), atEnd = log.scrollTop + log.clientHeight >= log.scrollHeight - 8;
     log.textContent = s.log.join('\n');
     if (atEnd) log.scrollTop = log.scrollHeight;

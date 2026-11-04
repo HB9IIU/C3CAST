@@ -227,7 +227,7 @@ input[type=range]:disabled { opacity: .5; }
 .kv dt { color: var(--faint); font: 600 0.692rem/1 var(--mono); letter-spacing: .16em; text-transform: uppercase; margin-bottom: 0.231rem; }
 .kv dd { margin: 0; font: 0.923rem var(--mono); color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 @media (max-width: 460px) { .kv { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-.tele { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--line); border-bottom: 1px solid var(--line); }
+.tele { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: var(--line); border-bottom: 1px solid var(--line); }
 .tele div { background: var(--panel-hi); padding: 0.462rem 0.769rem; }
 .tele dt { color: var(--faint); font: 600 0.692rem/1 var(--mono); letter-spacing: .16em; text-transform: uppercase; margin-bottom: 0.231rem; }
 .tele dd { margin: 0; font: 1rem var(--mono); color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -287,3 +287,11 @@ footer { margin-top: 0.923rem; padding-top: 0.615rem; color: var(--faint); font:
 .vvc-titlebar { display: flex; justify-content: center; padding: .55rem 1rem; background: #fff; }
 .vvc-titlebar img { display: block; width: min(100%, 18rem); height: auto; }
 .vvc-option-logo { display: block; width: 5rem; height: auto; padding: .2rem; background: #fff; border-radius: .2rem; }
+
+.cpu-tele dd { display: flex; align-items: center; gap: .6rem; }
+#cpuValue { min-width: 2.7em; }
+.cpu-meter { flex: 1; height: .6rem; overflow: hidden; background: var(--line-hi); border-radius: .2rem; }
+.cpu-meter > span { display: block; width: 0; height: 100%; background: var(--ok); transition: width .5s ease; }
+.cpu-meter.medium > span { background: var(--amber); }
+.cpu-meter.high > span { background: var(--bad); }
+@media (max-width: 600px) { .tele { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
