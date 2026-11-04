@@ -7,6 +7,25 @@
   const eyes = new Map(panels.map(panel => [panel, new MagicEye(panel.querySelector('.rx-eye-display'), 76)]));
   let activeReceiver = 1;
   let closing = false;
+  const second = panels[1];
+  const hideSecond = second.querySelector('.rx-hide');
+  const restoreSecond = document.querySelector('.rx-restore');
+  function hideRx2(hidden) {
+    second.classList.toggle('d-none', hidden);
+    document.getElementById('receivers').classList.toggle('rx-single', hidden);
+    restoreSecond.classList.toggle('d-none', !hidden);
+    if (hidden && activeReceiver === 2) selectReceiver(1);
+  }
+  hideSecond.onclick = () => {
+    if (!hideSecond.classList.contains('d-none')) {
+      hideRx2(true);
+      document.getElementById('showRx2').focus();
+    }
+  };
+  document.getElementById('showRx2').onclick = () => {
+    hideRx2(false);
+    hideSecond.focus();
+  };
   function selectReceiver(number) {
     activeReceiver = number;
     for (const panel of panels) {
@@ -115,6 +134,11 @@
       const data = await response.json();
       for (const rx of data.receivers) {
         const panel = panels[rx.number - 1];
+        if (rx.number === 2) {
+          const absent = !rx.available && rx.state !== 'running' && !rx.error && !panel.querySelector('iframe');
+          hideSecond.classList.toggle('d-none', !absent);
+          if (!absent) hideRx2(false);
+        }
         panel.querySelector('.rx-device').textContent = rx.label;
         panel.querySelector('.rx-device').title = rx.label;
         if (rx.available && !requested.has(rx.number)) await start(panel);

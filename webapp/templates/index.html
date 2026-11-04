@@ -283,6 +283,7 @@
       </div>
     </section>
 
+  <div class="rx-restore d-none"><button id="showRx2" class="btn" type="button">Show RX2</button></div>
   <div id="receivers" class="grid rx-grid" aria-label="DATV receivers">
     {% for n in (1, 2) %}
     <section class="panel rx-panel" data-receiver="{{ n }}">
@@ -292,6 +293,7 @@
           <button class="rx-mute" type="button" aria-label="Unmute receiver {{ n }}" aria-pressed="true" disabled><svg class="i" aria-hidden="true"><use href="#i-sound-off"/></svg></button>
         </div>
         <button class="btn rx-settings" type="button" title="Receiver settings">Settings</button>
+        {% if n == 2 %}<button class="btn rx-hide d-none" type="button" title="Hide unused receiver for this page">Hide</button>{% endif %}
         <button class="btn rx-full" type="button" title="Fullscreen receiver">⛶</button>
       </div>
       <div class="rx-picture"><div class="rx-placeholder"><div class="rx-empty"><strong>No receiver connected</strong><p>C3CAST automatically detects MiniTiouner, PicoTuner and RTL-SDR USB receivers.</p><p>Connect your receiver, then restart C3CAST to refresh detection.</p></div></div></div>

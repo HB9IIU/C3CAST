@@ -57,6 +57,8 @@ a:hover { text-decoration: underline; }
 }
 
 .rx-grid { margin-top: .6rem; }
+.rx-grid.rx-single { grid-template-columns: minmax(0, 1fr); }
+.rx-restore { margin-top: .6rem; text-align: right; }
 .rx-panel { --rx-color: #25c26e; }
 .rx-panel[data-receiver="2"] { --rx-color: #b07cff; }
 .rx-panel.rx-selected { border-color: var(--rx-color); box-shadow: 0 0 0 1px var(--rx-color); }
