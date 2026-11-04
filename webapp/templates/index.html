@@ -267,7 +267,6 @@
             <button id="vvcInfo" class="btn" type="button" aria-label="Explain H.266" title="H.266 in plain language"><svg class="i"><use href="#i-info"/></svg></button>
             <img class="vvc-option-logo" src="{{ url_for('static', filename='vvc-logo.jpg') }}" alt="VVC" width="300" height="86">
           </div>
-          <div id="vvcWarn" class="warnbox d-none" role="alert"><svg class="i"><use href="#i-warn"/></svg><div><b>Most DATV viewers cannot decode H.266.</b> They will see no picture. Use this mode only for tests with stations that have agreed to take part, and switch back to H.265 for normal operation.</div></div>
           <div id="vvcNote" class="hint d-none">CPU encoding · slower startup</div>
         </div>
         <dl class="kv field tx-summary">
@@ -343,7 +342,6 @@ $('vvc').checked = false;
 $('vvcInfo').onclick = () => $('infoVvc').showModal();
 $('vvc').onchange = () => {
   $('vvcNote').classList.toggle('d-none', !$('vvc').checked);
-  $('vvcWarn').classList.toggle('d-none', !$('vvc').checked);
   updatePlan();
 };
 let band = {offset_mhz: 8089.5, allowed: {}, min: 2300, max: 2450};
