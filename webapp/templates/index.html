@@ -612,6 +612,7 @@ async function updatePlan() {
 }
 
 let lastState = 'idle';
+let monitoredTransmission = null;
 const setupReady = {{ 'true' if setup_ready else 'false' }};
 function updateButtons(state) {
   const wasBusy = busy;
@@ -647,9 +648,15 @@ function resetLevel() {
 async function poll() {
   try {
     const s = await (await fetch('/api/status')).json();
-    window.batcSetTransmit?.(s.state === 'transmitting' && s.settings ? {
+    const txSignal = s.state === 'transmitting' && s.settings ? {
       centerMhz: Number(s.settings.freq) + band.offset_mhz, sr: Number(s.settings.sr) / 1000
-    } : null);
+    } : null;
+    window.batcSetTransmit?.(txSignal);
+    if (!txSignal) monitoredTransmission = null;
+    else {
+      const key = JSON.stringify(txSignal);
+      if (key !== monitoredTransmission && window.c3MonitorTransmit?.(txSignal)) monitoredTransmission = key;
+    }
     flashing = s.flashing;
     const [cls, text] = s.flashing ? ['warn', 'flashing'] : (CHIP[s.state] || ['', s.state]);
     chip('state', cls, text);

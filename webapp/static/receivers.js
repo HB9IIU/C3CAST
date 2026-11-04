@@ -2,6 +2,7 @@
 (() => {
   const panels = [...document.querySelectorAll('[data-receiver]')];
   const requested = new Set();
+  const available = new Set();
   const pending = new Map();
   const lastSignals = new Map();
   const eyes = new Map(panels.map(panel => [panel, new MagicEye(panel.querySelector('.rx-eye-display'), 76)]));
@@ -80,6 +81,12 @@
     panel.querySelector('.rx-settings').onclick = () => send(panel, {type: 'settings'});
     panel.querySelector('.rx-full').onclick = () => panel.requestFullscreen().catch(() => {});
   }
+  window.c3MonitorTransmit = signal => {
+    const panel = panels[0];
+    if (!available.has(1) && !panel.querySelector('iframe')) return false;
+    tune(panel, signal);
+    return true; // Tune once per TX session; preserve the selected pill and RX2.
+  };
   window.c3TuneReceiver = signal => {
     const number = activeReceiver;
     const panel = panels[number - 1];
@@ -135,6 +142,7 @@
       const data = await response.json();
       for (const rx of data.receivers) {
         const panel = panels[rx.number - 1];
+        if (rx.available) available.add(rx.number); else available.delete(rx.number);
         if (rx.number === 2) {
           const absent = !rx.available && rx.state !== 'running' && !rx.error && !panel.querySelector('iframe');
           hideSecond.classList.toggle('d-none', !absent);

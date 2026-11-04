@@ -151,3 +151,9 @@ is absent. Receiver labels remain visible; a receiver on the same carrier does
 not repaint the TX trace. The idle selection band returns after transmission.
 `tools/check_tx_spectrum.py` checks state transitions, frequency/bandwidth,
 relative readings, colours and missing-beacon behavior without transmitting RF.
+
+When transmission begins, RX1 automatically tunes to the actual TX downlink and
+symbol rate once per transmission, allowing self-monitoring. RX2 and the selected
+receiver pill are unchanged. If RX1 is absent/unavailable, TX can still operate;
+monitoring waits until RX1 is available. Stopping TX leaves RX1 at that frequency.
+The offline TX browser check verifies auto-monitoring and repeated-poll behavior.

@@ -11,6 +11,7 @@ from werkzeug.serving import make_server
 from playwright.sync_api import sync_playwright
 
 FAKE='''
+window.rxTunes=[];addEventListener('message',event=>{if(event.data?.type==='test-tune')rxTunes.push(event.data)});
 window.txLabels=[]; window.redTrace=[];
 const proto=CanvasRenderingContext2D.prototype;
 const clear=proto.clearRect,begin=proto.beginPath,move=proto.moveTo,line=proto.lineTo,stroke=proto.stroke,fillText=proto.fillText;
@@ -41,13 +42,23 @@ def main():
    errors=[]
    page.on('pageerror',lambda error:errors.append(str(error)))
    page.add_init_script(FAKE)
-   page.route('**/api/receivers',lambda r:r.fulfill(json={'receivers':[]}))
+   entries=[dict(number=n,label=f'Test receiver {n}',available=False,state='running',error='',url=f'http://127.0.0.1:3900{n}') for n in (1,2)]
+   page.route('**/api/receivers',lambda r:r.fulfill(json={'receivers':entries}))
+   for n in (1,2):
+    player=f"<script>addEventListener('message',e=>{{if(e.data?.type==='tune')parent.postMessage({{type:'test-tune',receiver:{n},signal:e.data}},'*')}})</script>"
+    page.route(f'http://127.0.0.1:3900{n}/embed*',lambda r,request,body=player:r.fulfill(content_type='text/html',body=body))
    page.route('**/api/status',lambda r:r.fulfill(json=report))
    page.goto(f'http://127.0.0.1:{server.server_port}')
    page.wait_for_function('window.testSocket && document.querySelector("#specChipText").textContent==="live"')
    assert not page.evaluate('txLabels.length')
+   page.locator('[data-receiver="2"] iframe').wait_for()
+   page.locator('[data-receiver="2"] .rx-pill').click()
    report['state']='transmitting'
    page.wait_for_function('txLabels.some(label=>label.text==="TX -4.6 dB vs beacon")')
+   page.wait_for_function('rxTunes.length===1')
+   tuned=page.evaluate('rxTunes[0]')
+   assert tuned['receiver']==1 and tuned['signal']['centerMhz']==10494.25 and tuned['signal']['sr']==500,tuned
+   assert page.locator('[data-receiver="2"] .rx-pill').get_attribute('aria-pressed')=='true'
    assert page.evaluate('txLabels[0].color')=='#3ecf8e'
    assert page.evaluate('redTrace.length>2')
    bounds=page.evaluate('({first:redTrace[0][0],last:redTrace.at(-1)[0],width:document.querySelector("#spectrum").clientWidth})')
@@ -59,11 +70,15 @@ def main():
    page.locator('#spectrum').screenshot(path=str(ROOT/'output/tx-spectrum-above.png'))
    page.evaluate('sendSpectrum(25000,false)')
    page.wait_for_function('txLabels.some(label=>label.text==="TX")')
+   assert page.evaluate('rxTunes.length')==1,'Status polling retuned RX1 repeatedly'
    report['state']='idle'
    page.wait_for_function('txLabels.length===0&&redTrace.length===0')
+   report['state']='transmitting'
+   page.wait_for_function('rxTunes.length===2')
+   assert page.evaluate('rxTunes.every(t=>t.receiver===1)')
    assert not errors,errors
    browser.close()
-   print('TX-only rendering, actual frequency/SR, red measured trace, below/above-beacon colours, missing beacon and stop cleanup passed. No RF.')
+   print('TX-only rendering, actual frequency/SR, red measured trace, below/above-beacon colours, missing beacon, stop cleanup and RX1-only auto-monitoring once per TX passed. No RF.')
  finally:
   server.shutdown();server.server_close()
 
