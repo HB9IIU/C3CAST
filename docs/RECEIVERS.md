@@ -13,8 +13,8 @@ by serial, PicoTuner channel 1/channel 2, then RTL-SDR. The first two entries ge
 the panels. The list is retained once hardware is found; restart after changing
 an existing assignment. If no hardware was found, polling keeps looking.
 
-Each available receiver starts its local browser service automatically. RX 1
-tunes the QO-100 beacon at 10491.500 MHz / 1500 kS/s. RX 2 waits for a selection.
+Each available receiver starts its local browser service automatically. Both
+receivers tune the QO-100 beacon at 10491.500 MHz / 1500 kS/s at startup.
 For another signal, select a receiver pill, then click the carrier in the spectrum.
 Settings exposes LNB power/input or RTL gain. RX 2 starts
 muted. Click the picture or fullscreen button to enlarge a receiver.

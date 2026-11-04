@@ -77,8 +77,6 @@ def _launch(number, slot, entry, shared):
             '--ts-port2', str(entry['ts_port2']),
             '--settings', str(data / 'settings.json'), '--logs', str(data / 'logs'),
             '--ffmpeg', str(ffmpeg), '--tuner', slot['tuner'], '--label', slot['label']]
-        if number == 2:
-            command += ['--no-autotune']
         if shared:
             command += ['--channel', '2', '--primary-port', str(entry['primary_port'])]
         env = dict(os.environ)
