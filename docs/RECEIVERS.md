@@ -139,3 +139,15 @@ The suite now has 60 tests, including native-call cleanup and no worker launch
 on an access refusal. Browser checks verify the unavailable message and Retry
 recovery with mocked device states. Competing real applications on each tuner
 remain a hardware bench check.
+
+## On-air spectrum highlighting
+
+While the backend reports transmitting, the measured trace at the actual TX
+frequency is filled and outlined red, over the configured symbol-rate bandwidth.
+Its received plateau level is compared with the beacon plateau, using QOCAST's
+BATC conversion of 3276.8 FFT units per dB. The relative reading is green at or
+below the beacon and red above it. No numeric comparison is shown if the beacon
+is absent. Receiver labels remain visible; a receiver on the same carrier does
+not repaint the TX trace. The idle selection band returns after transmission.
+`tools/check_tx_spectrum.py` checks state transitions, frequency/bandwidth,
+relative readings, colours and missing-beacon behavior without transmitting RF.

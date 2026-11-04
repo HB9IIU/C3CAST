@@ -11,6 +11,7 @@
  *   window.QO_SR_KS         - the current symbol rate in kS/s (width of the chosen-slot band)
  *   window.QO_LOCKED        - true while on air: no frequency change
  *   window.onBatcSlotSelected(centerMhz) - called when a free, legal slot is clicked
+ *   window.batcSetTransmit({centerMhz, sr}|null) - actual on-air TX, SR in kS/s
  *   window.batcSetSelected(centerMhz|null), window.batcRedraw(), window.batcSlotState(centerMhz) -> true (occupied) | false | null
  */
 (function () {
@@ -22,6 +23,7 @@
   const END_MHZ = 10499.5;
   const DISPLAY_FLOOR = 0.12;
   const DISPLAY_CEILING = 0.58; // Fallback until a beacon plateau is visible.
+  const UNITS_PER_DB = 3276.8; // BATC FFT units per dB, as used by QOCAST.
   const BEACON_HEIGHT = 0.95; // Leave 5% of the plot above the beacon.
   const CHANNEL_CENTERS = Array.from({ length: 14 }, (_, index) => 10492.75 + index * 0.5);
   const canvas = document.querySelector('#spectrum');
@@ -63,6 +65,7 @@
   let selectedCenter = null;
   let displayCeiling = null, scaleFrame = null, scaleAt = null;
   const receivers = new Map();
+  let transmit = null;
 
   const CHIP = { success: 'ok', danger: 'bad', secondary: '' };
   function setStatus(label, style) {
@@ -83,6 +86,44 @@
     }
     context.setTransform(ratio, 0, 0, ratio, 0, 0);
     return { width, height };
+  }
+
+  function drawTransmit(frame, points, beaconPlateau, bottom, top, frequencyX, width) {
+    const half = transmit.sr * 1.35 / 2000;
+    const left = Math.max(0, frequencyX(transmit.centerMhz - half));
+    const right = Math.min(width, frequencyX(transmit.centerMhz + half));
+    const inside = points.filter(point => point[0] >= left && point[0] <= right);
+    if (inside.length < 2) return;
+    const peakY = Math.min(...inside.map(point => point[1]));
+    context.save();
+    const gradient = context.createLinearGradient(0, peakY, 0, bottom);
+    gradient.addColorStop(0, 'rgba(230, 0, 0, .55)');
+    gradient.addColorStop(1, 'rgba(230, 0, 0, .08)');
+    context.beginPath(); context.moveTo(inside[0][0], bottom);
+    inside.forEach(point => context.lineTo(...point));
+    context.lineTo(inside[inside.length - 1][0], bottom); context.closePath();
+    context.fillStyle = gradient; context.fill();
+    context.beginPath();
+    inside.forEach((point, index) => index ? context.lineTo(...point) : context.moveTo(...point));
+    context.strokeStyle = '#ff3b3b'; context.lineWidth = 2; context.stroke();
+    let text = 'TX', color = BAD;
+    if (beaconPlateau !== null) {
+      const bin = mhz => Math.round((mhz - START_MHZ) * (frame.length - 1) / (END_MHZ - START_MHZ));
+      const samples = Array.from(frame.slice(Math.max(0, bin(transmit.centerMhz - half * .8)),
+        Math.min(frame.length, bin(transmit.centerMhz + half * .8) + 1))).sort((a, b) => a - b);
+      if (samples.length) {
+        const delta = (samples[Math.floor(samples.length * .75)] - beaconPlateau) / UNITS_PER_DB;
+        text = `TX ${delta > 0 ? '+' : ''}${delta.toFixed(1)} dB vs beacon`;
+        color = delta > 0 ? BAD : OK;
+      }
+    }
+    context.font = `bold 15px ${FONT}`; context.textAlign = 'center';
+    const halfLabel = context.measureText(text).width / 2 + 4;
+    const x = Math.max(halfLabel, Math.min(width - halfLabel, (left + right) / 2));
+    const y = Math.max(top + 53, peakY - 10); // Below both receiver labels.
+    context.strokeStyle = 'rgba(0, 0, 0, .85)'; context.lineWidth = 4;
+    context.strokeText(text, x, y); context.fillStyle = color; context.fillText(text, x, y);
+    context.restore();
   }
 
   function draw(frame) {
@@ -123,6 +164,7 @@
     const slotWidth = Math.max(6, channelSpacing * 0.62);
     let noiseFloor = null;
     let activityThreshold = null;
+    let beaconPlateau = null;
     if (frame && frame.length >= 2) {
       const sortedFrame = Array.from(frame).sort((a, b) => a - b);
       noiseFloor = sortedFrame[Math.floor(sortedFrame.length / 2)];
@@ -131,6 +173,7 @@
       const beaconEnd = Math.ceil((10492.2 - START_MHZ) * frame.length / (END_MHZ - START_MHZ));
       const beaconSamples = Array.from(frame.slice(beaconStart, beaconEnd)).sort((a, b) => a - b);
       const beaconLevel = beaconSamples[Math.floor(beaconSamples.length / 2)];
+      if (beaconLevel > noiseFloor + 1000) beaconPlateau = beaconSamples[Math.floor(beaconSamples.length * .75)];
       activityThreshold = noiseFloor + (beaconLevel - noiseFloor) * 0.5;
       if (frame !== scaleFrame) {
         scaleFrame = frame;
@@ -179,7 +222,7 @@
 
     // The chosen frequency: a semi-transparent band over the plot, as wide as our
     // signal (symbol rate x 1.35), under the trace so the spectrum stays visible.
-    if (selectedCenter !== null) {
+    if (selectedCenter !== null && !transmit) {
       const sr = window.QO_SR_KS || 333;
       const halfMhz = sr * 1.35 / 1000 / 2;
       const left = frequencyX(selectedCenter - halfMhz);
@@ -238,23 +281,27 @@
       const left = Math.max(0, frequencyX(rx.tuned.centerMhz - half));
       const right = Math.min(width, frequencyX(rx.tuned.centerMhz + half));
       if (right <= left) continue;
+      const onOwnCarrier = transmit && Math.abs(rx.tuned.centerMhz - transmit.centerMhz) < Math.max(.005, transmit.sr / 4000);
       const color = rx.state === 'lost' ? '#ef5350' : number === 1 ? '#25c26e' : '#b07cff';
-      context.save();
-      context.beginPath(); context.rect(left, top, right-left, plotHeight); context.clip();
-      context.globalAlpha = rx.state === 'searching' ? .12 : .27;
-      context.fillStyle = color;
-      context.beginPath(); context.moveTo(points[0][0], bottom);
-      points.forEach(point => context.lineTo(point[0], point[1]));
-      context.lineTo(points[points.length-1][0], bottom); context.closePath(); context.fill();
-      context.globalAlpha = rx.state === 'searching' ? .55 : 1;
-      context.strokeStyle = color; context.beginPath();
-      points.forEach((point, index) => index ? context.lineTo(...point) : context.moveTo(...point));
-      context.stroke(); context.restore();
+      if (!onOwnCarrier) {
+        context.save();
+        context.beginPath(); context.rect(left, top, right-left, plotHeight); context.clip();
+        context.globalAlpha = rx.state === 'searching' ? .12 : .27;
+        context.fillStyle = color;
+        context.beginPath(); context.moveTo(points[0][0], bottom);
+        points.forEach(point => context.lineTo(point[0], point[1]));
+        context.lineTo(points[points.length-1][0], bottom); context.closePath(); context.fill();
+        context.globalAlpha = rx.state === 'searching' ? .55 : 1;
+        context.strokeStyle = color; context.beginPath();
+        points.forEach((point, index) => index ? context.lineTo(...point) : context.moveTo(...point));
+        context.stroke(); context.restore();
+      }
       context.font = `11px ${FONT}`; context.textAlign = 'left'; context.fillStyle = color;
       const label = `RX ${number}${rx.callsign ? ' · '+rx.callsign : ''} · ${rx.state}`;
       const x = Math.max(4, Math.min(left+4, width-context.measureText(label).width-4));
       context.fillText(label, x, top+14+(number-1)*15);
     }
+    if (transmit) drawTransmit(frame, points, beaconPlateau, bottom, top, frequencyX, width);
   }
 
   function scheduleDraw(frame) {
@@ -354,6 +401,11 @@
     draw(latestFrame);
   };
 
+  window.batcSetTransmit = signal => {
+    const next = signal && Number.isFinite(signal.centerMhz) && signal.sr > 0 ? signal : null;
+    if (JSON.stringify(next) === JSON.stringify(transmit)) return;
+    transmit = next; draw(latestFrame);
+  };
   window.batcSetSelected = (center) => { selectedCenter = center; draw(latestFrame); };
   window.batcRedraw = () => draw(latestFrame);
   window.batcSlotState = (center) => { for (const [slot, active] of slotStates) if (same(slot, center)) return active; return null; };
