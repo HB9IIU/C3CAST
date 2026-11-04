@@ -21,7 +21,8 @@
   const START_MHZ = 10490.5;
   const END_MHZ = 10499.5;
   const DISPLAY_FLOOR = 0.12;
-  const DISPLAY_CEILING = 0.58;
+  const DISPLAY_CEILING = 0.58; // Fallback until a beacon plateau is visible.
+  const BEACON_HEIGHT = 0.95; // Leave 5% of the plot above the beacon.
   const CHANNEL_CENTERS = Array.from({ length: 14 }, (_, index) => 10492.75 + index * 0.5);
   const canvas = document.querySelector('#spectrum');
   const status = document.querySelector('#specChip');
@@ -60,6 +61,7 @@
   let intentionallyClosed = false;
   let slotStates = new Map();
   let selectedCenter = null;
+  let displayCeiling = null, scaleFrame = null, scaleAt = null;
   const receivers = new Map();
 
   const CHIP = { success: 'ok', danger: 'bad', secondary: '' };
@@ -130,6 +132,21 @@
       const beaconSamples = Array.from(frame.slice(beaconStart, beaconEnd)).sort((a, b) => a - b);
       const beaconLevel = beaconSamples[Math.floor(beaconSamples.length / 2)];
       activityThreshold = noiseFloor + (beaconLevel - noiseFloor) * 0.5;
+      if (frame !== scaleFrame) {
+        scaleFrame = frame;
+        const now = performance.now();
+        // Use the beacon's upper plateau, ignoring isolated spike bins. Without
+        // a clear beacon, retain the last scale rather than magnifying noise.
+        const plateau = beaconSamples[Math.floor((beaconSamples.length - 1) * .99)] / 65535;
+        if (beaconLevel > noiseFloor + 1000 && plateau > DISPLAY_FLOOR + .02) {
+          const target = DISPLAY_FLOOR + (plateau - DISPLAY_FLOOR) / BEACON_HEIGHT;
+          const follow = scaleAt === null ? 1 : 1 - Math.exp(-(now - scaleAt) / 1500);
+          // Gain rises immediately to prevent clipping; settles down gently.
+          displayCeiling = displayCeiling === null || target >= displayCeiling
+            ? target : displayCeiling + (target - displayCeiling) * follow;
+        }
+        scaleAt = now;
+      }
     }
 
     function slotHasTransmission(center) {
@@ -190,7 +207,7 @@
       const sample = frame[left] + fraction * (frame[Math.min(left + 1, frame.length - 1)] - frame[left]);
       const normalized = Math.max(0, Math.min(
         1,
-        (sample / 65535 - DISPLAY_FLOOR) / (DISPLAY_CEILING - DISPLAY_FLOOR)
+        (sample / 65535 - DISPLAY_FLOOR) / ((displayCeiling ?? DISPLAY_CEILING) - DISPLAY_FLOOR)
       ));
       points.push([x, bottom - normalized * plotHeight]);
     }
