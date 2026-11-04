@@ -50,7 +50,7 @@ class Receivers(unittest.TestCase):
             self.assertEqual(entry['state'], 'running')
             command = popen.call_args.args[0]
             self.assertIn('--watch-stdin', command)
-            self.assertIn('--no-autotune', command)
+            self.assertNotIn('--no-autotune', command)  # RX 1 starts on the beacon.
             self.assertEqual(popen.call_args.kwargs['env']['QOCAST_TUNER_SERIAL'], 'TEST123')
 
     def test_stop_closes_parent_pipe_and_waits(self):

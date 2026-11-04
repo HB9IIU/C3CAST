@@ -13,8 +13,9 @@ by serial, PicoTuner channel 1/channel 2, then RTL-SDR. The first two entries ge
 the panels. The list is retained once hardware is found; restart after changing
 an existing assignment. If no hardware was found, polling keeps looking.
 
-Each available receiver starts its local browser service automatically, but does
-not tune or power an LNB until requested. Set downlink MHz and kS/s, then Receive.
+Each available receiver starts its local browser service automatically. RX 1
+tunes the QO-100 beacon at 10491.500 MHz / 1500 kS/s. RX 2 waits for a selection.
+For another signal, set downlink MHz and kS/s, then Receive.
 Stop stops playback; Settings exposes LNB power/input or RTL gain. RX 2 starts
 muted. Click the picture or fullscreen button to enlarge a receiver.
 
@@ -60,6 +61,8 @@ Initial validation on 2026-11-04: 49 unit/regression tests passed. Both source a
 portable EXE passed simultaneous RX 1/RX 2 playback for H.264, H.265 and H.266,
 RX 2 mute, responsive layout checks, and normal worker/app shutdown.
 The startup-conflict regression brings the test total to 50.
+Follow-up live reception on MiniTiouner DA582LER received A71A (QARS), H.264
+1280x720, QPSK 4/5 at 10491.500 MHz / 1500 kS/s, approximately 8.8 dB MER.
 
 This is not a public release. The additional binary source/licence audit described
 in `webapp/receiver/SOURCE.md` must be completed before distribution.

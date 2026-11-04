@@ -46,7 +46,7 @@
       const data = event.data;
       panel.querySelector('.rx-message').textContent = data.tuned
         ? `${data.callsign || ''} ${data.tuned.centerMhz.toFixed(3)} MHz · ${data.tuned.sr} kS/s · ${data.state}`
-        : 'Ready · choose frequency and press Receive';
+        : data.message || 'Ready · choose frequency and press Receive';
     }
   });
   async function poll() {

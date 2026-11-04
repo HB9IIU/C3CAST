@@ -77,6 +77,9 @@ def main():
             browser = pw.chromium.launch(channel='msedge', headless=True)
             page = browser.new_page(viewport={'width': 1500, 'height': 1250})
             page.on('pageerror', lambda error: errors.append(str(error)))
+            absent = [dict(number=n, label='No receiver connected', available=False, state='stopped', error='', url=None) for n in (1, 2)]
+            idle_route = lambda route: route.fulfill(json={'receivers': absent})
+            page.route('**/api/receivers', idle_route)
             page.goto(base)
             page.locator('[data-receiver="2"]').wait_for()
             page.screenshot(path=str(output / 'c3cast-receivers-desktop.png'), full_page=True)
@@ -110,6 +113,7 @@ def main():
                                 raise RuntimeError('Replay server failed: ' + name)
                             time.sleep(.1)
                     entries.append(dict(number=n, label=f'Replay {name}', available=True, state='running', error='', url=url))
+                page.unroute('**/api/receivers')
                 page.route('**/api/receivers', lambda route, request, data=entries: route.fulfill(json={'receivers': data}))
                 page.route('**/api/receivers/*/start', lambda route: route.fulfill(json={'ok': True}))
                 page.reload()
@@ -129,6 +133,7 @@ def main():
                     process.wait(timeout=20)
                     worker_log.close()
                 page.unroute('**/api/receivers')
+                page.route('**/api/receivers', idle_route)
                 page.unroute('**/api/receivers/*/start')
                 page.goto(base)
             assert not errors, errors

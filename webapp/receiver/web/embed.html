@@ -173,6 +173,7 @@ async function loadDevices(){
    // Nothing tuned yet and a receiver is chosen (at the start, or after choosing another): the QO-100 beacon
    if(d.selected&&pendingSignal){const p=pendingSignal;pendingSignal=null;tune(p);}
    else if(d.autotune&&d.selected&&!tuned&&!live&&!busy)tune({centerMhz:10491.5,sr:1500});
+   else if(d.selected&&!tuned&&!live&&!busy)status.textContent='Ready · choose frequency and press Receive.';
   }
  }catch(e){}
 }
@@ -232,7 +233,7 @@ setInterval(async()=>{
   el('calltext').textContent=station;el('call').hidden=!station||!live;
   // QOCAST paints the tuned signal in the spectrum: blue searching, green locked, red lost (a lock that was lost, or none in ten seconds).
   const state=!live||!tuned?null:s.locked?'locked':(lockAt!==null||performance.now()-t0>10000)?'lost':'searching';
-  parent.postMessage({type:'rx',tuned:live&&tuned?{centerMhz:tuned.centerMhz,sr:tuned.sr}:null,state,callsign:s.locked?String(s.service||'').trim():''},'*');
+  parent.postMessage({type:'rx',tuned:live&&tuned?{centerMhz:tuned.centerMhz,sr:tuned.sr}:null,state,message:status.textContent,callsign:s.locked?String(s.service||'').trim():''},'*');
  }catch(e){}finally{polling=false;}
 },500);
 video.style.cursor='zoom-in';video.addEventListener('click',()=>parent.postMessage({type:'enlarge'},'*'));
