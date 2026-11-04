@@ -231,7 +231,7 @@ class QocastBackend:
         while time.monotonic() < deadline:
             if self.service and self.service.poll() is not None:
                 if self.service.returncode == 2:
-                    raise ValueError('Another player or tuner service is using the receiver. Close it, then press Receive again.')
+                    raise ValueError('Another player or tuner service is using the receiver. Close it, then click a spectrum signal to retry.')
                 raise ValueError('The tuner service exited (code %s). Check server.log and the tuner-service log.' % self.service.returncode)
             try:
                 if self.api('GET', 'health').get('ok'):

@@ -10,6 +10,7 @@ import receivers
 import tuner_assignment
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'webapp' / 'receiver'))
 from tuners import QocastBackend
+import usb_devices
 
 
 class Receivers(unittest.TestCase):
@@ -87,6 +88,14 @@ class Receivers(unittest.TestCase):
                     backend.ensure_service()
                 sleep.assert_not_called()
 
+    def test_busy_minitiouners_keep_their_distinct_serial_assignments(self):
+        devices = [dict(id='minitiouner', count=2, label='MiniTiouner', serials=['FIRST', 'SECOND'])]
+        with patch.object(usb_devices, 'detect', return_value=devices), \
+             patch.object(tuner_assignment, 'free_tuners', return_value=[]) as free:
+            slots = tuner_assignment._enumerate()
+        self.assertEqual([s['serial'] for s in slots], ['FIRST', 'SECOND'])
+        free.assert_not_called()
+
     def test_actual_page_places_both_receivers_before_telemetry(self):
         with patch.object(web, 'load_config', return_value={}):
             page = web.app.test_client().get('/').text
@@ -95,6 +104,8 @@ class Receivers(unittest.TestCase):
         self.assertLess(page.index('id="receivers"'), page.index('>Telemetry<'))
         self.assertIn('id="rxTargetLabel"', page)
         self.assertEqual(page.count('class="rx-pill"'), 2)
+        self.assertNotIn('rx-tuning', page)
+        self.assertEqual(page.count('class="rx-eye-display"'), 2)
 
 
 if __name__ == '__main__':

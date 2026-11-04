@@ -287,16 +287,24 @@
     {% for n in (1, 2) %}
     <section class="panel rx-panel" data-receiver="{{ n }}">
       <div class="ph"><button class="rx-pill" type="button" aria-pressed="{{ 'true' if n == 1 else 'false' }}">Receiver {{ n }}</button><span class="rx-device grow">No receiver connected</span>
+        <button class="btn rx-stop" type="button">Stop</button>
         <button class="btn rx-settings" type="button" title="Receiver settings">Settings</button>
         <button class="btn rx-full" type="button" title="Fullscreen receiver">⛶</button>
       </div>
       <div class="rx-picture"><div class="rx-placeholder">No receiver connected</div></div>
-      <form class="pb rx-tuning">
-        <label class="lab">Downlink MHz<input class="inp rx-frequency" type="number" min="10490" max="10500" step="0.001" value="{{ '10491.500' if n == 1 else '10494.750' }}" required></label>
-        <label class="lab">kS/s<input class="inp rx-rate" type="number" min="1" max="10000" value="{{ 1500 if n == 1 else 500 }}" required></label>
-        <button class="btn" type="submit">Receive</button>
-        <button class="btn rx-stop" type="button">Stop</button>
-      </form>
+      <div class="pb rx-details">
+        <div class="rx-stream">
+          <div class="row rx-station"><b data-rx-field="station">No stream</b><span class="grow"></span><span class="rx-lock">Idle</span></div>
+          <dl class="rx-stream-info">
+            <div class="rx-wide"><dt>Downlink · symbol rate</dt><dd data-rx-field="tuning">—</dd></div>
+            <div><dt>Video</dt><dd data-rx-field="video">—</dd></div>
+            <div><dt>Audio</dt><dd data-rx-field="audio">—</dd></div>
+            <div><dt>Modulation · FEC</dt><dd data-rx-field="mode">—</dd></div>
+            <div><dt>Signal quality</dt><dd data-rx-field="quality">—</dd></div>
+          </dl>
+        </div>
+        <div class="rx-eye"><div class="rx-eye-display"></div><span class="hint rx-margin">Margin —</span></div>
+      </div>
       <div class="hint rx-message" role="status" aria-live="polite"></div>
     </section>
     {% endfor %}
@@ -319,6 +327,7 @@
 
 <script src="/static/signal-finder.js?v={{ app_version }}"></script>
 <script src="/static/spectrum.js?v={{ app_version }}"></script>
+<script src="/static/magic-eye.js?v={{ app_version }}"></script>
 <script src="/static/receivers.js?v={{ app_version }}" defer></script>
 <script>
 const $ = id => document.getElementById(id);

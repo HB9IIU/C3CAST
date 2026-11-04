@@ -15,7 +15,7 @@ an existing assignment. If no hardware was found, polling keeps looking.
 
 Each available receiver starts its local browser service automatically. RX 1
 tunes the QO-100 beacon at 10491.500 MHz / 1500 kS/s. RX 2 waits for a selection.
-For another signal, set downlink MHz and kS/s, then Receive.
+For another signal, select a receiver pill, then click the carrier in the spectrum.
 Stop stops playback; Settings exposes LNB power/input or RTL gain. RX 2 starts
 muted. Click the picture or fullscreen button to enlarge a receiver.
 
@@ -24,7 +24,11 @@ spectrum clicks tune. Selecting a pill alone does not retune it. Clicking a carr
 above the slot bar estimates its centre and symbol rate using QOCAST's smoothed
 half-height measurement and standard-rate rounding. The beacon is fixed to
 10491.500 MHz / 1500 kS/s. Noise clicks report no signal and leave tuning alone.
-Frequency/rate fields update and remain available for manual correction.
+The manual frequency/SR fields have been replaced by stream information: station
+and provider, downlink/SR, video codec and resolution, audio codec, modulation/FEC,
+MER, and decoding margin. The EM34-style magic eye uses that margin, not raw MER:
+the shadow closes as margin approaches +5 dB. It is open while searching and dark
+when stopped. Missing quality readings are displayed as unavailable.
 
 The green slot bar below still selects the TX frequency. RX tuning remains
 available during TX; TX slot changes stay locked on air. Coloured receiver bands
@@ -33,6 +37,8 @@ for RX 2, faded while searching and red after loss.
 
 MiniTiouner requires its existing Windows FTDI driver. Other receiver applications
 must release the hardware first; C3CAST does not close them or adopt their services.
+MiniTiouner serials come from the Windows USB device list, so an occupied device
+keeps its identity instead of both receivers falling back to an unpinned service.
 
 ## Architecture
 
@@ -72,8 +78,11 @@ Initial validation on 2026-11-04: 49 unit/regression tests passed. Both source a
 portable EXE passed simultaneous RX 1/RX 2 playback for H.264, H.265 and H.266,
 RX 2 mute, responsive layout checks, and normal worker/app shutdown.
 The startup-conflict regression brings the test total to 50.
+Stable serial assignment while devices are occupied brings the total to 51.
 Follow-up live reception on MiniTiouner DA582LER received A71A (QARS), H.264
 1280x720, QPSK 4/5 at 10491.500 MHz / 1500 kS/s, approximately 8.8 dB MER.
+Both DA582LER and DA73APV4 subsequently received that stream simultaneously;
+both stream panels and magic eyes reported approximately +4.1 dB decoding margin.
 
 This is not a public release. The additional binary source/licence audit described
 in `webapp/receiver/SOURCE.md` must be completed before distribution.

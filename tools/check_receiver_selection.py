@@ -31,7 +31,7 @@ window.WebSocket = class extends EventTarget {
 FAKE_PLAYER = """<script>
 window.tunes=[];
 addEventListener('message',e=>{if(e.source===parent&&e.data.type==='tune'){
- tunes.push(e.data);parent.postMessage({type:'rx',tuned:e.data,state:'locked',callsign:'TEST'},'*');
+ tunes.push(e.data);parent.postMessage({type:'rx',tuned:e.data,state:'locked',callsign:'TEST',info:{running:true,locked:true,service:'TEST',provider:'Test provider',video:'H.265',audio:'AAC',width:1280,height:720,mode:'QPSK 3/4',esn0:8.8,esn0_label:'MER',margin:4.2}},'*');
 }});
 </script>"""
 
@@ -72,7 +72,10 @@ def main():
             assert abs(signal['centerMhz']-10494.25)<.005 and signal['sr']==333, signal
             assert not tunes(1), 'The unselected receiver was retuned'
             assert page.locator('#freq').input_value() == tx, 'RX click changed TX frequency'
-            assert page.locator('[data-receiver="2"] .rx-rate').input_value() == '333'
+            assert '333 kS/s' in page.locator('[data-receiver="2"] [data-rx-field="tuning"]').inner_text()
+            assert 'MER 8.8 dB' in page.locator('[data-receiver="2"] [data-rx-field="quality"]').inner_text()
+            assert 'H.265 · 1280×720' in page.locator('[data-receiver="2"] [data-rx-field="video"]').inner_text()
+            assert '4.2 dB' in page.locator('[data-receiver="2"] .rx-eye canvas').get_attribute('aria-label')
             page.locator('[data-receiver="1"] .rx-pill').click()
             click_signal(10491.7)
             frames[0].locator('body').evaluate('()=>new Promise(r=>setTimeout(r,50))')

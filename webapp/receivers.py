@@ -27,7 +27,7 @@ def status():
     with _lock:
         for entry in _workers.values():
             if entry['state'] == 'running' and entry['proc'].poll() is not None:
-                entry.update(state='error', error='Receiver stopped unexpectedly; press Receive to restart')
+                entry.update(state='error', error='Receiver stopped unexpectedly; click a spectrum signal to restart')
         return [dict(number=n, label=slots[n-1]['label'] if len(slots) >= n else 'No receiver connected',
                      available=len(slots) >= n, state=_workers.get(n, {}).get('state', 'stopped'),
                      error=_workers.get(n, {}).get('error', ''),

@@ -77,6 +77,7 @@ def main():
             browser = pw.chromium.launch(channel='msedge', headless=True)
             page = browser.new_page(viewport={'width': 1500, 'height': 1250})
             page.on('pageerror', lambda error: errors.append(str(error)))
+            page.add_init_script("window.rxReports=[];addEventListener('message',e=>{if(e.data?.type==='rx')rxReports.push(e.data)})")
             absent = [dict(number=n, label='No receiver connected', available=False, state='stopped', error='', url=None) for n in (1, 2)]
             idle_route = lambda route: route.fulfill(json={'receivers': absent})
             page.route('**/api/receivers', idle_route)
@@ -120,9 +121,12 @@ def main():
                 for n in (1, 2):
                     frame = page.frame_locator(f'[data-receiver="{n}"] iframe')
                     frame.locator('#video').wait_for(timeout=15000)
-                    page.locator(f'[data-receiver="{n}"] button[type="submit"]').click()
+                    page.locator(f'[data-receiver="{n}"] .rx-pill').click()
+                    page.evaluate("window.c3TuneReceiver({centerMhz:10491.5,sr:1500})")
                     frame.locator('#video').evaluate("v => new Promise((resolve,reject) => {const timer=setTimeout(()=>reject(new Error('No picture')),25000);const check=()=>{if(v.videoWidth>0&&v.currentTime>.3){clearTimeout(timer);resolve()}else setTimeout(check,100)};check()})")
                     print(name, 'RX', n, frame.locator('#video').evaluate('v=>({width:v.videoWidth,height:v.videoHeight,time:v.currentTime})'), flush=True)
+                codec = {'h264': 'H.264', 'h265': 'H.265', 'h266': 'H.266'}[name]
+                page.wait_for_function('(codec)=>window.rxReports.some(r=>r.info?.video===codec)', arg=codec)
                 assert page.frame_locator('[data-receiver="2"] iframe').locator('#video').evaluate('v=>v.muted')
                 page.screenshot(path=str(output / f'c3cast-receiver-{name}.png'), full_page=True)
                 page.locator('[data-receiver="1"] .rx-stop').click()

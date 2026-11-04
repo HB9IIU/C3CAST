@@ -48,9 +48,12 @@ def _enumerate():
     if str(WEBPLAYER_DIR) not in sys.path:
         sys.path.insert(0, str(WEBPLAYER_DIR))
     import usb_devices
-    found = {entry["id"]: entry["count"] for entry in usb_devices.detect()}
+    devices = usb_devices.detect()
+    found = {entry["id"]: entry["count"] for entry in devices}
     result = []
-    serials = free_tuners()
+    serials = next((entry.get('serials', []) for entry in devices if entry['id'] == 'minitiouner'), [])
+    if len(serials) != found.get('minitiouner', 0):
+        serials = free_tuners()
     for index in range(found.get("minitiouner", 0)):
         serial = serials[index] if len(serials) == found["minitiouner"] else None   # unknown ones: no pin
         result.append(dict(tuner="minitiouner", channel=1, serial=serial,

@@ -71,6 +71,7 @@ def detect():
     try:
         cfg = _manager()
         found = {'rtlsdr': [], 'minitiouner': [], 'picotuner': []}
+        mini_serials = set()
         for instance in _instance_ids(cfg):
             top = instance.upper()
             if any(top.startswith('USB\\' + ids + '\\') for ids in RTL_SDR_IDS):
@@ -80,6 +81,9 @@ def detect():
                 product = _text(cfg, instance, 'bus')
                 if any(word in product.lower() for word in MINITIOUNER_WORDS):
                     found['minitiouner'].append(product)
+                    serial = instance.rsplit('\\', 1)[-1]
+                    if serial and '&' not in serial:
+                        mini_serials.add(serial)
                 continue
             names = ' '.join(_text(cfg, instance, which) for which in ('bus', 'desc', 'name'))
             if 'picotuner' in names.lower():
@@ -94,7 +98,10 @@ def detect():
             if kind == 'rtlsdr' and devices[0] and devices[0] != 'RTL-SDR':
                 label += ' (' + devices[0] + ')'
             # a PicoTuner shows as several USB entries (i2c and TS ports): still one tuner
-            result.append({'id': kind, 'label': label, 'count': 1 if kind == 'picotuner' else len(devices)})
+            entry = {'id': kind, 'label': label, 'count': 1 if kind == 'picotuner' else len(devices)}
+            if kind == 'minitiouner':
+                entry['serials'] = sorted(mini_serials)
+            result.append(entry)
         return result
     except (OSError, AttributeError):
         return []                            # not Windows, or the device manager is unavailable

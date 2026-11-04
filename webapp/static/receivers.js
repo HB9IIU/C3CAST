@@ -3,6 +3,8 @@
   const panels = [...document.querySelectorAll('[data-receiver]')];
   const requested = new Set();
   const pending = new Map();
+  const lastSignals = new Map();
+  const eyes = new Map(panels.map(panel => [panel, new MagicEye(panel.querySelector('.rx-eye-display'), 96)]));
   let activeReceiver = 1;
   let closing = false;
   function selectReceiver(number) {
@@ -16,6 +18,8 @@
   }
   selectReceiver(1);
   function tune(panel, signal) {
+    lastSignals.set(Number(panel.dataset.receiver), signal);
+    panel.querySelector('[data-rx-field="tuning"]').textContent = `${signal.centerMhz.toFixed(3)} MHz · ${signal.sr} kS/s`;
     const frame = panel.querySelector('iframe');
     if (!frame || !frame.dataset.ready) {
       pending.set(Number(panel.dataset.receiver), signal);
@@ -45,10 +49,6 @@
     }
   }
   for (const panel of panels) {
-    panel.querySelector('form').onsubmit = async event => {
-      event.preventDefault();
-      tune(panel, {centerMhz: Number(panel.querySelector('.rx-frequency').value), sr: Number(panel.querySelector('.rx-rate').value)});
-    };
     panel.querySelector('.rx-pill').onclick = () => selectReceiver(Number(panel.dataset.receiver));
     panel.querySelector('.rx-stop').onclick = () => { pending.delete(Number(panel.dataset.receiver)); send(panel, {type: 'stop'}); };
     panel.querySelector('.rx-settings').onclick = () => send(panel, {type: 'settings'});
@@ -57,8 +57,6 @@
   window.c3TuneReceiver = signal => {
     const number = activeReceiver;
     const panel = panels[number - 1];
-    panel.querySelector('.rx-frequency').value = signal.centerMhz.toFixed(3);
-    panel.querySelector('.rx-rate').value = signal.sr;
     tune(panel, signal);
   };
   window.addEventListener('message', event => {
@@ -67,10 +65,26 @@
     if (event.data?.type === 'enlarge') panel.requestFullscreen().catch(() => {});
     if (event.data?.type === 'rx') {
       const data = event.data;
+      const info = data.info || {};
+      const number = Number(panel.dataset.receiver);
+      if (data.tuned) lastSignals.set(number, data.tuned);
+      const signal = data.tuned || lastSignals.get(number);
+      const set = (name, value) => { panel.querySelector(`[data-rx-field="${name}"]`).textContent = value || '—'; };
+      const locked = info.locked === true || data.state === 'locked';
+      set('station', locked ? [info.service || data.callsign, info.provider].filter(Boolean).join(' · ') : data.tuned ? 'Waiting for signal' : 'No stream');
+      set('tuning', signal ? `${signal.centerMhz.toFixed(3)} MHz · ${signal.sr} kS/s` : '');
+      set('video', locked ? [info.video, info.width && info.height ? `${info.width}×${info.height}` : ''].filter(Boolean).join(' · ') : '');
+      set('audio', locked ? info.audio : '');
+      set('mode', locked ? info.mode : '');
+      set('quality', Number.isFinite(info.esn0) ? `${info.esn0_label || 'MER'} ${info.esn0.toFixed(1)} dB` : '');
+      const badge = panel.querySelector('.rx-lock');
+      badge.textContent = locked ? 'LOCKED' : data.state === 'lost' ? 'SIGNAL LOST' : data.tuned ? 'SEARCHING' : 'IDLE';
+      badge.classList.toggle('locked', locked);
+      const margin = locked && Number.isFinite(info.margin) ? info.margin : null;
+      eyes.get(panel).update(margin, Boolean(data.tuned));
+      panel.querySelector('.rx-margin').textContent = margin === null ? 'Margin —' : `Δ ${margin >= 0 ? '+' : ''}${margin.toFixed(1)} dB`;
       window.c3ReceiverState?.(Number(panel.dataset.receiver), data.tuned, data.state, data.callsign);
-      panel.querySelector('.rx-message').textContent = data.tuned
-        ? `${data.callsign || ''} ${data.tuned.centerMhz.toFixed(3)} MHz · ${data.tuned.sr} kS/s · ${data.state}`
-        : data.message || 'Ready · choose frequency and press Receive';
+      panel.querySelector('.rx-message').textContent = '';
     }
   });
   async function poll() {
@@ -84,7 +98,7 @@
         if (rx.available && !requested.has(rx.number)) await start(panel);
         if (rx.state === 'running' && !panel.querySelector('iframe')) {
           const frame = document.createElement('iframe');
-          frame.src = `${rx.url}/embed?n=${rx.number}`;
+          frame.src = `${rx.url}/embed?n=${rx.number}&details=external`;
           frame.title = `DATV receiver ${rx.number}`;
           frame.allow = 'autoplay; fullscreen';
           frame.addEventListener('load', () => {
@@ -99,7 +113,7 @@
           placeholder.className = 'rx-placeholder';
           placeholder.textContent = 'Receiver stopped';
           panel.querySelector('.rx-picture').replaceChildren(placeholder);
-          panel.querySelector('.rx-message').textContent = rx.error + ' · Press Receive to retry.';
+          panel.querySelector('.rx-message').textContent = rx.error + ' · Click a spectrum signal to retry.';
         }
       }
     } catch (_) { /* A restarting app will answer the next poll. */ }
