@@ -4,6 +4,16 @@ The version lives in `webapp/version.py` (shown on the page, the setup page and 
 Version 1.0.0 is the first stable release. Subsequent features increment the minor
 version; fixes increment the patch version. Versions 0.1 to 0.4 were internal development versions.
 
+## 1.0.1 (2026-11-10)
+- **OBS Virtual Camera with a separate audio input** - a camera without its own microphone combined with another audio device
+  (for example a VB-Audio cable) no longer sends an empty picture. Reported by F1JMJ.
+- **Detect audio delay works with your camera** - it now records the very stream that goes on air, so it no longer fails to open the
+  camera, and it skips the first seconds while the camera settles.
+- **Audio delay remembered per camera and sound source** - set it once for each combination; it is saved as soon as you change it.
+- **Receivers use only free tuners** - a MiniTiouner that another program holds is skipped, so the PicoTuner can serve both receivers.
+- **Camera picture options in Setup** - show or hide the top banner, show UTC or local time, show or hide the scrolling text at the
+  bottom. The scrolling text now reads "Transmitted with C3CAST (GitHub HB9IIU) · Firmware by SP8ESA".
+
 ## 1.0.0 (2026-11-04; download in preparation)
 - **DATV reception with RTL-SDR USB sticks!** Up to two integrated receivers, supporting RTL-SDR, MiniTiouner and PicoTuner.
 - **Automatic TX monitoring** - Receiver 1 tunes to your transmitted signal when you go on air.

@@ -9,6 +9,7 @@
 </head>
 <body class="window-pending">
 {% include "_icons.html" %}
+<div id="toast" class="toast d-none" role="status"></div>
 <div class="wrap" style="max-width:55rem">
 
   <header class="bar">
@@ -32,15 +33,20 @@
         </div>
       </div>
       <div class="field">
-        <div class="lab"><label for="ahead">Clock lead time</label><b id="aheadVal"></b></div>
-        <input id="ahead" type="range" min="0" max="15" step="0.1">
-        <div class="note" style="margin-top:.3rem">Clock and tones run this far ahead, to read right once the signal has passed the encoder, the ESP and your receiver. Compare with a real clock and adjust. Shows this PC's local time.</div>
+        <div class="lab"><label>Camera picture</label></div>
+        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:.5rem 2rem;margin-bottom:.5rem">
+          <label style="display:flex;gap:.6rem;align-items:center;cursor:pointer"><input id="banner" type="checkbox"> Show the top banner (callsign and clock)</label>
+          <span id="timeRow">
+            <label style="cursor:pointer"><input type="radio" name="clockzone" value="utc"> UTC</label>
+            <label style="cursor:pointer;margin-left:1.2rem"><input type="radio" name="clockzone" value="local"> Local time</label>
+          </span>
+        </div>
+        <label style="display:flex;gap:.6rem;align-items:center;cursor:pointer"><input id="marquee" type="checkbox"> Show the scrolling text at the bottom</label>
       </div>
       <div class="field">
         <button id="save" class="btn save-primary" type="button"><svg class="i"><use href="#i-save"/></svg>Save settings</button>
         <div id="msg" class="note" role="status" style="margin-top:.5rem"></div>
       </div>
-      <div class="screen"><img id="clockPreview" alt=""><span class="tag">PREVIEW</span></div>
     </div>
   </section>
 
@@ -67,17 +73,23 @@ async function post(url, body) {
 }
 const say = (ok, text) => { $('msg').className = 'note ' + (ok ? 'ok-text' : 'bad-text'); $('msg').textContent = text; };
 function show(s) {
-  $('callsign').value = s.callsign; $('locator').value = s.locator; $('ahead').value = s.clock_ahead;
-  $('aheadVal').textContent = Number(s.clock_ahead).toFixed(1) + ' s';
+  $('callsign').value = s.callsign; $('locator').value = s.locator; $('marquee').checked = s.marquee; $('banner').checked = s.banner;
+  document.querySelector(`input[name=clockzone][value=${s.local_time ? 'local' : 'utc'}]`).checked = true; dimTime();
   $('board').textContent = s.board.port ? `${s.board.port} · USB serial ${s.board.serial || 'unknown'}` : 'none saved';
-  $('clockPreview').src = '/api/clock-preview.png?' + Date.now();
 }
+function dimTime() {                       // no banner, no clock: the choice is greyed out
+  document.querySelectorAll('input[name=clockzone]').forEach(e => e.disabled = !$('banner').checked);
+  $('timeRow').style.opacity = $('banner').checked ? '' : '.45';
+}
+$('banner').onchange = dimTime;
 async function load() { show(await (await fetch('/api/setup')).json()); }
-$('ahead').oninput = () => $('aheadVal').textContent = Number($('ahead').value).toFixed(1) + ' s';
 $('save').onclick = async () => {
-  const r = await post('/api/setup', {callsign: $('callsign').value, locator: $('locator').value, clock_ahead: $('ahead').value});
-  say(r.ok, r.ok ? 'saved' : (r.data.error || 'could not save'));
-  if (r.ok) load();
+  const r = await post('/api/setup', {callsign: $('callsign').value, locator: $('locator').value, marquee: $('marquee').checked, banner: $('banner').checked,
+                                           local_time: document.querySelector('input[name=clockzone]:checked').value === 'local'});
+  if (!r.ok) return say(false, r.data.error || 'could not save');
+  $('toast').className = 'toast ok';
+  $('toast').textContent = 'Settings saved';
+  setTimeout(() => { location.href = '/'; }, 1200);           // back to the transmitter by itself
 };
 $('forget').onclick = async () => {
   const r = await post('/api/connection/forget');

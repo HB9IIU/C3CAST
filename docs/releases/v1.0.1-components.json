@@ -1,0 +1,1160 @@
+{
+  "version": "1.0.1",
+  "distribution_audit_complete": true,
+  "checked_files": 91,
+  "components": [
+    {
+      "path": "_internal/_asyncio.pyd",
+      "bytes": 65304,
+      "sha256": "746bc8fa88282afe19dc60e426cc0a75bea3bd137cca06a0b57a30bd31459403",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/_bz2.pyd",
+      "bytes": 84760,
+      "sha256": "00b8ca9a338d2b47285c9e56d6d893db2a999b47216756f18439997fb80a56e3",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/_cffi_backend.cp311-win_amd64.pyd",
+      "bytes": 179712,
+      "sha256": "0b5c05bf3e9da14c33566d2c546fb7618ac7fc2b89365a66cfb1082ffe3d898d",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/_ctypes.pyd",
+      "bytes": 124696,
+      "sha256": "c148292328f0aab7863af82f54f613961e7cb95b7215f7a81cafaf45bd4c42b7",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/_decimal.pyd",
+      "bytes": 255768,
+      "sha256": "980a63f2b39cf16910f44384398e25f24482346a482addb00de42555b17d4278",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/_elementtree.pyd",
+      "bytes": 128792,
+      "sha256": "02e30b6a2bee5be5336e40a9c89575603051bde86f9c9cdc78b7fa7d9b7bd1f0",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/_hashlib.pyd",
+      "bytes": 65304,
+      "sha256": "87dd0c858620287454fd6d31d52b6a48eddbb2a08e09e8b2d9fdb0b92200d766",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/_lzma.pyd",
+      "bytes": 159512,
+      "sha256": "f5e01b516c2c23035f7703e23569dec26c5616c05a929b2580ae474a5c6722c5",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/_multiprocessing.pyd",
+      "bytes": 34584,
+      "sha256": "975c1947798e3c39898c86675ca1eb68249f77361f41f172f9800275227213b9",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/_overlapped.pyd",
+      "bytes": 51480,
+      "sha256": "ca106e4dfdeafeabf9e98956d3d8d0cb73e109f1a96f1a7e35bc47dbd7c7e164",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/_queue.pyd",
+      "bytes": 32024,
+      "sha256": "3f8e7e6aa13b417acc78b63434fb1144e6319a010a9fc376c54d6e69b638fe4c",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/_socket.pyd",
+      "bytes": 79640,
+      "sha256": "a19e3c7c03ef1b5625790b1c9c42594909311ab6df540fbf43c6aa93300ab166",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/_ssl.pyd",
+      "bytes": 178456,
+      "sha256": "ba5388d6a6557d431e086734a3323621dc447f63ba299b0a815e5837cf869678",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/_uuid.pyd",
+      "bytes": 25368,
+      "sha256": "e6aa7f1637e211251c9d6f467203b2b6d85e5bc2d901699f2a55af637fa89250",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/cryptography/hazmat/bindings/_rust.pyd",
+      "bytes": 9897472,
+      "sha256": "1d4332a447cab13dec8e3a533ad579e0e562b79e40822c931f33769758fc7156",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/firmware/bootloader.bin",
+      "bytes": 13408,
+      "sha256": "b81ac67ac3eade6031e6b9df275b3d0b494ad9e092181fdc4f7dfc4f5f20627e",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/firmware/firmware.bin",
+      "bytes": 716064,
+      "sha256": "5b27077988a55a452b4ee2519258c2177d3e72b22a53f6995deb70458d9455fa",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/firmware/partitions.bin",
+      "bytes": 3072,
+      "sha256": "7f00b6c042a89b15b0cac534f82ed988caf29278ff5700b0c511eb1b5bb7c820",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/libcrypto-3.dll",
+      "bytes": 5191960,
+      "sha256": "05fe080eab7fc535c51e10c1bd76a2f3e6217f9c91a25034774588881c3f99de",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/libffi-8.dll",
+      "bytes": 39696,
+      "sha256": "eff52743773eb550fcc6ce3efc37c85724502233b6b002a35496d828bd7b280a",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/librtlsdr.dll",
+      "bytes": 107954,
+      "sha256": "ce770e44df6d58345a617e7601c64d72d0b77a0586de81c30fdacffaff6f98fb",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/libssl-3.dll",
+      "bytes": 787224,
+      "sha256": "2e9fbcd8f7fdc13a5179533239811456554f2b3aa2fb10e1b17be0df81c79006",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/libusb-1.0.dll",
+      "bytes": 228396,
+      "sha256": "39a8be2a8c628c2a6146a3a1a85758a5f7fe44045fe425c9bf5897a11ea1b46c",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/libwinpthread-1.dll",
+      "bytes": 63675,
+      "sha256": "6661cfc5ca7dd8a6ae74687e4812d324e4be0ff8e0a83f92a9bfae04e6231d32",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/markupsafe/_speedups.cp311-win_amd64.pyd",
+      "bytes": 11776,
+      "sha256": "79d6891d23e7bb5acfae0ab87b2c8d59431450724999e9cfc3deb8877e1f4cb9",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/numpy/_core/_multiarray_tests.cp311-win_amd64.pyd",
+      "bytes": 64512,
+      "sha256": "adf0e01de577f4ccc2a11099c817cb41c8a78b6174175356dd62e745075cfac8",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/numpy/_core/_multiarray_umath.cp311-win_amd64.pyd",
+      "bytes": 3703296,
+      "sha256": "4fb4c5d62a6bd766eea716350eaf5396580e33cf7dc159e305488d1b7d72dad2",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/numpy/fft/_pocketfft_umath.cp311-win_amd64.pyd",
+      "bytes": 276480,
+      "sha256": "e22ee51c9761e8cb2e153efc321d09cb656c5573488e55167f69d6e070d22466",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/numpy/linalg/_umath_linalg.cp311-win_amd64.pyd",
+      "bytes": 112128,
+      "sha256": "8742391ee3d6dfb4a6e41418626bb45048b102e05229d424279ddefb877d9cd6",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/numpy/random/_bounded_integers.cp311-win_amd64.pyd",
+      "bytes": 220160,
+      "sha256": "418dc5293b11f83a70c63ef77c3c9ca0dc4b9f20c7fadb4625805480305ddcef",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/numpy/random/_common.cp311-win_amd64.pyd",
+      "bytes": 169984,
+      "sha256": "f2cdbaa3d3d0dd8f5b74b7b4630470d609be4e4d31f8e37f8681e6c3c5aca895",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/numpy/random/_generator.cp311-win_amd64.pyd",
+      "bytes": 608768,
+      "sha256": "91f53ff9a803213ea5fa38b73be057b448be1728b4a353586d10f08d4f2c021c",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/numpy/random/_mt19937.cp311-win_amd64.pyd",
+      "bytes": 84992,
+      "sha256": "e66de88dbf0b9a2ae67576cf2f4e7c220e10729d445403787bc8b58f4e8a6750",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/numpy/random/_pcg64.cp311-win_amd64.pyd",
+      "bytes": 96768,
+      "sha256": "16e4f9401783c502d82bce06263d98c985c841f3115d301741b22413bbbff851",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/numpy/random/_philox.cp311-win_amd64.pyd",
+      "bytes": 79872,
+      "sha256": "56c44540e500dfb820e5a75004b5cf9945a648a87d0e40d64672325dd22fa3c1",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/numpy/random/_sfc64.cp311-win_amd64.pyd",
+      "bytes": 59392,
+      "sha256": "23f03f25c5528ca51c11846bcbb5aaaee7c1c518897249865c47dca913c43863",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/numpy/random/bit_generator.cp311-win_amd64.pyd",
+      "bytes": 165888,
+      "sha256": "eafa63966c1b3e34397bec8fef991dee5a7944b09058b38afd9f2de40acfd141",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/numpy/random/mtrand.cp311-win_amd64.pyd",
+      "bytes": 512512,
+      "sha256": "6f8a3d3ce835c6cd4fea9e4425b757b268ad69b0cef201a225f6cbd1b453182a",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/numpy.libs/libscipy_openblas64_-63c857e738469261263c764a36be9436.dll",
+      "bytes": 20415488,
+      "sha256": "63c857e738469261263c764a36be9436ebdeaa272e340a828f42047a97131080",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/numpy.libs/msvcp140-a4c2229bdc2a2a630acdc095b4d86008.dll",
+      "bytes": 575056,
+      "sha256": "a4c2229bdc2a2a630acdc095b4d86008e5c3e3bc7773174354f3da4f5beb9cde",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/PIL/_avif.cp311-win_amd64.pyd",
+      "bytes": 7888896,
+      "sha256": "93d18fd6e9170db341560cc3b3909e01346fcaad6ac26128bb8fafca65b4c546",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/PIL/_imaging.cp311-win_amd64.pyd",
+      "bytes": 2662400,
+      "sha256": "1ead5ef5fb2b0b40d5a92c4baa5e4e111b187e9f9f4e895a1ab8cea8e12318f2",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/PIL/_imagingcms.cp311-win_amd64.pyd",
+      "bytes": 275968,
+      "sha256": "6b2b71a29b684727c100cbe2810a69cde03d32fd489150f90ef7ca155556a5fe",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/PIL/_imagingft.cp311-win_amd64.pyd",
+      "bytes": 2250240,
+      "sha256": "6661a925b55bc9c0465699a64327b3b7602d1b04391caf5ab88efa77e8569838",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/PIL/_imagingtk.cp311-win_amd64.pyd",
+      "bytes": 14336,
+      "sha256": "d3a5ebaf8a550fe1e3a5baed6eac89e6e21a5ccd3c8f8f22ae577a57248173c7",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/PIL/_webp.cp311-win_amd64.pyd",
+      "bytes": 415744,
+      "sha256": "2d5846f349212f73e613ab18076851d360d3deb0dd7b41db76357ed06e65f39d",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/pyexpat.pyd",
+      "bytes": 199448,
+      "sha256": "c7c7564f7f874fb660a46384980a2cf28bc3e245ca83628a197ccf861eab5560",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/python3.dll",
+      "bytes": 67352,
+      "sha256": "db84bc052cfb121fe4db36242ba5f1d2c031b600ef5d8d752cf25b7c02b6bac6",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/python311.dll",
+      "bytes": 5800216,
+      "sha256": "0817a2a657a24c0d5fbb60df56960f42fc66b3039d522ec952dab83e2d869364",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/receiver/bin/datvrx.exe",
+      "bytes": 6992889,
+      "sha256": "eb3d25f1ee86103b60af40c6c9cfaeb4dd06ca00aace0d91012a4a092ff8baf0",
+      "what": "DATVision receiver (Rust)",
+      "licence": "GPL v3",
+      "source": [
+        "_internal/receiver/source/DATVision-1.0.0-source.zip"
+      ],
+      "licence_text": [
+        "_internal/receiver/licenses/DATVision-GPL.txt"
+      ]
+    },
+    {
+      "path": "_internal/receiver/bin/librtlsdr.dll",
+      "bytes": 107954,
+      "sha256": "ce770e44df6d58345a617e7601c64d72d0b77a0586de81c30fdacffaff6f98fb",
+      "what": "rtl-sdr 2.0.2",
+      "licence": "GPL v2 or later",
+      "source": [
+        "_internal/receiver/source/mingw-w64-rtl-sdr-2.0.2-1.src.tar.zst"
+      ],
+      "licence_text": [
+        "_internal/receiver/licenses/librtlsdr-GPL-2.0.txt"
+      ]
+    },
+    {
+      "path": "_internal/receiver/bin/libusb-1.0.dll",
+      "bytes": 228396,
+      "sha256": "39a8be2a8c628c2a6146a3a1a85758a5f7fe44045fe425c9bf5897a11ea1b46c",
+      "what": "libusb 1.0.28",
+      "licence": "LGPL v2.1 or later",
+      "source": [
+        "_internal/receiver/source/mingw-w64-libusb-1.0.28-1.src.tar.zst"
+      ],
+      "licence_text": [
+        "_internal/receiver/licenses/libusb-LGPL-2.1.txt"
+      ]
+    },
+    {
+      "path": "_internal/receiver/bin/libwinpthread-1.dll",
+      "bytes": 63675,
+      "sha256": "6661cfc5ca7dd8a6ae74687e4812d324e4be0ff8e0a83f92a9bfae04e6231d32",
+      "what": "winpthreads",
+      "licence": "MIT and BSD-3-Clause-Clear",
+      "source": [],
+      "licence_text": [
+        "_internal/receiver/licenses/libwinpthread-MIT.txt"
+      ]
+    },
+    {
+      "path": "_internal/receiver/bin/rtl_iq.exe",
+      "bytes": 2917348,
+      "sha256": "4db0269769803f6f6477464c6e35cff58814b1823642d5685defb5834060ea02",
+      "what": "DATVision RTL-SDR reader (C++)",
+      "licence": "GPL v3",
+      "source": [
+        "_internal/receiver/source/DATVision-1.0.0-source.zip"
+      ],
+      "licence_text": [
+        "_internal/receiver/licenses/DATVision-GPL.txt"
+      ]
+    },
+    {
+      "path": "_internal/receiver/tuner-service/bin/FTD2XX_NET.dll",
+      "bytes": 74520,
+      "sha256": "7e5be9e5f90dd280609b6ad0f130fbc40d9c414cb853cdb33627e84324c51c9a",
+      "what": "FTDI .NET wrapper",
+      "licence": "FTDI licence (distribution allowed with its text unmodified)",
+      "source": [],
+      "licence_text": [
+        "_internal/receiver/tuner-service/licenses/FTD2XX_NET-FTDI-licence.txt"
+      ]
+    },
+    {
+      "path": "_internal/receiver/tuner-service/bin/libusb-1.0.dll",
+      "bytes": 157184,
+      "sha256": "d4e5db4fad8bef7201dc5a4a71ca997e6dccc9da25e8a988d4be63b13a02208d",
+      "what": "libusb 1.0.27",
+      "licence": "LGPL v2.1 or later",
+      "source": [
+        "_internal/receiver/source/libusb-1.0.27.tar.bz2"
+      ],
+      "licence_text": [
+        "_internal/receiver/licenses/libusb-LGPL-2.1.txt"
+      ]
+    },
+    {
+      "path": "_internal/receiver/tuner-service/bin/LibUsbDotNet.LibUsbDotNet.dll",
+      "bytes": 156672,
+      "sha256": "b6de87ff6fdde6d0a245ef37fe81fac49523c35115c61bc002e4935d99875508",
+      "what": "LibUsbDotNet 2.2.29",
+      "licence": "LGPL v3",
+      "source": [
+        "_internal/receiver/source/LibUsbDotNet-2.2.29-source.zip"
+      ],
+      "licence_text": [
+        "_internal/receiver/tuner-service/licenses/LibUsbDotNet-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/receiver/tuner-service/bin/Newtonsoft.Json.dll",
+      "bytes": 711952,
+      "sha256": "e1e27af7b07eeedf5ce71a9255f0422816a6fc5849a483c6714e1b472044fa9d",
+      "what": "Json.NET 13.0.3",
+      "licence": "MIT",
+      "source": [],
+      "licence_text": [
+        "_internal/receiver/tuner-service/licenses/Newtonsoft.Json-MIT.txt"
+      ]
+    },
+    {
+      "path": "_internal/receiver/tuner-service/bin/Serilog.dll",
+      "bytes": 142848,
+      "sha256": "5755736f579a63e23e0ea42890061dce8a7834887745896eabbd73a5f392c5e8",
+      "what": "Serilog",
+      "licence": "Apache 2.0",
+      "source": [],
+      "licence_text": [
+        "_internal/receiver/tuner-service/licenses/Apache-2.0.txt"
+      ]
+    },
+    {
+      "path": "_internal/receiver/tuner-service/bin/Serilog.Sinks.File.dll",
+      "bytes": 33280,
+      "sha256": "5b70dc2eeceb1963f9c3690c1cc8ffa793b280e903fa9a31780e6a7bb0bdfcf9",
+      "what": "Serilog",
+      "licence": "Apache 2.0",
+      "source": [],
+      "licence_text": [
+        "_internal/receiver/tuner-service/licenses/Apache-2.0.txt"
+      ]
+    },
+    {
+      "path": "_internal/receiver/tuner-service/bin/System.Buffers.dll",
+      "bytes": 20856,
+      "sha256": "accccfbe45d9f08ffeed9916e37b33e98c65be012cfff6e7fa7b67210ce1fefb",
+      "what": "Microsoft .NET support library",
+      "licence": "MIT",
+      "source": [],
+      "licence_text": [
+        "_internal/receiver/tuner-service/THIRD-PARTY.txt"
+      ]
+    },
+    {
+      "path": "_internal/receiver/tuner-service/bin/System.Diagnostics.DiagnosticSource.dll",
+      "bytes": 173232,
+      "sha256": "5b8ccdda36486950de37484c25e1334376431e52176c32f87dd730690b273e3b",
+      "what": "Microsoft .NET support library",
+      "licence": "MIT",
+      "source": [],
+      "licence_text": [
+        "_internal/receiver/tuner-service/THIRD-PARTY.txt"
+      ]
+    },
+    {
+      "path": "_internal/receiver/tuner-service/bin/System.Memory.dll",
+      "bytes": 142240,
+      "sha256": "bf3fb84664f4097f1a8a9bc71a51dcf8cf1a905d4080a4d290da1730866e856f",
+      "what": "Microsoft .NET support library",
+      "licence": "MIT",
+      "source": [],
+      "licence_text": [
+        "_internal/receiver/tuner-service/THIRD-PARTY.txt"
+      ]
+    },
+    {
+      "path": "_internal/receiver/tuner-service/bin/System.Numerics.Vectors.dll",
+      "bytes": 115856,
+      "sha256": "1d3ef8698281e7cf7371d1554afef5872b39f96c26da772210a33da041ba1183",
+      "what": "Microsoft .NET support library",
+      "licence": "MIT",
+      "source": [],
+      "licence_text": [
+        "_internal/receiver/tuner-service/THIRD-PARTY.txt"
+      ]
+    },
+    {
+      "path": "_internal/receiver/tuner-service/bin/System.Runtime.CompilerServices.Unsafe.dll",
+      "bytes": 18024,
+      "sha256": "37768488e8ef45729bc7d9a2677633c6450042975bb96516e186da6cb9cd0dcf",
+      "what": "Microsoft .NET support library",
+      "licence": "MIT",
+      "source": [],
+      "licence_text": [
+        "_internal/receiver/tuner-service/THIRD-PARTY.txt"
+      ]
+    },
+    {
+      "path": "_internal/receiver/tuner-service/bin/tuner-service.exe",
+      "bytes": 260608,
+      "sha256": "01317e01e005c41134036ff6f3b2ee000eb1d48bc59c00c2bbc421caccd3820a",
+      "what": "tuner service (C#), derived from Open Tuner",
+      "licence": "GPL v3",
+      "source": [
+        "_internal/receiver/tuner-service/src/Program.cs"
+      ],
+      "licence_text": [
+        "_internal/receiver/tuner-service/LICENSE-GPL-3.0.txt"
+      ]
+    },
+    {
+      "path": "_internal/receiver/tuner-service/lib/FTD2XX_NET.dll",
+      "bytes": 74520,
+      "sha256": "7e5be9e5f90dd280609b6ad0f130fbc40d9c414cb853cdb33627e84324c51c9a",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/receiver/tuner-service/lib/libusb-1.0.dll",
+      "bytes": 157184,
+      "sha256": "d4e5db4fad8bef7201dc5a4a71ca997e6dccc9da25e8a988d4be63b13a02208d",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/select.pyd",
+      "bytes": 30488,
+      "sha256": "bae0974390945520eb99ab32486c6a964691f8f4a028ac408d98fa8fb0db7d90",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/unicodedata.pyd",
+      "bytes": 1140504,
+      "sha256": "37c68617fa02a2cadced17ef724e2d450ef12a8a37215da789a4679fde1c5c02",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/VCRUNTIME140.dll",
+      "bytes": 119192,
+      "sha256": "4d292623516f65c80482081e62d5dadb759dc16e851de5db24c3cbb57b87db83",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/VCRUNTIME140_1.dll",
+      "bytes": 49528,
+      "sha256": "a113f192195f245f17389e6ecbed8005990bcb2476ddad33f7c4c6c86327afe5",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/websockets/speedups.cp311-win_amd64.pyd",
+      "bytes": 11264,
+      "sha256": "9ad57b15b6cb99c88a2a5ee0ff20a0ae32b8fa9bc8aede3a8ef32ca1ae69d486",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "_internal/yaml/_yaml.cp311-win_amd64.pyd",
+      "bytes": 258560,
+      "sha256": "ee7df83fa5dca1467bfd841dc08189b10361f31700cf57a6aacddaf0c05706f4",
+      "what": "Python runtime and packages inside C3CAST.exe",
+      "licence": "PSF and the packages' own licences, see PYTHON-PACKAGES.txt",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt"
+      ],
+      "licence_text": [
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "C3CAST.exe",
+      "bytes": 10353359,
+      "sha256": "e02954cd598f5eba56ac33b6e8968447ef4d80ff9174bbb053e527339ce72413",
+      "what": "C3CAST (Python program packed with PyInstaller)",
+      "licence": "PolyForm Noncommercial 1.0.0 (C3CAST), packages as listed",
+      "source": [
+        "_internal/sources/PYTHON-PACKAGES.txt",
+        "_internal/sources/esptool-5.6.0.tar.gz"
+      ],
+      "licence_text": [
+        "LICENSE",
+        "_internal/sources/Python-PSF-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "H266-Player/ffplay.exe",
+      "bytes": 33584640,
+      "sha256": "8c3052fd03b8d3db7a00e8240b7ddb9492c2baad75bfc5b84dc1618620a15b3b",
+      "what": "ffplay for the player",
+      "licence": "LGPL v2.1 or later",
+      "source": [
+        "H266-Player/source/ffmpeg-c0f6ae570-source.zip"
+      ],
+      "licence_text": [
+        "H266-Player/FFMPEG-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "H266-Player/FTD2XX_NET.dll",
+      "bytes": 74520,
+      "sha256": "7e5be9e5f90dd280609b6ad0f130fbc40d9c414cb853cdb33627e84324c51c9a",
+      "what": "FTDI .NET wrapper",
+      "licence": "FTDI licence",
+      "source": [],
+      "licence_text": [
+        "H266-Player/licenses/FTD2XX_NET-FTDI-licence.txt"
+      ]
+    },
+    {
+      "path": "H266-Player/HB9IIU-Experimental-H266-Player.exe",
+      "bytes": 350720,
+      "sha256": "10e6e76e9b6e0fe5321bb764855271f93cc8cffd99a765cb26dd5c50e24d3f30",
+      "what": "HB9IIU Experimental H.266 Player",
+      "licence": "GPL v3",
+      "source": [
+        "H266-Player/source/HB9IIU-Experimental-H266-Player-v0.2-source.zip"
+      ],
+      "licence_text": [
+        "H266-Player/LICENSE-GPLv3.txt"
+      ]
+    },
+    {
+      "path": "H266-Player/libusb-1.0.dll",
+      "bytes": 157184,
+      "sha256": "d4e5db4fad8bef7201dc5a4a71ca997e6dccc9da25e8a988d4be63b13a02208d",
+      "what": "libusb 1.0.27",
+      "licence": "LGPL v2.1 or later",
+      "source": [
+        "H266-Player/source/libusb-1.0.27.tar.bz2"
+      ],
+      "licence_text": [
+        "H266-Player/licenses/libusb-LGPL-2.1.txt"
+      ]
+    },
+    {
+      "path": "H266-Player/LibUsbDotNet.LibUsbDotNet.dll",
+      "bytes": 156672,
+      "sha256": "b6de87ff6fdde6d0a245ef37fe81fac49523c35115c61bc002e4935d99875508",
+      "what": "LibUsbDotNet 2.2.29",
+      "licence": "LGPL v3",
+      "source": [
+        "H266-Player/source/LibUsbDotNet-2.2.29-source.zip"
+      ],
+      "licence_text": [
+        "H266-Player/licenses/LibUsbDotNet-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "H266-Player/Newtonsoft.Json.dll",
+      "bytes": 711952,
+      "sha256": "e1e27af7b07eeedf5ce71a9255f0422816a6fc5849a483c6714e1b472044fa9d",
+      "what": "Json.NET",
+      "licence": "MIT",
+      "source": [],
+      "licence_text": [
+        "H266-Player/licenses/Newtonsoft.Json-MIT.txt"
+      ]
+    },
+    {
+      "path": "H266-Player/Serilog.dll",
+      "bytes": 142848,
+      "sha256": "5755736f579a63e23e0ea42890061dce8a7834887745896eabbd73a5f392c5e8",
+      "what": "Serilog",
+      "licence": "Apache 2.0",
+      "source": [],
+      "licence_text": [
+        "H266-Player/licenses/Apache-2.0.txt"
+      ]
+    },
+    {
+      "path": "H266-Player/Serilog.Sinks.File.dll",
+      "bytes": 33280,
+      "sha256": "5b70dc2eeceb1963f9c3690c1cc8ffa793b280e903fa9a31780e6a7bb0bdfcf9",
+      "what": "Serilog",
+      "licence": "Apache 2.0",
+      "source": [],
+      "licence_text": [
+        "H266-Player/licenses/Apache-2.0.txt"
+      ]
+    },
+    {
+      "path": "H266-Player/System.Buffers.dll",
+      "bytes": 20856,
+      "sha256": "accccfbe45d9f08ffeed9916e37b33e98c65be012cfff6e7fa7b67210ce1fefb",
+      "what": "Microsoft .NET support library",
+      "licence": "MIT",
+      "source": [],
+      "licence_text": [
+        "H266-Player/FFMPEG-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "H266-Player/System.Diagnostics.DiagnosticSource.dll",
+      "bytes": 173232,
+      "sha256": "5b8ccdda36486950de37484c25e1334376431e52176c32f87dd730690b273e3b",
+      "what": "Microsoft .NET support library",
+      "licence": "MIT",
+      "source": [],
+      "licence_text": [
+        "H266-Player/FFMPEG-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "H266-Player/System.Memory.dll",
+      "bytes": 142240,
+      "sha256": "bf3fb84664f4097f1a8a9bc71a51dcf8cf1a905d4080a4d290da1730866e856f",
+      "what": "Microsoft .NET support library",
+      "licence": "MIT",
+      "source": [],
+      "licence_text": [
+        "H266-Player/FFMPEG-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "H266-Player/System.Numerics.Vectors.dll",
+      "bytes": 115856,
+      "sha256": "1d3ef8698281e7cf7371d1554afef5872b39f96c26da772210a33da041ba1183",
+      "what": "Microsoft .NET support library",
+      "licence": "MIT",
+      "source": [],
+      "licence_text": [
+        "H266-Player/FFMPEG-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "H266-Player/System.Runtime.CompilerServices.Unsafe.dll",
+      "bytes": 18024,
+      "sha256": "37768488e8ef45729bc7d9a2677633c6450042975bb96516e186da6cb9cd0dcf",
+      "what": "Microsoft .NET support library",
+      "licence": "MIT",
+      "source": [],
+      "licence_text": [
+        "H266-Player/FFMPEG-LICENSE.txt"
+      ]
+    },
+    {
+      "path": "tools/ffmpeg/bin/ffmpeg.exe",
+      "bytes": 67198976,
+      "sha256": "d85850a0f12fcfcc8b3dc7be08d93ab30944584ec59293b434113ba9837c54bf",
+      "what": "ffmpeg with x264, x265, VVenC (transmit and receive)",
+      "licence": "GPL v2 or later",
+      "source": [
+        "tools/ffmpeg/source/ffmpeg-5048d707a3d57aaf91579116dbe64585a9715cd8-source.zip",
+        "tools/ffmpeg/source/x264-0480cb05fa188d37ae87e8f4fd8f1aea3711f7ee-source.zip",
+        "tools/ffmpeg/source/x265-1836f70c17cde142ac023da71a96ba9cc49c9213-source.zip",
+        "tools/ffmpeg/source/x265-local-build.patch",
+        "tools/ffmpeg/source/vvenc-e0891287edc0d64de2d3977c4dbebff63fe367f9-source.zip",
+        "tools/ffmpeg/source/build_c3cast_ffmpeg_vvc.bat",
+        "tools/ffmpeg/source/ffmpeg-buildconf.txt"
+      ],
+      "licence_text": [
+        "tools/ffmpeg/licenses/COPYING.GPLv2",
+        "tools/ffmpeg/licenses/x264-COPYING.txt",
+        "tools/ffmpeg/licenses/x265-COPYING.txt",
+        "tools/ffmpeg/licenses/VVenC-BSD-3-Clause-Clear.txt",
+        "tools/ffmpeg/licenses/THIRD-PARTY-LICENSES.txt"
+      ]
+    },
+    {
+      "path": "videos/Bunny.mp4",
+      "bytes": 20774124,
+      "sha256": "4abe0b014ae3d7fffdc1ac1a1226a8cb225210cd921b31b54536833717f14c39",
+      "what": "sample film",
+      "licence": "Creative Commons BY 3.0 (Blender Foundation)",
+      "source": [],
+      "licence_text": [
+        "videos/CREDITS.txt"
+      ]
+    },
+    {
+      "path": "videos/sintel_trailer.mp4",
+      "bytes": 4372373,
+      "sha256": "b670602fa00934ca27c4351bb0efe7ea7a07fae57284e44226025eeed7c51254",
+      "what": "sample film",
+      "licence": "Creative Commons BY 3.0 (Blender Foundation)",
+      "source": [],
+      "licence_text": [
+        "videos/CREDITS.txt"
+      ]
+    }
+  ]
+}

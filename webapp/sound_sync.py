@@ -17,11 +17,12 @@ import subprocess
 
 from qo100_enc import FFMPEG as FFMPEG_EXE
 
-RECORD_SECONDS = 12
+RECORD_SECONDS = 15
 STEP_S = 0.010          # one sample every 10 ms
 MAX_SHIFT_MS = 1000
 MIN_SCORE = 0.3         # below: no clear claps (measured: claps 0.4-0.5, none 0.04)
 ROUND_MS = 10
+WARMUP_S = 3.0          # a camera just opened jumps (exposure, focus, filters): the first seconds of a transmitted recording are not used
 _NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
 
 
@@ -39,8 +40,11 @@ def _metadata(path, args, key):
     return points
 
 
-def picture_motion(path):
-    return _metadata(path, ["-an", "-vf", "scale=320:-2,signalstats,metadata=mode=print:key=lavfi.signalstats.YDIF"],
+def picture_motion(path, transmitted=False):
+    """``transmitted``: the finished stream, which has the marquee at the bottom of the picture; it moves on its
+    own, so the bottom is left out of the analysis."""
+    trim = "crop=iw:trunc(ih*0.88/2)*2:0:0," if transmitted else ""
+    return _metadata(path, ["-an", "-vf", trim + "scale=320:-2,signalstats,metadata=mode=print:key=lavfi.signalstats.YDIF"],
                      "lavfi.signalstats.YDIF")
 
 
@@ -86,10 +90,13 @@ def match(motion, level):
     return sorted(scores, reverse=True)
 
 
-def measure(path):
+def measure(path, transmitted=False):
     """dict(offset_ms, score, runner_up, clear) for a recording with claps.
-    ``clear`` False: no clear claps (too soft, out of view, or a steady rhythm)."""
-    motion, level = picture_motion(path), sound_level(path)
+    ``clear`` False: no clear claps (too soft, out of view, or a steady rhythm).
+    ``transmitted``: the recording is the finished stream (see picture_motion)."""
+    motion, level = picture_motion(path, transmitted), sound_level(path)
+    if transmitted:
+        motion, level = [p for p in motion if p[0] >= WARMUP_S], [p for p in level if p[0] >= WARMUP_S]
     if len(motion) < 30 or len(level) < 100:
         raise RuntimeError(f"The recording is too short ({len(motion)} frames, "
                            f"{len(level) / 100:.1f} s of sound) - is the microphone working?")

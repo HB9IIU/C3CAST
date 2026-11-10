@@ -73,7 +73,7 @@ class VvcEncoding(unittest.TestCase):
         with patch("camera.inputs_and_filter", return_value=(["-i", "camera"], "overlay", "adelay=100")) as inputs:
             _, cmd = stream_tx.build("camera", "", 125, "3/4", "TEST", "JN00aa", 5, 0,
                                      "webcam", "microphone", 100, "h266")
-            inputs.assert_called_once_with("webcam", "microphone", "640x360", 30, "TEST", 100)
+            inputs.assert_called_once_with("webcam", "microphone", "640x360", 30, "TEST", 100, False, None)
             self.assertIn("overlay", cmd)
             self.assertIn("adelay=100", cmd)
 

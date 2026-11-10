@@ -15,8 +15,10 @@ import qo100_enc
 import version
 
 FOLDER = paths.DATA / "overlays"
-MARQUEE_TEXT = f"TRANSMITTED WITH {version.APP_NAME} v{version.__version__} · FIRMWARE BY SP8ESA"
+MARQUEE_TEXT = f"Transmitted with {version.APP_NAME} (GitHub HB9IIU) · Firmware by SP8ESA"
 TIME_TEXT = "%{gmtime:%H\\:%M\\:%S} UTC"       # ffmpeg text expansion; the file holds %{gmtime:%H\:%M\:%S} UTC
+LOCAL_TIME_TEXT = "%{localtime:%H\\:%M\\:%S} LOCAL"
+DEFAULT_LOOK = {"banner": True, "marquee": True, "local_time": False}   # what is drawn on the camera picture (Setup page)
 FONT = "C:/Windows/Fonts/arialbd.ttf"           # banner: bold
 MARQUEE_FONT = "C:/Windows/Fonts/arial.ttf"     # marquee: regular, calmer to read
 BAND = 0.055                                    # band height, part of the picture height
@@ -137,8 +139,11 @@ def _write(name, text):
     return _path(name)
 
 
-def overlay_filter(callsign):
-    """The drawbox/drawtext chain. Sizes are expressions of the picture height, so it fits every picture size."""
+def overlay_filter(callsign, look=None):
+    """The drawbox/drawtext chain. Sizes are expressions of the picture height, so it fits every picture size.
+    look (see DEFAULT_LOOK): banner = the top band with callsign and clock, marquee = the scrolling text in the band at the bottom,
+    local_time = the clock shows this PC's local time instead of UTC."""
+    look = {**DEFAULT_LOOK, **(look or {})}
     band = f"(ih*{BAND})"                    # drawbox: ih; drawtext: h
     text_band = f"(h*{BAND})"
     margin = f"(h*{BAND * 0.4})"
@@ -149,16 +154,19 @@ def overlay_filter(callsign):
 
     middle = f"({text_band}-th)/2"           # text centred in a band
     unit = MARQUEE_TEXT + MARQUEE_GAP
-    return ",".join([
+    top = [
         f"drawbox=x=0:y=0:w=iw:h={band}:color={SHADE}:t=fill",
         f"drawtext={style(FONT)}:textfile='{_write('banner_left.txt', callsign)}':expansion=none:x={margin}:y={middle}",
-        f"drawtext={style(FONT)}:textfile='{_write('banner_right.txt', TIME_TEXT)}'"
+        f"drawtext={style(FONT)}:textfile='{_write('banner_right.txt', LOCAL_TIME_TEXT if look['local_time'] else TIME_TEXT)}'"
         f":expansion=normal:x=w-tw-{margin}:y={middle}",
+    ]
+    bottom = [
         f"drawbox=x=0:y=ih-{band}:w=iw:h={band}:color={SHADE}:t=fill",
         # Starts at the right edge, scrolls left, comes back after one full pass.
         f"drawtext={style(MARQUEE_FONT)}:textfile='{_write('marquee.txt', unit)}'"
         f":expansion=none:x=w-mod(t*h*{MARQUEE_SPEED:.4f}\\,w+tw):y=h-{text_band}+{middle}",
-    ])
+    ]
+    return ",".join((top if look["banner"] else []) + (bottom if look["marquee"] else [])) or "null"       # null: nothing drawn
 
 
 _previews = []
@@ -179,11 +187,11 @@ def stop_previews():
             pass
 
 
-def preview_stream(camera, callsign):
+def preview_stream(camera, callsign, look=None):
     """Generator of multipart/x-mixed-replace JPEG parts: 640x360 at 10 fps, with the overlay as it will be transmitted.
     One preview at a time; it ends when the client goes away, or when stop_previews() is called."""
     stop_previews()
-    vf = f"fps=10,scale=640:360,setsar=1,{overlay_filter(callsign)}"
+    vf = f"fps=10,scale=640:360,setsar=1,{overlay_filter(callsign, look)}"
     cmd = [str(qo100_enc.FFMPEG), "-nostdin", "-hide_banner", "-loglevel", "error",
            "-f", "dshow", "-rtbufsize", "50M", *capture_options(camera, "1280x720"), "-i", f"video={camera}",
            "-an", "-vf", vf, "-f", "image2pipe", "-vcodec", "mjpeg", "-q:v", "7", "-"]
@@ -219,17 +227,26 @@ def audio_devices():
     return list_devices()["audio"]
 
 
-def inputs_and_filter(camera, mic, size, fps, callsign, delay_ms=0):
+def uses_separate_audio(own_mic, mic):
+    """True when the sound comes from another device than the camera's own microphone (OBS camera + VB-Audio cable, a headset ...).
+    Two devices keep unrelated clocks: without a shared clock the muxer waits for audio that is thousands of seconds "behind" the picture
+    and never sends the picture (no image on QO-100). A camera with its own microphone shares one clock and needs nothing."""
+    return bool(mic) and mic != own_mic
+
+
+def inputs_and_filter(camera, mic, size, fps, callsign, delay_ms=0, separate_audio=False, look=None):
     """(ffmpeg inputs, -vf chain, audio filter) for a camera at the transmitted picture ``size``.
-    delay_ms > 0 delays the sound (it arrives before the lips move), < 0 delays the picture."""
+    delay_ms > 0 delays the sound (it arrives before the lips move), < 0 delays the picture.
+    separate_audio: the sound is from another device than the camera's own microphone (see uses_separate_audio)."""
     width, height = size.split("x")
     capture_size = "1280x720" if int(width) <= 1280 else "1920x1080"
     device = f"video={camera}" + (f":audio={mic}" if mic else "")
     inputs = ["-f", "dshow", "-rtbufsize", "100M", "-audio_buffer_size", "50",
+              *(["-use_wallclock_as_timestamps", "1"] if mic and separate_audio else []),
               *capture_options(camera, capture_size, fps), "-i", device]
     if not mic:
         inputs += ["-f", "lavfi", "-i", "anullsrc=r=48000:cl=mono"]      # no microphone: silence
-    vf = f"fps={fps},scale={width}:{height},setsar=1,{overlay_filter(callsign)}"
+    vf = f"fps={fps},scale={width}:{height},setsar=1,{overlay_filter(callsign, look)}"
     audio = MICROPHONE_FILTER if mic else "lowpass=20000"
     if delay_ms > 0:
         audio = f"adelay={delay_ms}:all=1," + audio

@@ -96,7 +96,7 @@ def video_info(path, codec="h265"):
     return {"summary": " \u00b7 ".join(parts), "heavy": heavy, "notes": notes}
 
 
-def build(source, picture, sr_ks, fec, callsign, locator, ahead, start_time, camera="", mic="", delay_ms=0, codec="h265", video=""):
+def build(source, picture, sr_ks, fec, callsign, locator, ahead, start_time, camera="", mic="", delay_ms=0, codec="h265", video="", separate_audio=False, look=None):
     """Return (settings, ffmpeg command) for the source. The clock takes raw frames on stdin; a picture or the
     camera is read by ffmpeg itself."""
     provider = f"{version.APP_NAME} @ {locator}"        # what receivers show as "Provider"
@@ -115,7 +115,7 @@ def build(source, picture, sr_ks, fec, callsign, locator, ahead, start_time, cam
     if source == "camera":
         import camera as cam
         s = source_settings(source, sr_ks, fec, codec)
-        inputs, vf, audio_filter = cam.inputs_and_filter(camera, mic, s["size"], s["fps"], callsign, delay_ms)
+        inputs, vf, audio_filter = cam.inputs_and_filter(camera, mic, s["size"], s["fps"], callsign, delay_ms, separate_audio, look)
         return s, qo100_enc.ffmpeg_command(s, inputs, callsign, provider, video_filter=vf, audio_filter=audio_filter)
     if source == "clock":
         s = source_settings(source, sr_ks, fec, codec)
@@ -150,6 +150,10 @@ def main(argv=None):
     ap.add_argument("--picture", default="")
     ap.add_argument("--camera", default="")
     ap.add_argument("--mic", default="")
+    ap.add_argument("--no-marquee", action="store_true", help="camera: no scrolling text and band at the bottom of the picture")
+    ap.add_argument("--no-banner", action="store_true", help="camera: no top band with callsign and clock")
+    ap.add_argument("--local-time", action="store_true", help="camera: the clock shows local time instead of UTC")
+    ap.add_argument("--separate-audio", action="store_true", help="camera: the sound is from another device than the camera's own microphone")
     ap.add_argument("--delay", type=int, default=0, help="camera: audio delay in ms (negative: picture delay)")
     ap.add_argument("--port", required=True)
     ap.add_argument("--freq", required=True)
@@ -217,7 +221,8 @@ def main(argv=None):
                 status = 1
         else:
             start_time = time.time() + 0.5
-            s, command = build(a.source, a.picture, sr_ks, a.fec, a.callsign, a.locator, a.ahead, start_time, a.camera, a.mic, a.delay, a.codec, a.video)
+            s, command = build(a.source, a.picture, sr_ks, a.fec, a.callsign, a.locator, a.ahead, start_time, a.camera, a.mic, a.delay, a.codec, a.video, a.separate_audio,
+                               {"marquee": not a.no_marquee, "banner": not a.no_banner, "local_time": a.local_time})
             if a.codec == "h266":
                 say("H.266: encoder warming up; the transmitter sends null packets until video arrives. Real-time performance is experimental.")
             ffmpeg = subprocess.Popen(command, stdin=subprocess.PIPE if a.source == "clock" else subprocess.DEVNULL,

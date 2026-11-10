@@ -1,6 +1,7 @@
 """The clap test with a live picture and a microphone level: one ffmpeg process records the camera and its microphone (as one
 DirectShow input, like on air) to a file for sound_sync.py, and at the same time gives the page a small live picture (MJPEG on
 stdout) and the microphone level (from the raw audio it also writes to a file). Experimental."""
+import shutil
 import subprocess
 import tempfile
 import threading
@@ -9,8 +10,6 @@ from pathlib import Path
 
 import numpy as np
 
-import camera
-import qo100_enc
 import sound_sync
 
 SECONDS = sound_sync.RECORD_SECONDS
@@ -35,14 +34,17 @@ def frame():
     return state["frame"]
 
 
-def _command(cam, mic, folder):
-    options = camera.capture_options(cam, "1280x720", 30)
-    codec = ["-c:v", "copy"] if "mjpeg" in options else ["-c:v", "mjpeg", "-q:v", "3"]
-    return [str(qo100_enc.FFMPEG), "-hide_banner", "-loglevel", "error", "-y", "-f", "dshow", "-rtbufsize", "100M",
-            "-audio_buffer_size", "50", *options, "-t", str(SECONDS), "-i", f"video={cam}:audio={mic}",
-            "-map", "0:v", "-map", "0:a", *codec, "-c:a", "pcm_s16le", "claps.mkv",
-            "-map", "0:v", "-vf", "fps=12,scale=480:-2", "-q:v", "6", "-f", "mjpeg", "pipe:1",
-            "-map", "0:a", "-ac", "2", "-ar", "48000", "-flush_packets", "1", "-f", "s16le", "levels.raw"]
+def _command(transmit, folder):
+    """The transmission's own ffmpeg command (as QOCAST does), writing the stream to a file for SECONDS instead of
+    to the transmitter. The page's live picture and microphone level come from extra outputs of the same process,
+    so the camera is opened once, exactly as on air. Options before an output belong to that output (-t each)."""
+    command = list(transmit)
+    if command[-1] != "-":
+        raise ValueError("unexpected transmit command")
+    t = ["-t", str(SECONDS)]
+    return [*command[:-1], *t, str(Path(folder) / "claps.ts"),
+            *t, "-map", "0:v", "-vf", "fps=12,scale=480:-2", "-q:v", "6", "-f", "mjpeg", "pipe:1",
+            *t, "-map", "0:a", "-ac", "2", "-ar", "48000", "-flush_packets", "1", "-f", "s16le", str(Path(folder) / "levels.raw")]
 
 
 def _pump_frames(stream):
@@ -86,10 +88,10 @@ def _watch_level(path, proc):
         state["level"] = float(min(1.0, max(0.0, (db + 60.0) / 60.0)))
 
 
-def _run(cam, mic):
+def _run(transmit):
     try:
         with tempfile.TemporaryDirectory(prefix="c3cast_clap_") as tmp:
-            proc = subprocess.Popen(_command(cam, mic, tmp), cwd=tmp, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            proc = subprocess.Popen(_command(transmit, tmp), cwd=tmp, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                     creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
             threading.Thread(target=_pump_frames, args=(proc.stdout,), daemon=True).start()
             errors = []
@@ -103,16 +105,18 @@ def _run(cam, mic):
                 time.sleep(0.1)
             if proc.poll() is None:
                 proc.kill()
-                raise RuntimeError(f"the camera or microphone did not answer: try the camera's own microphone ({mic}) "
-                                   "or close other programs using them")
+                raise RuntimeError("the camera or microphone did not answer: close other programs using them")
             time.sleep(0.3)
-            path = Path(tmp) / "claps.mkv"
+            path = Path(tmp) / "claps.ts"
             if proc.returncode or not path.is_file():
                 tail = (errors[0].decode(errors="replace").strip()[-160:] if errors else "")
                 raise RuntimeError("could not record from the camera and microphone (in use elsewhere?) " + tail)
             with _lock:
                 state["state"] = "analysing"
-            result = sound_sync.measure(path)
+            kept = Path(tempfile.gettempdir()) / "c3cast_last_sound_sync.ts"      # kept for support: the last recording, to look at it
+            shutil.copyfile(path, kept)
+            result = sound_sync.measure(path, transmitted=True)
+            print(f"Sound sync: {result} (recording kept: {kept})", flush=True)
         with _lock:
             state.update(state="done", result={"delay": -result["offset_ms"], "score": result["score"], "clear": result["clear"]})
     except (RuntimeError, ValueError, OSError) as e:
@@ -123,11 +127,11 @@ def _run(cam, mic):
         state["level"] = 0.0
 
 
-def start(cam, mic):
+def start(transmit, mic):
     """Start the test in the background; False if one is already running."""
     with _lock:
         if busy():
             return False
         state.update(state="starting", started=time.time(), error="", result=None, frame=b"", level=0.0, mic=mic)
-    threading.Thread(target=_run, args=(cam, mic), daemon=True).start()
+    threading.Thread(target=_run, args=(transmit,), daemon=True).start()
     return True

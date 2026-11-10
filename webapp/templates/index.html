@@ -156,9 +156,9 @@
       <div class="pb">
         <div class="field">
           <div class="seg source-seg">
-            <input type="radio" name="source" id="srcPicture" value="picture" checked>
+            <input type="radio" name="source" id="srcPicture" value="picture">
             <label for="srcPicture"><svg class="i"><use href="#i-image"/></svg>Picture</label>
-            <input type="radio" name="source" id="srcClock" value="clock">
+            <input type="radio" name="source" id="srcClock" value="clock" checked>
             <label for="srcClock"><svg class="i"><use href="#i-clock"/></svg>SBB clock</label>
             <input type="radio" name="source" id="srcCamera" value="camera">
             <label for="srcCamera"><svg class="i"><use href="#i-camera"/></svg>USB camera</label>
@@ -179,7 +179,7 @@
           <select id="camera"></select>
           <select id="audio" style="margin-top:.5rem" title="Sound source"></select>
           <div id="levelBar" class="d-none" style="height:.5rem;margin:.4rem 0;background:var(--line);border-radius:.25rem;overflow:hidden" title="Microphone level"><i id="levelFill" style="display:block;height:100%;width:0;background:var(--ok);transition:width .1s"></i></div>
-          <div class="row" style="margin-top:.5rem;gap:.5rem 1rem">
+          <div id="delayRow" class="row" style="margin-top:.5rem;gap:.5rem 1rem">
             <span style="color:var(--dim)">Audio delay</span>
             <span class="row" style="gap:.3rem" title="Sound delay: plus delays the sound, minus delays the picture">
               <button id="delayDec" class="btn" type="button">&minus;</button>
@@ -278,7 +278,7 @@
           <div><dt>Audio</dt><dd id="pAudio">-</dd></div>
         </dl>
         <div class="tx-action">
-          <p id="powerReminder" class="tx-power-warning"><svg class="i" aria-hidden="true"><use href="#i-warn"/></svg>Set power before Start</p>
+          <p id="powerReminder" class="tx-power-warning"><svg class="i" aria-hidden="true"><use href="#i-warn"/></svg>{% if setup_ready %}Set power before Start{% else %}<span>Set your callsign and locator on the <a href="/setup">Setup page</a> before you can transmit</span>{% endif %}</p>
           <button id="toggle" class="go" type="button" aria-describedby="powerReminder"><svg class="i"><use id="toggleUse" href="#i-play"/></svg><span id="toggleText">Start</span></button>
         </div>
       </div>
@@ -322,7 +322,6 @@
       <div><dt>TS packets</dt><dd id="packets">-</dd></div>
       <div class="cpu-tele" title="Total system CPU usage across all processors, including C3CAST and the browser"><dt>CPU load</dt><dd><span id="cpuValue">—</span><span id="cpuMeter" class="cpu-meter" role="progressbar" aria-label="Total system CPU load" aria-valuemin="0" aria-valuemax="100"><span id="cpuFill"></span></span></dd></div>
     </dl>
-    <div id="setupWarn" class="err{% if setup_ready %} d-none{% endif %}">No callsign yet: set your callsign and locator on the <a href="/setup">Setup page</a> before you can transmit.</div>
     <div id="error" class="err d-none"></div>
     <pre id="log"></pre>
   </section>
@@ -438,6 +437,7 @@ $('videoPreview').onerror = () => {
   if (isVideo() && $('video').value) $('previewMsg').textContent = 'Browser preview unavailable for this format. FFmpeg can still transmit a supported video file.';
 };
 let clockTimer = null, cameras = [], previewKey = '', camerasLoaded = false;
+let detecting = false;                      // Detect audio delay is running: the camera is not for the preview then
 
 // The camera picture takes a moment to arrive (or never does): a placeholder instead of the browser's broken-image icon.
 function cameraWait(state, text) {         // 'loading' | 'failed' | 'ok' | 'off'; text replaces the default message
@@ -455,7 +455,7 @@ function setPreview(url) {                  // '' stops the camera stream (the s
 }
 
 function syncCameraPreview() {
-  if (!isCamera()) return;
+  if (!isCamera() || detecting) return;          // Detect audio delay owns the camera: no preview meanwhile
   $('onair').classList.toggle('d-none', !busy);
   $('screenTag').classList.add('d-none');          // the camera picture already carries the overlay
   $('preview').classList.toggle('d-none', busy);
@@ -481,13 +481,25 @@ async function loadCameras() {
 
 let audioDelay = 0;
 const setDelay = v => { audioDelay = Math.max(-500, Math.min(500, v)); $('delayVal').textContent = (audioDelay > 0 ? '+' : '') + audioDelay + ' ms'; };
-$('delayDec').onclick = () => setDelay(audioDelay - 10);
-$('delayInc').onclick = () => setDelay(audioDelay + 10);
+async function loadDelay() {               // every camera + sound source keeps its own delay (saved at Start)
+  const r = await (await fetch('/api/audio-delay?camera=' + encodeURIComponent($('camera').value) + '&audio=' + encodeURIComponent($('audio').value))).json();
+  setDelay(r.delay);
+}
+let delayTimer = null;
+function changeDelay(v) {                  // by hand (+ / - / Apply): remembered at once for this camera + sound source
+  setDelay(v);
+  clearTimeout(delayTimer);
+  const camera = $('camera').value, audio = $('audio').value, delay = audioDelay;
+  delayTimer = setTimeout(async () => {
+    await post('/api/audio-delay', {camera, audio, delay});
+  }, 400);
+}
+$('delayDec').onclick = () => changeDelay(audioDelay - 10);
+$('delayInc').onclick = () => changeDelay(audioDelay + 10);
 
 $('detectInfo').onclick = () => $('infoDelay').classList.remove('d-none');
 $('infoClose').onclick = () => $('infoDelay').classList.add('d-none');
 $('infoDelay').onclick = e => { if (e.target === $('infoDelay')) $('infoDelay').classList.add('d-none'); };
-let detecting = false;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 $('detectBtn').onclick = async () => {
   if (detecting) return;                   // the status poll re-enables the button; a second run would be refused anyway
@@ -499,7 +511,7 @@ $('detectBtn').onclick = async () => {
   cameraWait('loading');
   msg.textContent = 'Starting the camera ...';
   const finish = text => { detecting = false; btn.disabled = false; bar.classList.add('d-none'); previewKey = ''; syncCameraPreview(); if (text) msg.textContent = text; };
-  const r = await post('/api/audio/detect', {camera: $('camera').value, audio: $('audio').value});
+  const r = await post('/api/audio/detect', {camera: $('camera').value, audio: $('audio').value, sr: +val('sr'), fec: val('fec'), codec: selectedCodec()});
   if (!r.ok) return finish(r.data.error || 'measurement failed');
   bar.classList.remove('d-none');
   let s = {state: 'starting'};
@@ -522,7 +534,7 @@ $('detectBtn').onclick = async () => {
   msg.append('Suggested delay: ' + (d > 0 ? '+' : '') + d + ' ms (' + (d > 0 ? 'sound arrives before the picture' : d < 0 ? 'sound arrives after the picture' : 'in sync') + '). ');
   const apply = document.createElement('button');
   apply.className = 'btn'; apply.type = 'button'; apply.textContent = 'Apply';
-  apply.onclick = () => { setDelay(Math.max(-500, Math.min(500, d))); msg.textContent = 'Applied. Fine-tune with the + and - buttons and check on a receiver.'; };
+  apply.onclick = () => { changeDelay(Math.max(-500, Math.min(500, d))); msg.textContent = 'Applied. Fine-tune with the + and - buttons and check on a receiver.'; };
   msg.append(apply);
 };
 
@@ -533,7 +545,9 @@ async function loadAudio() {
   pick.innerHTML = `<option value="auto">Auto: ${c && c.mic ? c.mic : 'camera microphone'}</option><option value="none">No audio (silence)</option>` +
     a.devices.map(n => `<option value="${n.replace(/"/g, '&quot;')}">${n}</option>`).join('');
   pick.value = [...pick.options].some(o => o.value === a.audio) ? a.audio : 'auto';
-  setDelay(a.delay);
+  await loadDelay();
+  updateButtons();
+  dimDelay();
 }
 
 function showCameraInfo() {
@@ -633,7 +647,8 @@ function updateButtons(state) {
   }
   $('recheck').disabled = busy || flashing;
   $('flashBtn').disabled = busy || flashing;
-  document.querySelectorAll('input[name=sr], input[name=fec], input[name=source], #level, #limitsBtn, #picture, #picPrev, #picNext, #camera, #audio, #delayDec, #delayInc, #detectBtn, #reload, #freq, #vvc').forEach(e => e.disabled = busy);
+  const silent = $('audio').value === 'none';           // no sound: nothing to delay or detect
+  document.querySelectorAll('input[name=sr], input[name=fec], input[name=source], #level, #limitsBtn, #picture, #picPrev, #picNext, #camera, #audio, #delayDec, #delayInc, #detectBtn, #reload, #freq, #vvc').forEach(e => e.disabled = busy || (silent && ['delayDec', 'delayInc', 'detectBtn'].includes(e.id)));
   window.QO_LOCKED = busy || flashing;
   $('video').disabled = busy;
   if (isVideo() && busy) $('videoPreview').pause();
@@ -706,7 +721,8 @@ $('vvcCancel').onclick = () => $('askVvc').classList.add('d-none');
 $('askVvc').onclick = e => { if (e.target === $('askVvc')) $('askVvc').classList.add('d-none'); };
 $('reload').onclick = () => isCamera() ? loadCameras() : isVideo() ? loadVideos() : loadPictures();
 $('camera').onchange = () => { loadAudio().then(showCameraInfo); };
-$('audio').onchange = showCameraInfo;
+function dimDelay() { $('delayRow').style.opacity = $('audio').value === 'none' ? '.45' : ''; }
+$('audio').onchange = () => { showCameraInfo(); loadDelay(); updateButtons(); dimDelay(); };
 $('recheck').onclick = checkBoard;
 const stepPicture = d => {
   const o = $('picture').options;

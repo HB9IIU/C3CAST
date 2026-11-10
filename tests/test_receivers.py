@@ -91,13 +91,28 @@ class Receivers(unittest.TestCase):
                     backend.ensure_service()
                 sleep.assert_not_called()
 
-    def test_busy_minitiouners_keep_their_distinct_serial_assignments(self):
-        devices = [dict(id='minitiouner', count=2, label='MiniTiouner', serials=['FIRST', 'SECOND'])]
+    def slots_for(self, free, plugged, pico=False, readable=True):
+        devices = [dict(id='minitiouner', count=plugged, label='MiniTiouner')] if plugged else []
+        if pico:
+            devices.append(dict(id='picotuner', count=1, label='PicoTuner', usb_ids=[[1, 2]]))
         with patch.object(usb_devices, 'detect', return_value=devices), \
-             patch.object(tuner_assignment, 'free_tuners', return_value=[]) as free:
-            slots = tuner_assignment._enumerate()
-        self.assertEqual([s['serial'] for s in slots], ['FIRST', 'SECOND'])
-        free.assert_not_called()
+             patch.object(tuner_assignment, 'free_tuners', return_value=free), \
+             patch.object(tuner_assignment, '_driver_readable', return_value=readable):
+            return [(s['tuner'], s['channel'], s['serial']) for s in tuner_assignment._enumerate()]
+
+    def test_a_minitiouner_held_by_another_program_is_left_out(self):
+        # plugged in but another program holds it: it shows no name, so the PicoTuner gets receivers 1 and 2 (like QOCAST)
+        self.assertEqual(self.slots_for([], 1, pico=True), [('picotuner', 1, None), ('picotuner', 2, None)])
+
+    def test_a_free_minitiouner_comes_first(self):
+        self.assertEqual(self.slots_for(['DA582LER'], 1, pico=True),
+                         [('minitiouner', 1, 'DA582LER'), ('picotuner', 1, None), ('picotuner', 2, None)])
+
+    def test_only_the_free_one_of_two_minitiouners_is_listed(self):
+        self.assertEqual(self.slots_for(['SECOND'], 2), [('minitiouner', 1, 'SECOND')])
+
+    def test_driver_not_readable_keeps_the_plugged_ones_without_serial(self):
+        self.assertEqual(self.slots_for([], 1, readable=False), [('minitiouner', 1, None)])
 
     def test_actual_page_places_both_receivers_before_telemetry(self):
         with patch.object(web, 'load_config', return_value={}):

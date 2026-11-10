@@ -99,13 +99,18 @@ def save_config(port, serial_number):
     write_config(port=port, serial=serial_number)
 
 
-SETUP_DEFAULTS = {"callsign": "NOCALL", "locator": "JNxxyy", "clock_ahead": 5.0,
+SETUP_DEFAULTS = {"callsign": "NOCALL", "locator": "JNxxyy", "clock_ahead": 5.0, "marquee": True, "banner": True, "local_time": False,
                   "level_min": LEVEL_LIMITS_DEFAULT[0], "level_max": LEVEL_LIMITS_DEFAULT[1]}      # a fresh install: everyone sets their own on the Setup page
 
 
 def get_setup():
     cfg = load_config()
     return {k: cfg.get(k, v) for k, v in SETUP_DEFAULTS.items()}
+
+
+def look_of(setup):
+    """What is drawn on the camera picture (the Setup page options)."""
+    return {key: setup[key] for key in ("banner", "marquee", "local_time")}
 
 
 def whole(value):
@@ -155,7 +160,7 @@ def check_setup(d):
     callsign = str(d.get("callsign", "")).strip().upper()
     locator = str(d.get("locator", "")).strip()
     try:
-        ahead = float(d.get("clock_ahead"))
+        ahead = float(d.get("clock_ahead", get_setup()["clock_ahead"]))      # not on the Setup page any more: the saved value stays
     except (TypeError, ValueError):
         return None, "lead time must be a number"
     if not re.fullmatch(r"[A-Z0-9/]{3,12}", callsign):
@@ -164,7 +169,9 @@ def check_setup(d):
         return None, "locator: like JN36 or JN36kl"
     if not 0 <= ahead <= 30:
         return None, "lead time: 0 to 30 seconds"
-    return {"callsign": callsign, "locator": locator[:2].upper() + locator[2:4] + locator[4:6].lower() + locator[6:], "clock_ahead": ahead}, ""
+    current = get_setup()
+    return {"callsign": callsign, "locator": locator[:2].upper() + locator[2:4] + locator[4:6].lower() + locator[6:], "clock_ahead": ahead,
+            **{key: d.get(key, current[key]) is True for key in ("marquee", "banner", "local_time")}}, ""
 
 
 def check_limits(d):
@@ -568,7 +575,40 @@ def api_cameras():
 def api_audio():
     """Audio inputs for the camera source, and the remembered choice ("auto" = the camera's own microphone) and delay."""
     cfg = load_config()
-    return jsonify(devices=camera.audio_devices(), audio=cfg.get("audio", "auto"), delay=cfg.get("audio_delay", 0))
+    return jsonify(devices=camera.audio_devices(), audio=cfg.get("audio", "auto"))
+
+
+def saved_delay(cfg, camera_name, audio):
+    """(audio delay in ms, saved for exactly this camera + sound source?). Every setup keeps its own delay; before that table
+    existed there was one value for all, which is then used until the first Start saves the table."""
+    table = cfg.get("audio_delays")
+    if isinstance(table, dict):
+        value = table.get(f"{camera_name}|{audio}")
+        return (value, True) if isinstance(value, int) else (0, False)
+    return cfg.get("audio_delay", 0), False
+
+
+@app.post("/api/audio-delay")
+def api_audio_delay_save():
+    """Remember the delay for this camera and sound source right away (the + / - buttons and Apply after Detect)."""
+    d = request.get_json(silent=True) or {}
+    name, audio = str(d.get("camera", "")), str(d.get("audio", ""))
+    try:
+        delay = int(d["delay"])
+    except (KeyError, TypeError, ValueError):
+        return jsonify(error="audio delay must be a number"), 400
+    if not name or not audio or not -500 <= delay <= 500:
+        return jsonify(error="camera, sound source and a delay of -500 to 500 ms are required"), 400
+    table = load_config().get("audio_delays")
+    write_config(audio_delays={**(table if isinstance(table, dict) else {}), f"{name}|{audio}": delay})
+    return jsonify(ok=True, delay=delay)
+
+
+@app.get("/api/audio-delay")
+def api_audio_delay():
+    """The delay remembered for this camera and sound source (the page asks whenever either changes)."""
+    delay, saved = saved_delay(load_config(), request.args.get("camera", ""), request.args.get("audio", "auto"))
+    return jsonify(delay=delay, saved=saved)
 
 
 @app.post("/api/audio/detect")
@@ -588,7 +628,18 @@ def api_audio_detect():
             return jsonify(error="stop the transmission first"), 409
     camera.stop_previews()                      # a preview holds the camera
     time.sleep(0.5)
-    if not clap_test.start(chosen["name"], mic):
+    setup = get_setup()
+    try:                                        # the transmission's own command, as on air (see clap_test._command)
+        from stream_tx import build as build_stream
+        sr, fec = int(d.get("sr", 500000)), d.get("fec", "3/4")
+        if sr not in SYMBOL_RATES or fec not in FECS:
+            return jsonify(error="value outside the allowed list"), 400
+        _, transmit = build_stream("camera", "", sr // 1000, fec, setup["callsign"], setup["locator"],
+                                      setup["clock_ahead"], time.time(), chosen["name"], mic, 0, d.get("codec", "h265"), "",
+                                      camera.uses_separate_audio(chosen["mic"], mic), look_of(setup))
+    except (KeyError, ValueError, TypeError) as exc:
+        return jsonify(error=f"cannot prepare the recording: {exc}"), 400
+    if not clap_test.start(transmit, mic):
         return jsonify(error="a measurement is already running"), 409
     return jsonify(ok=True, seconds=clap_test.SECONDS, mic=mic)
 
@@ -613,7 +664,7 @@ def api_camera_preview():
     name = request.args.get("camera", "")
     if name not in [c["name"] for c in camera.cameras()]:
         abort(404)
-    return Response(stream_with_context(camera.preview_stream(name, get_setup()["callsign"])),
+    return Response(stream_with_context(camera.preview_stream(name, get_setup()["callsign"], look_of(get_setup()))),
                     mimetype="multipart/x-mixed-replace; boundary=frame", headers={"Cache-Control": "no-store"})
 
 
@@ -722,6 +773,7 @@ def api_start():
             return jsonify(error=str(exc)), 400
     camera_name = mic = ""
     delay = 0
+    separate_audio = False
     if source == "camera":
         chosen = next((c for c in camera.cameras() if c["name"] == d.get("camera")), None)
         if chosen is None:
@@ -734,13 +786,16 @@ def api_start():
             if choice not in camera.audio_devices():
                 return jsonify(error="unknown audio device: reload the list"), 400
             mic = choice
+        separate_audio = camera.uses_separate_audio(chosen["mic"], mic)
         try:
             delay = int(d.get("delay", 0))
         except (TypeError, ValueError):
             return jsonify(error="audio delay must be a number"), 400
         if not -500 <= delay <= 500:
             return jsonify(error="audio delay: -500 to 500 ms"), 400
-        write_config(audio=choice, audio_delay=delay)
+        table = load_config().get("audio_delays")
+        write_config(audio=choice, audio_delay=delay,
+                     audio_delays={**(table if isinstance(table, dict) else {}), f"{chosen['name']}|{choice}": delay})
     camera.stop_previews()                  # a preview holds the camera; the transmission needs it
     if source == "camera":
         time.sleep(0.5)                     # let DirectShow release it
@@ -766,7 +821,8 @@ def api_start():
         cmd = [*paths.worker_cmd("stream_tx"), "--source", source, "--codec", codec,
                "--picture", str(PICTURES / name) if source == "picture" else "",
                "--video", str(VIDEOS / video_name) if source == "video" else "",
-               "--camera", camera_name, "--mic", mic, "--delay", str(delay),
+               "--camera", camera_name, "--mic", mic, "--delay", str(delay), *(["--separate-audio"] if separate_audio else []), *([] if setup["marquee"] else ["--no-marquee"]),
+               *([] if setup["banner"] else ["--no-banner"]), *(["--local-time"] if setup["local_time"] else []),
                "--port", port, "--freq", freq, "--baud", str(sr), "--fec", fec, "--amp", str(level),
                "--seconds", str(MAX_SECONDS), "--callsign", setup["callsign"], "--locator", setup["locator"],
                "--ahead", str(setup["clock_ahead"])]
